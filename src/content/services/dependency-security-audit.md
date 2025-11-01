@@ -4,20 +4,12 @@ description: "Comprehensive security assessment including dependencies, reposito
 type: "service"
 target_audience: "both"
 service_type: "audit"
-tags: ["Security", "Dependencies", "OpenSSF", "Best Practices", "Supply Chain"]
-featured: true
-available: true
-prerequisites: "Repository access, package manifest files, and permissions to review security settings"
-deliverables:
-  - "Comprehensive security assessment report"
-  - "OpenSSF Scorecard analysis and improvement plan"
-  - "Repository security configuration recommendations"
-  - "Dependency vulnerability assessment"
-  - "Prioritized remediation roadmap with timelines"
+available: false
 pricing:
   small: 4500
   medium: 8000
   large: 14000
+impact: "Strong security practices protect the integrity and reliability of the software supply chain your products and services depend on."
 ---
 playbook: security-audit
 

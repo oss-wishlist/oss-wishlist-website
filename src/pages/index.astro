@@ -11,7 +11,7 @@ const siteMode = import.meta.env.PUBLIC_SITE_MODE || 'full';
 const isPlaceholder = siteMode === 'placeholder';
 
 const services = await getCollection('services');
-const featuredServices = services.filter(service => service.data.featured);
+const featuredServices = [] as typeof services;
 const maintainerServices = services.filter(service => 
   service.data.target_audience === 'maintainer' || service.data.target_audience === 'both'
 );

@@ -2,6 +2,113 @@
 import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
+import { getEntry, getCollection } from 'astro:content';
+import { formatPrice } from '../lib/pricing';
+
+const page = await getEntry('pages', 'pricing');
+const { Content } = await page.render();
+const allServices = await getCollection('services');
+const services = allServices
+  .filter((s) => s.data.service_type !== 'hosting')
+  .sort((a, b) => a.data.title.localeCompare(b.data.title));
+const hosting = allServices.find((s) => s.data.service_type === 'hosting');
+---
+
+<Layout title="Community Pricing Guide - OSS Wishlist" description="Transparent pricing for open source sustainability services. Fair rates that respect practitioner expertise and project needs.">
+  <!-- Hero Section -->
+  <section class="bg-gradient-to-br from-gray-100 to-gray-200 py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">{page.data.title}</h1>
+      <p class="text-xl text-gray-600">
+        {page.data.description}
+      </p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="py-12 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-h2:text-3xl prose-h2:font-bold prose-h2:mb-6 prose-h2:mt-12 prose-h3:text-xl prose-h3:font-semibold prose-h3:mb-3 prose-h4:text-lg prose-h4:font-semibold prose-h4:mb-2 prose-p:text-gray-600 prose-ul:text-gray-600 prose-strong:text-gray-900">
+        <Content />
+      </div>
+    </div>
+  </section>
+
+  <!-- Dynamic Pricing by Service -->
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Pricing Tiers by Service</h2>
+      <p class="text-gray-600 mb-8">All prices are in USD.</p>
+
+      <div class="space-y-10">
+        {services.map((svc) => (
+          <div class="border rounded-xl bg-white shadow-sm">
+            <div class="p-6 border-b">
+              <h3 class="text-2xl font-semibold text-gray-900">{svc.data.title}</h3>
+              {svc.data.description && (
+                <p class="mt-2 text-gray-600">{svc.data.description}</p>
+              )}
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+              <div class="border rounded-lg p-5">
+                <div class="text-sm font-semibold text-gray-600 mb-1">SMALL</div>
+                <div class="text-2xl font-bold text-gray-900 mb-2">{formatPrice(svc.data.pricing?.small ?? null)}</div>
+                <div class="text-xs text-gray-500">Single-repo or limited scope</div>
+              </div>
+              <div class="border rounded-lg p-5">
+                <div class="text-sm font-semibold text-gray-600 mb-1">MEDIUM</div>
+                <div class="text-2xl font-bold text-gray-900 mb-2">{formatPrice(svc.data.pricing?.medium ?? null)}</div>
+                <div class="text-xs text-gray-500">Multi-stakeholder, growing activity</div>
+              </div>
+              <div class="border rounded-lg p-5">
+                <div class="text-sm font-semibold text-gray-600 mb-1">LARGE</div>
+                <div class="text-2xl font-bold text-gray-900 mb-2">{formatPrice(svc.data.pricing?.large ?? null)}</div>
+                <div class="text-xs text-gray-500">Complex ecosystem or high impact</div>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {hosting && (
+          <div class="border rounded-xl bg-white shadow-sm">
+            <div class="p-6 border-b">
+              <h3 class="text-2xl font-semibold text-gray-900">{hosting.data.title}</h3>
+              {hosting.data.description && (
+                <p class="mt-2 text-gray-600">{hosting.data.description}</p>
+              )}
+            </div>
+            <div class="p-6">
+              <div class="rounded-lg border p-5">
+                <div class="text-sm font-semibold text-gray-600 mb-2">PRICING</div>
+                <p class="text-gray-700">Credits and managed options vary by provider and configuration.</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-16 bg-gray-600">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl font-bold text-white mb-4">Join Our Community</h2>
+      <p class="text-xl text-gray-200 mb-8">Explore what we offer together, or share what your project needs</p>
+      <div class="flex justify-center space-x-4">
+        <a href={`${basePath}catalog`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+          Explore Services
+        </a>
+        <a href={`${basePath}maintainers`} class="border border-gray-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+          Share Your Wishlist
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
+---
+import { getBasePath } from '../lib/paths';
+const basePath = getBasePath();
+import Layout from '../components/Layout.astro';
 import { getEntry } from 'astro:content';
 
 const page = await getEntry('pages', 'pricing');

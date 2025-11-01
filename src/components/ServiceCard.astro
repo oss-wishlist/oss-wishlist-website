@@ -5,13 +5,13 @@ export interface Props {
   title: string;
   description: string;
   slug: string;
-  tags: string[];
   type: 'service' | 'resource';
   available?: boolean;
   unavailable_reason?: string;
+  impact?: string;
 }
 
-const { title, description, slug, tags, type, available = true, unavailable_reason } = Astro.props;
+const { title, description, slug, type, available = true, unavailable_reason, impact } = Astro.props;
 ---
 
 <div class={`service-card bg-white p-6 rounded-lg shadow-sm border transition-shadow ${!available ? 'opacity-60 grayscale' : 'hover:shadow-md'}`}>
@@ -26,32 +26,36 @@ const { title, description, slug, tags, type, available = true, unavailable_reas
         </div>
       )}
       <p class={`text-sm mb-3 ${!available ? 'text-gray-400' : 'text-gray-600'}`}>{description}</p>
+      {impact && (
+        <div class={`text-xs mb-3 ${!available ? 'text-gray-400' : 'text-gray-700'}`}>
+          <span class="font-semibold">Sponsor and Ecosystem Impact:</span> {impact}
+        </div>
+      )}
       {!available && unavailable_reason && (
         <p class="text-xs text-gray-500 italic mb-3">{unavailable_reason}</p>
       )}
     </div>
   </div>
   
-  <div class="mb-4">
-    <div class="flex flex-wrap gap-2">
-      {tags.map(tag => (
-        <span class={`px-2 py-1 text-xs rounded ${!available ? 'bg-gray-50 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
-          {tag}
-        </span>
-      ))}
-    </div>
-  </div>
+  <!-- tags removed -->
   
-  {available ? (
+  <div class="flex items-center gap-3">
     <a 
       href={`${basePath}services/${slug}`} 
       class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
     >
       Learn More
     </a>
-  ) : (
-    <span class="text-sm text-gray-400 italic">
-      {type === 'resource' ? 'Funding needed' : 'Practitioners needed'}
-    </span>
-  )}
+    {!available && type !== 'resource' && (
+      <a 
+        href={`${basePath}apply-practitioner`}
+        class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+      >
+        Practitioners needed →
+      </a>
+    )}
+    {!available && type === 'resource' && (
+      <span class="text-sm text-gray-400 italic">Funding needed</span>
+    )}
+  </div>
 </div>

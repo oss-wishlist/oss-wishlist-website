@@ -88,29 +88,32 @@ function getPlaybookForService(serviceSlug: string) {
             <p class="text-gray-600 mb-4">
               {service.data.description}
             </p>
+            {service.data.impact && (
+              <div class="text-sm text-gray-700 mb-4">
+                <span class="font-semibold">Sponsor and Ecosystem Impact:</span> {service.data.impact}
+              </div>
+            )}
             
             {service.data.available === false && service.data.unavailable_reason && (
               <p class="text-xs text-gray-500 italic mb-4">{service.data.unavailable_reason}</p>
             )}
 
             <div class="pt-4 border-t flex gap-3 items-center">
-              {service.data.available ? (
-                <a href={`${basePath}services/${service.slug}`} 
-                   class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Learn more
+              <a href={`${basePath}services/${service.slug}`} 
+                 class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Learn more
+              </a>
+              {service.data.available === false && service.data.type !== 'resource' && (
+                <a href={`${basePath}apply-practitioner`}
+                   class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                  Practitioners needed →
                 </a>
-              ) : (
-                service.data.type === 'resource' ? (
-                  <span class="text-sm text-gray-500 italic">Funding needed</span>
-                ) : (
-                  <a href={`${basePath}/apply-practitioner`}
-                     class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
-                    Practitioners needed →
-                  </a>
-                )
+              )}
+              {service.data.available === false && service.data.type === 'resource' && (
+                <span class="text-sm text-gray-500 italic">Funding needed</span>
               )}
             </div>
           </div>

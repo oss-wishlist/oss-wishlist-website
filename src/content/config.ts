@@ -20,12 +20,10 @@ const services = defineCollection({
       'hosting',
       'tool'
     ]),
-    tags: z.array(z.string()),
-    featured: z.boolean().default(false),
     available: z.boolean().default(true),
     unavailable_reason: z.string().optional(),
-    prerequisites: z.string().optional(),
-    deliverables: z.array(z.string()).optional(),
+  // Impact statement for sponsors – short, concrete motivation
+  impact: z.string().optional(),
     // Link to playbook folder(s) in the playbooks-external collection
     // Example: playbook: 'funding-strategy' maps to 'playbooks-external/funding-strategy/playbook.md'
     playbook: z.string().optional(),
