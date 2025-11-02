@@ -147,6 +147,7 @@ if (issueNumber && GITHUB_TOKEN) {
                 <input type="hidden" name="project-name" value={wishlistData.projectName} />
                 <input type="hidden" name="github-url" value={wishlistData.url} />
                 <input type="hidden" name="maintainer" value={wishlistData.maintainer} />
+                <input type="hidden" name="project-size" value={(projectSize || 'medium')} />
               </>
             ) : (
               <div class="bg-red-50 border border-red-200 rounded-md p-4">
@@ -178,26 +179,42 @@ if (issueNumber && GITHUB_TOKEN) {
           {wishlistData && wishlistData.wishes && wishlistData.wishes.length > 0 && (
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">
-                Which specific wishes do you want to fulfill? <span class="text-red-600">*</span>
+                Which services would you like to fund? <span class="text-red-600">*</span>
               </label>
-              <div class="space-y-3 mb-4">
-                <p class="text-sm text-green-700 mb-4">
-                  <strong>Wishes available for fulfillment</strong> from <strong>{wishlistData.projectName}</strong>:
-                </p>
+              <p class="text-xs text-gray-500 mb-4">Select the services you want to sponsor and choose a practitioner for each (or let us select the best match).</p>
+              <div class="space-y-4">
                 {wishlistData.wishes.map((serviceName: string) => {
-                  const serviceDetails = servicesByKey[serviceName];
-                  const sizeForPricing = projectSize ?? 'medium';
-                  const priceValue = getPriceForService(serviceName, sizeForPricing, services);
-                  const priceText = formatPrice(priceValue);
+                  const serviceDetails = servicesByKey[serviceName] || servicesByKey[serviceName.split(' (')[0]?.trim()] || null;
+                  
+                  const sizeForPricing = projectSize || 'medium';
+                  const price = serviceDetails && getPriceForService(serviceDetails.slug, sizeForPricing, services);
+                  const priceText = price ? formatPrice(price) : 'Custom pricing';
+                  
+                  const serviceSlug = serviceDetails?.slug || serviceName.toLowerCase().replace(/\s+/g, '-');
+                  
+                  // Filter practitioners who offer this service
+                  const availablePractitioners = practitioners.filter(p => 
+                    p.data.services && p.data.services.includes(serviceSlug)
+                  );
+
                   return (
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
-                      <div class="flex items-start justify-between gap-3">
+                    <div key={serviceName} class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div class="flex items-start gap-3">
                         <input 
                           type="checkbox" 
                           id={`service-${serviceName.replace(/\s+/g, '-').toLowerCase()}`}
-                          name="funded-services" 
+                          name="services-to-fund"
                           value={serviceName}
+                          data-service-slug={serviceSlug}
                           class="mt-1 mr-3 h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded funded-service-checkbox"
+                        />
+                        <input 
+                          type="hidden"
+                          name="funded-slugs"
+                          value={serviceSlug}
+                          disabled
+                          class="funded-service-slug"
+                          data-service={serviceSlug}
                         />
                         <div class="flex-1">
                           <label 
@@ -219,6 +236,64 @@ if (issueNumber && GITHUB_TOKEN) {
                               )}
                             </div>
                           )}
+                          
+                          <!-- Per-service practitioner selection -->
+                          <div class="mt-3 pl-4 border-l-2 border-gray-300">
+                            <label class="block text-xs font-medium text-gray-700 mb-2">
+                              Practitioner for this service:
+                            </label>
+                            {availablePractitioners.length > 0 ? (
+                              <select 
+                                name={`practitioner-${serviceSlug}`}
+                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              >
+                                <option value="no-preference">No preference (we'll select best match)</option>
+                                <option value="provide-own">We will use our own employee practitioner</option>
+                                <optgroup label="Available Practitioners">
+                                  {availablePractitioners.map(practitioner => (
+                                    <option value={practitioner.slug}>
+                                      {practitioner.data.name} - {practitioner.data.title}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              </select>
+                            ) : (
+                              <div class="space-y-2">
+                                <select 
+                                  name={`practitioner-${serviceSlug}`}
+                                  class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-500"
+                                  disabled
+                                  aria-disabled="true"
+                                >
+                                  <option>No currently available practitioners</option>
+                                </select>
+                                <div>
+                                  <label class="inline-flex items-start gap-2 text-sm text-gray-700">
+                                    <input 
+                                      type="checkbox" 
+                                      name={`use-employee-${serviceSlug}`} 
+                                      class="use-employee-checkbox h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500" 
+                                      data-service={serviceSlug}
+                                    />
+                                    <span>
+                                      We will use our own employee practitioner to complete this OSS Wishlist service.
+                                    </span>
+                                  </label>
+                                  <p class="text-xs text-gray-500 mt-1">We'll still guide and track the work through the OSS Wishlist process.</p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            <!-- Custom practitioner input (shown when "provide own" selected) -->
+                            <div class="mt-2 custom-practitioner-input" style="display: none;" data-service={serviceSlug}>
+                              <input 
+                                type="text" 
+                                name={`custom-practitioner-${serviceSlug}`}
+                                placeholder="Practitioner name and contact information"
+                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              />
+                            </div>
+                          </div>
                         </div>
                         <div class="flex-shrink-0 text-right">
                           <div class="inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs border border-gray-200" title={`Estimated price for ${sizeForPricing} project`}>
@@ -234,9 +309,7 @@ if (issueNumber && GITHUB_TOKEN) {
                 })}
               </div>
             </div>
-          )}
-
-          <!-- Additional Items -->
+          )}          <!-- Additional Items -->
           <div>
             <label for="additional-items" class="block text-sm font-medium text-gray-600 mb-2">
               Additional items or notes (optional):
@@ -250,82 +323,18 @@ if (issueNumber && GITHUB_TOKEN) {
             ></textarea>
           </div>
 
-          <!-- Practitioner Selection -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-3">
-              Practitioner Selection <span class="text-red-600">*</span>
-            </label>
-            <div class="space-y-3">
-              <div>
-                <input 
-                  type="radio" 
-                  id="select-practitioner" 
-                  name="practitioner-choice" 
-                  value="select" 
-                  class="mr-2"
-                  required
-                />
-                <label for="select-practitioner" class="text-sm text-gray-700">
-                  Select from our recommended practitioners
-                </label>
-              </div>
-              <div class="ml-6" id="practitioner-dropdown" style="display: none;">
-                <label for="practitioner-select" class="block text-sm font-medium text-gray-600 mb-2">
-                  Choose an practitioner:
-                </label>
-                <select 
-                  id="practitioner-select"
-                  name="selected-practitioner" 
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                >
-                  <option value="">Select an practitioner...</option>
-                  {practitioners.map(practitioner => (
-                    <option value={practitioner.slug}>
-                      {practitioner.data.name} - {practitioner.data.title} ({practitioner.data.specialties?.join(', ') || 'Multiple specialties'})
-                    </option>
-                  ))}
-                </select>
-                <div id="practitioner-info" class="mt-3 p-3 bg-gray-50 rounded-md" style="display: none;">
-                  <div id="practitioner-details"></div>
-                </div>
-              </div>
-              
-              <div>
-                <input 
-                  type="radio" 
-                  id="provide-practitioner" 
-                  name="practitioner-choice" 
-                  value="provide" 
-                  class="mr-2"
-                />
-                <label for="provide-practitioner" class="text-sm text-gray-700">
-                  I will provide my own practitioner
-                </label>
-              </div>
-              <div class="ml-6" id="custom-practitioner" style="display: none;">
-                <input 
-                  type="text" 
-                  name="custom-practitioner-name" 
-                  placeholder="Practitioner name and contact information"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 mb-4"
-                />
-                
-                <!-- Process Agreement (only for custom practitioner) -->
-                <div class="bg-blue-50 border border-blue-200 p-4 rounded-md">
-                  <div class="flex items-start">
-                    <input 
-                      type="checkbox" 
-                      id="process-agreement" 
-                      name="process-agreement" 
-                      class="mt-1 mr-3"
-                      required
-                    />
-                    <label for="process-agreement" class="text-sm text-gray-700">
-                      <strong>Process Agreement:</strong> I understand and agree to follow the OSS Wishlist process for fulfilling and reporting on wishes. This includes regular progress updates, adherence to project timelines, and completion reports upon project delivery.
-                    </label>
-                  </div>
-                </div>
-              </div>
+          <!-- Process Agreement for custom practitioners -->
+          <div class="bg-blue-50 border border-blue-200 p-4 rounded-md" id="custom-practitioner-agreement" style="display: none;">
+            <div class="flex items-start">
+              <input 
+                type="checkbox" 
+                id="process-agreement" 
+                name="process-agreement" 
+                class="mt-1 mr-3"
+              />
+              <label for="process-agreement" class="text-sm text-gray-700">
+                <strong>Process Agreement:</strong> I confirm our employee practitioner will complete the OSS Wishlist service using the OSS Wishlist process. This includes regular progress updates, adherence to project timelines, and a completion report upon delivery.
+              </label>
             </div>
           </div>
 
@@ -453,72 +462,85 @@ if (issueNumber && GITHUB_TOKEN) {
       return acc;
     }, {})
   }}>
-    // Show/hide practitioner selection fields based on radio button selection
-    const selectPractitionerRadio = document.getElementById('select-practitioner');
-    const providePractitionerRadio = document.getElementById('provide-practitioner');
-    const practitionerDropdown = document.getElementById('practitioner-dropdown');
-    const customPractitioner = document.getElementById('custom-practitioner');
-    const practitionerSelect = document.getElementById('practitioner-select');
-    const practitionerInfo = document.getElementById('practitioner-info');
-    const practitionerDetails = document.getElementById('practitioner-details');
-
-    function togglePractitionerFields() {
-      const processAgreement = document.getElementById('process-agreement');
+    // Handle per-service practitioner selection
+    const practitionerSelects = document.querySelectorAll('select[name^="practitioner-"]');
+    const customPractitionerAgreement = document.getElementById('custom-practitioner-agreement');
+    const processAgreementCheckbox = document.getElementById('process-agreement');
+    const useEmployeeCheckboxes = document.querySelectorAll('.use-employee-checkbox');
+  const fundedServiceCheckboxes = document.querySelectorAll('.funded-service-checkbox');
+    
+    // Show/hide custom practitioner input based on selection
+    practitionerSelects.forEach(select => {
+      select.addEventListener('change', function() {
+        const serviceSlug = this.name.replace('practitioner-', '');
+        const customInput = document.querySelector(`.custom-practitioner-input[data-service="${serviceSlug}"]`);
+        
+        if (this.value === 'provide-own') {
+          customInput.style.display = 'block';
+          customInput.querySelector('input').required = true;
+        } else {
+          customInput.style.display = 'none';
+          customInput.querySelector('input').required = false;
+        }
+        
+        // Show/hide process agreement if any service has "provide-own" selected
+        updateProcessAgreementVisibility();
+      });
+    });
+    
+    function updateProcessAgreementVisibility() {
+      const hasCustomPractitioner = (
+        Array.from(practitionerSelects).some(select => select.value === 'provide-own') ||
+        Array.from(useEmployeeCheckboxes).some(cb => cb.checked)
+      );
       
-      if (selectPractitionerRadio.checked) {
-        practitionerDropdown.style.display = 'block';
-        customPractitioner.style.display = 'none';
-        practitionerInfo.style.display = 'none';
-        document.querySelector('select[name="selected-practitioner"]').required = true;
-        document.querySelector('input[name="custom-practitioner-name"]').required = false;
-        processAgreement.required = false;
-      } else if (providePractitionerRadio.checked) {
-        practitionerDropdown.style.display = 'none';
-        customPractitioner.style.display = 'block';
-        practitionerInfo.style.display = 'none';
-        document.querySelector('select[name="selected-practitioner"]').required = false;
-        document.querySelector('input[name="custom-practitioner-name"]').required = true;
-        processAgreement.required = true;
-      }
-    }
-
-    // Show practitioner details when selected
-    function showPractitionerDetails() {
-      const selectedPractitioner = practitionerSelect.value;
-      if (selectedPractitioner && practitionerData[selectedPractitioner]) {
-        const practitioner = practitionerData[selectedPractitioner];
-        practitionerDetails.innerHTML = `
-          <div class="flex items-start space-x-3">
-            <div class="flex-1">
-              <h4 class="font-medium text-gray-900">${practitioner.name}</h4>
-              <p class="text-sm text-gray-600 mb-2">${practitioner.title}</p>
-              <p class="text-sm text-gray-700 mb-2">${practitioner.bio}</p>
-              <div class="flex flex-wrap gap-4 text-xs text-gray-500 mb-2">
-                <span><strong>Specialties:</strong> ${practitioner.specialties.join(', ')}</span>
-                <span><strong>Location:</strong> ${practitioner.location}</span>
-                <span><strong>Languages:</strong> ${practitioner.languages.join(', ')}</span>
-              </div>
-            </div>
-          </div>
-        `;
-        practitionerInfo.style.display = 'block';
-        updatePricing();
+      if (hasCustomPractitioner) {
+        customPractitionerAgreement.style.display = 'block';
+        processAgreementCheckbox.required = true;
       } else {
-        practitionerInfo.style.display = 'none';
+        customPractitionerAgreement.style.display = 'none';
+        processAgreementCheckbox.required = false;
       }
     }
 
-    selectPractitionerRadio.addEventListener('change', togglePractitionerFields);
-    providePractitionerRadio.addEventListener('change', togglePractitionerFields);
-    practitionerSelect.addEventListener('change', showPractitionerDetails);
+    // Keep hidden funded service slug inputs in sync with checkboxes
+    fundedServiceCheckboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        const slug = this.getAttribute('data-service-slug');
+        if (!slug) return;
+        const hidden = document.querySelector(`input.funded-service-slug[data-service="${slug}"]`) as HTMLInputElement | null;
+        if (!hidden) return;
+        hidden.disabled = !this.checked;
+      });
+    });
+
+    // Handle per-service "use employee" checkbox toggling
+    useEmployeeCheckboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        const serviceSlug = this.dataset.service;
+        const customInput = document.querySelector(`.custom-practitioner-input[data-service="${serviceSlug}"]`);
+        if (!customInput) return;
+        
+        if (this.checked) {
+          customInput.style.display = 'block';
+          const input = customInput.querySelector('input');
+          if (input) input.required = true;
+        } else {
+          customInput.style.display = 'none';
+          const input = customInput.querySelector('input');
+          if (input) input.required = false;
+        }
+        updateProcessAgreementVisibility();
+      });
+    });
 
     // Form validation to ensure at least one service is selected (if checkboxes are present)
     const form = document.querySelector('form');
     form.addEventListener('submit', function(e) {
-      const serviceCheckboxes = document.querySelectorAll('input[name="funded-services"]');
+      const serviceCheckboxes = document.querySelectorAll('.funded-service-checkbox');
       
       if (serviceCheckboxes.length > 0) {
-        const checkedServices = document.querySelectorAll('input[name="funded-services"]:checked');
+        const checkedServices = document.querySelectorAll('.funded-service-checkbox:checked');
         if (checkedServices.length === 0) {
           e.preventDefault();
           alert('Please select at least one wish from the wishlist to fulfill.');

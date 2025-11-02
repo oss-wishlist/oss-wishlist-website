@@ -139,19 +139,37 @@ export async function fetchGitHubUser(accessToken: string): Promise<GitHubUser> 
  * This uses the public API and doesn't require repo OAuth scopes
  */
 export async function fetchUserRepositories(username: string): Promise<GitHubRepository[]> {
-  const response = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated&type=owner`, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'OSS-Wishlist-App'
-    }
-  });
+  // Accept an optional accessToken for authenticated requests
+  let accessToken = undefined;
+  if (arguments.length > 1 && typeof arguments[1] === 'string') {
+    accessToken = arguments[1];
+  }
+
+  // Timeout helper
+  function fetchWithTimeout(resource: RequestInfo, options: RequestInit = {}, timeout = 10000) {
+    return Promise.race([
+      fetch(resource, options),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), timeout))
+    ]);
+  }
+
+  const headers: Record<string, string> = {
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'OSS-Wishlist-App'
+  };
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetchWithTimeout(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated&type=owner`, {
+    headers
+  }, 10000) as Response;
 
   if (!response.ok) {
     throw new Error(`Failed to fetch repositories: ${response.statusText}`);
   }
 
   const repos = await response.json();
-  
   // Return all repositories (they're already filtered to ones the user owns)
   return repos;
 }

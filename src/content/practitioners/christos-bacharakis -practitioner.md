@@ -14,11 +14,10 @@ github: "octocat"
 mastodon: ""
 linkedin: ""
 
-# Expertise
-specialties: 
-  - "Community"
-  - "Developer Relations"
-  - "Open Source Governance"
+
+services:
+  - developer-relations-strategy
+  - governance-setup
 
 # Availability & Pricing
 availability: "available"

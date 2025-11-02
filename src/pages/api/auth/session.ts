@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
 
-    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET || process.env.OAUTH_STATE_SECRET;
+  const sessionSecret = import.meta.env.OAUTH_STATE_SECRET || process.env.OAUTH_STATE_SECRET;
     
     const session = verifySession(sessionCookie.value, sessionSecret);
     
@@ -31,20 +31,7 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
     
-    // Check if this is an old session without accessToken
-    if (!session.accessToken) {
-      // Clear old format cookie
-      cookies.delete('github_session', { path: '/' });
-      return new Response(JSON.stringify({ 
-        authenticated: false,
-        error: 'Session expired - please re-authenticate'
-      }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    }
+    // Return session even if accessToken is missing (legacy sessions)
 
     return new Response(JSON.stringify(session), {
       status: 200,

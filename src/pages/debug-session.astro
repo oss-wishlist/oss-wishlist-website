@@ -1,0 +1,15 @@
+---
+import Layout from '../components/Layout.astro';
+---
+<Layout title="Session Debug" description="Debug your authentication session context.">
+  <div class="max-w-2xl mx-auto px-4 py-12">
+    <h1 class="text-2xl font-bold mb-4">Session Debug</h1>
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 text-gray-900">
+      <div><strong>Astro.locals.user:</strong></div>
+      <pre>{JSON.stringify(Astro.locals.user, null, 2)}</pre>
+      <div><strong>Astro.locals.session:</strong></div>
+      <pre>{JSON.stringify(Astro.locals.session, null, 2)}</pre>
+    </div>
+    <div class="text-gray-600 text-sm">If both values are null or missing, your session cookie is not being set or read correctly. If you see your GitHub login, session is working.</div>
+  </div>
+</Layout>

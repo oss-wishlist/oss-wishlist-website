@@ -49,6 +49,8 @@ interface Service {
 
 interface WishlistFormProps {
   services?: Service[];
+  user?: GitHubUser | null;
+  initialRepositories?: GitHubRepository[];
 }
 
 interface GitHubUser {
@@ -71,11 +73,42 @@ interface GitHubRepository {
   language: string | null;
 }
 
-const WishlistForm = ({ services = [] }: WishlistFormProps) => {
+const WishlistForm = ({ services = [], user: initialUser = null, initialRepositories = [] }: WishlistFormProps) => {
   const MAX_WISHES = 3;
-  const [user, setUser] = useState<GitHubUser | null>(null);
-  const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
-  const [loadingRepos, setLoadingRepos] = useState(false);
+  
+  // Check cache only if we don't have server-provided data
+  const initializeFromCache = () => {
+    // If we have server-provided repos, use those
+    if (initialRepositories && initialRepositories.length > 0) {
+      return { repos: initialRepositories, loading: false };
+    }
+    
+    // Otherwise check cache
+    if (typeof window === 'undefined') return { repos: [], loading: true };
+    
+    const cachedRepos = sessionStorage.getItem('github_repositories');
+    const cacheTimestamp = sessionStorage.getItem('github_repositories_timestamp');
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    
+    if (cachedRepos && cacheTimestamp) {
+      const age = Date.now() - parseInt(cacheTimestamp);
+      if (age < CACHE_DURATION) {
+        try {
+          const parsedRepos = JSON.parse(cachedRepos);
+          return { repos: parsedRepos, loading: false };
+        } catch (e) {
+          return { repos: [], loading: true };
+        }
+      }
+    }
+    return { repos: [], loading: true };
+  };
+  
+  const cachedData = initializeFromCache();
+  
+  const [user, setUser] = useState<GitHubUser | null>(initialUser);
+  const [repositories, setRepositories] = useState<GitHubRepository[]>(cachedData.repos);
+  const [loadingRepos, setLoadingRepos] = useState(cachedData.loading);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepository | null>(null);
   const [selectedAction, setSelectedAction] = useState<'create' | 'edit' | 'close' | null>(null);
   const [existingWishlists, setExistingWishlists] = useState<Record<string, { issueUrl: string; issueNumber: number; isApproved?: boolean }>>({});
@@ -130,7 +163,18 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
   ];
 
   useEffect(() => {
-    // Check for auth callback first
+    // If we have server-provided repos, cache them for future visits
+    if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined') {
+      sessionStorage.setItem('github_repositories', JSON.stringify(initialRepositories));
+      sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
+    }
+    
+    // If we have cached repos, check for existing wishlists
+    if (repositories.length > 0 && !loadingRepos) {
+      checkExistingWishlists(repositories.map((r: GitHubRepository) => r.html_url));
+    }
+    
+    // Check for auth callback
     const urlParams = new URLSearchParams(window.location.search);
     const authStatus = urlParams.get('auth');
     const error = urlParams.get('error');
@@ -141,12 +185,14 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
         const basePath = getBasePath();
         window.history.replaceState({}, '', `${basePath}maintainers`);
       }
-      // Check if user is authenticated
-      checkUserSession();
+      // Only check user session if we don't have initial user data
+      if (!initialUser) {
+        checkUserSession();
+      }
     } else if (error) {
       setError(`Authentication failed: ${error.replace('_', ' ')}`);
-    } else {
-      // No auth callback, just check if user is logged in
+    } else if (!initialUser && repositories.length === 0) {
+      // No initial data and no cache - need to check session
       checkUserSession();
     }
   }, []);
@@ -161,6 +207,26 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
 
   const checkUserSession = async () => {
     try {
+      // Check if we already have repositories loaded (from cache initialization)
+      // If so, don't show loading state - just verify session in background
+      const alreadyHasRepos = repositories.length > 0;
+      
+      if (alreadyHasRepos) {
+        // Verify session in background without showing loading
+        fetch(getApiPath('/api/auth/session'))
+          .then(response => response.ok ? response.json() : null)
+          .then(data => {
+            if (data) {
+              setUser(data.user);
+              // Optionally refresh repos in background
+              fetchUserRepositories();
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      
+      // No repos yet - need to fetch, show loading
       setLoadingRepos(true);
       const response = await fetch(getApiPath('/api/auth/session'));
       
@@ -189,6 +255,10 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
         const data = await response.json();
         const repos = data.repositories || [];
         setRepositories(repos);
+        
+        // Cache repositories in sessionStorage
+        sessionStorage.setItem('github_repositories', JSON.stringify(repos));
+        sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
         
         // Check for existing wishlists for these repositories
         if (repos.length > 0) {
@@ -703,8 +773,8 @@ ${wishlistData.additionalNotes || 'None provided'}
       );
     }
 
-    // Loading repositories
-    if (loadingRepos) {
+    // Loading repositories - only show if actually loading AND no repos yet
+    if (loadingRepos && repositories.length === 0) {
       return (
         <div className="max-w-4xl mx-auto">
           <div className="bg-white p-8 rounded-lg shadow-sm border text-center">
