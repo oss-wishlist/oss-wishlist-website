@@ -50,6 +50,15 @@ All payments are processed directly through third-party platforms (GitHub Sponso
 
 Payment is made in advance to practitioners once a wishlist fulfillment has been finalized and scheduled. Each payment covers a one-time, single-service engagement. Follow-up work beyond the initial scope is out of scope for this initiative.
 
+## Tax Implications
+
+**Important:** Sponsorship payments may have tax implications for both practitioners and maintainers depending on your jurisdiction. 
+
+- **Practitioners:** Payments received through GitHub Sponsors, Open Collective, or similar platforms may be considered taxable income. You are responsible for understanding and complying with tax reporting requirements in your jurisdiction.
+- **Maintainers:** Receiving sponsored services may also have tax implications in some jurisdictions. 
+
+OSS Wishlist does not provide tax advice. We strongly recommend consulting with a qualified tax professional to understand your obligations regarding sponsorship payments and received services.
+
 ## Privacy
 
 For information about how we collect and use your data, please see our [Privacy Policy](/oss-wishlist-website/privacy-policy).

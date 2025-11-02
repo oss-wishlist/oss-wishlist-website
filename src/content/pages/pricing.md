@@ -21,7 +21,7 @@ This is not a company. It's a collaborative space where maintainers, practitione
 
 Each pricing tier represents a **complete, quality engagement**. The differences in pricing reflect the **human time investment, project and service complexity**. 
 
-**All services are guided by detailed rubrics and quality standards documented in our [Practitioner Playbooks](/oss-wishlist-website/playbooks)**. These playbooks outline deliverables, success criteria, and assessment frameworks for each service.  
+**All services are guided by detailed rubrics and quality standards documented in our [Practitioner Playbooks](/oss-wishlist-website/catalog)**. These playbooks outline deliverables, success criteria, and assessment frameworks for each service.  
 
 ### Pro Bono & Community Support
 

@@ -19,8 +19,9 @@ export function getPriceForService(
   return typeof value === 'number' ? value : null;
 }
 
-export function formatPrice(value: number | null): string {
+export function formatPrice(value: number | null, includeUSD: boolean = true): string {
   if (value === null) return 'Varies';
   // USD formatting
-  return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  const formattedValue = `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  return includeUSD ? `${formattedValue} USD` : formattedValue;
 }

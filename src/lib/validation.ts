@@ -32,7 +32,10 @@ export const wishlistFormDataSchema = z.object({
   
   maintainer: z.string().min(1, 'Maintainer is required'),
   
-  services: z.array(z.string()).min(1, 'At least one service must be selected'),
+  services: z
+    .array(z.string())
+    .min(1, 'At least one service must be selected')
+    .max(3, 'You can select up to 3 services'),
 
   // New: Project size selection for pricing context
   projectSize: z.enum(['small', 'medium', 'large'], {

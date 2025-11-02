@@ -173,8 +173,8 @@ const { Content } = await item.render();
 The `playbooks` collection uses a Git submodule:
 - **Location**: `src/content/playbooks-external/`
 - **Repo**: https://github.com/oss-wishlist/wishlist-playbooks
-- **Sync**: Run `npm run sync-playbooks` to update
-- **Files**: Synced to `src/content/playbooks/` with frontmatter added
+- **Sync**: Use regular git submodule commands to pull updates (no local copy/sync script)
+- **Files**: Rendered directly from `src/content/playbooks-external/` (no local duplication)
 
 **Important**: When cloning fresh:
 ```bash

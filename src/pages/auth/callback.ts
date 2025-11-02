@@ -144,8 +144,11 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     
     // Set session cookie using Astro's API
     const maxAge = 60 * 60 * 24; // 24 hours
+    const basePath = import.meta.env.BASE_URL || '/';
+    const cookiePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+    
     cookies.set('github_session', sessionToken, {
-      path: '/',
+      path: cookiePath || '/',
       maxAge: maxAge,
       httpOnly: true,
       sameSite: 'lax',
@@ -165,7 +168,6 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     
     // Redirect to the original page or maintainers
     // If returnTo already has the base path, use it as-is, otherwise add base path
-    const basePath = import.meta.env.BASE_URL || '/';
     const redirectPath = finalReturnTo.startsWith(basePath) || finalReturnTo.startsWith('/oss-wishlist-website/')
       ? finalReturnTo 
       : withBasePath(finalReturnTo);

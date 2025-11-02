@@ -1,5 +1,5 @@
 ---
-name: "Example Company 2"
+name: "Your name here"
 type: "foundation"
 description: "A technology foundation that supports the development, improvement and maintenance of open digital infrastructure with a focus on sustainability, project governance, and ecosystem growth."
 website: "https://example2.org"

@@ -20,12 +20,14 @@ const services = defineCollection({
       'hosting',
       'tool'
     ]),
-    tags: z.array(z.string()),
-    featured: z.boolean().default(false),
     available: z.boolean().default(true),
     unavailable_reason: z.string().optional(),
-    prerequisites: z.string().optional(),
-    deliverables: z.array(z.string()).optional(),
+  // Impact statement for sponsors – short, concrete motivation
+  impact: z.string().optional(),
+    // Link to playbook folder(s) in the playbooks-external collection
+    // Example: playbook: 'funding-strategy' maps to 'playbooks-external/funding-strategy/playbook.md'
+    playbook: z.string().optional(),
+    playbooks: z.array(z.string()).optional(),
     // Pricing by project size
     pricing: z.object({
       small: z.number().nullable().optional(),
@@ -93,7 +95,7 @@ const practitioners = defineCollection({
     bio: z.string(),
     avatar_url: z.string().url().optional(),
     location: z.string().optional(),
-    languages: z.array(z.string()).optional(),
+  languages: z.array(z.string()).min(1, { message: 'Please specify at least one language spoken.' }),
     
     // Contact & Social
     email: z.string().email().optional(),
@@ -103,18 +105,15 @@ const practitioners = defineCollection({
     mastodon: z.string().optional(),
     linkedin: z.string().optional(),
     
-    // Expertise
-    specialties: z.array(z.string()),
-    
-    // Availability & Pricing
-    availability: z.enum(['available', 'limited', 'unavailable']).default('available'),
-    accepts_pro_bono: z.boolean().default(false),
-    pro_bono_criteria: z.string().optional(),
-    pro_bono_capacity_per_month: z.number().optional(), // How many pro bono contracts per month
-    
-    // GitHub Sponsors Tiers (service name -> one-time price in USD)
-    // e.g., { "Community Building Strategy": 5000, "Security Audit": 8000 }
-    sponsor_tiers: z.record(z.string(), z.number()).optional(),
+
+  // Services offered (must match service slugs)
+  services: z.array(z.string()),
+
+  // Availability & Pricing
+  availability: z.enum(['available', 'limited', 'unavailable']).default('available'),
+  accepts_pro_bono: z.boolean().default(false),
+  pro_bono_criteria: z.string().optional(),
+  pro_bono_capacity_per_month: z.number().optional(), // How many pro bono contracts per month
     
     // Experience & Credentials
     years_experience: z.number().optional(),
@@ -196,17 +195,6 @@ const pages = defineCollection({
   }),
 });
 
-const playbooks = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    service: z.string(), // Maps to service slug (e.g., 'governance-setup')
-    github_folder: z.string(), // Folder name in wishlist-playbooks repo
-    order: z.number().optional(),
-  }),
-});
-
 const playbooksExternal = defineCollection({
   type: 'content',
   schema: z.object({
@@ -222,6 +210,5 @@ export const collections = {
   guardians,
   faq,
   pages,
-  playbooks,
   'playbooks-external': playbooksExternal,
 };

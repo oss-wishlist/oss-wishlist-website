@@ -197,8 +197,10 @@ export function formatIssueFormBody(data: {
   }
   
   body += `### Services Requested\n\n`;
-  if (data.services.length > 0) {
-    for (const service of data.services) {
+  // Enforce maximum of 3 services when formatting the issue body
+  const servicesCapped = (data.services || []).slice(0, 3);
+  if (servicesCapped.length > 0) {
+    for (const service of servicesCapped) {
       body += `- [x] ${service}\n`;
     }
   } else {

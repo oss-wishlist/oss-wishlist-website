@@ -126,6 +126,43 @@ The placeholder page displays:
 - **GitHub OAuth** - Authentication
 - **Markdown** - Content management
 
+## 📒 Playbooks (submodule)
+
+Playbooks are maintained in an external repository and included here as a Git submodule.
+
+- Location in this repo: `src/content/playbooks-external/`
+- Source repo: https://github.com/oss-wishlist/wishlist-playbooks
+- We don’t duplicate playbooks into a local content folder; the submodule is the single source of truth
+
+### Initialize or update the submodule
+
+```bash
+git submodule init
+git submodule update
+```
+
+### Linking playbooks from a Service
+
+In a service frontmatter (e.g., `src/content/services/funding-strategy.md`), link to the playbook folder name:
+
+```yaml
+---
+title: Funding Strategy
+playbook: funding-strategy      # or use `playbooks: ["a", "b"]` for multiple
+---
+```
+
+This maps to `src/content/playbooks-external/funding-strategy/playbook.md`.
+
+### Adding or editing a playbook
+
+Playbooks live in the external repo. To add or improve one:
+1. Open the source repo: https://github.com/oss-wishlist/wishlist-playbooks
+2. Add a new folder (kebab-case) and a `playbook.md` inside
+3. Submit a PR to that repo
+
+Note: Manual edits to submodule files should be done in the source repo via PR; changes made locally in the submodule will be overwritten on update.
+
 ## � Key Files & Folders
 
 ```

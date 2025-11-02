@@ -1,4 +1,6 @@
 import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
+import { getPriceForService, formatPrice } from '../../lib/pricing';
 import { sendAdminEmail } from '../../lib/mail';
 import { withBasePath } from '../../lib/paths';
 
@@ -8,8 +10,9 @@ export const POST: APIRoute = async ({ request, redirect }) => {
   try {
     const formData = await request.formData();
     
-    // Get all selected services from checkboxes
-    const fundedServices = formData.getAll('funded-services');
+  // Get all selected services from checkboxes (per-service in fulfill.astro)
+  const fundedServices = formData.getAll('services-to-fund') as string[];
+  const fundedServiceSlugs = formData.getAll('funded-slugs') as string[];
     
     // Get project name and issue details
     const projectName = formData.get('project-name') as string;
@@ -17,38 +20,108 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     const githubUrl = formData.get('github-url') as string;
     const maintainer = formData.get('maintainer') as string;
     
+    // Gather per-service selections by parsing form field names
+    const perServiceSelections: Record<string, {
+      selection?: 'no-preference' | 'provide-own' | 'practitioner' | 'employee';
+      practitionerSlug?: string;
+      customPractitioner?: string | null;
+      useEmployee?: boolean;
+    }> = {};
+
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith('practitioner-')) {
+        const slug = key.replace('practitioner-', '');
+        const v = String(value);
+        perServiceSelections[slug] = perServiceSelections[slug] || {};
+        if (v === 'no-preference') {
+          perServiceSelections[slug].selection = 'no-preference';
+        } else if (v === 'provide-own') {
+          perServiceSelections[slug].selection = 'provide-own';
+        } else {
+          perServiceSelections[slug].selection = 'practitioner';
+          perServiceSelections[slug].practitionerSlug = v;
+        }
+      }
+      if (key.startsWith('use-employee-')) {
+        const slug = key.replace('use-employee-', '');
+        perServiceSelections[slug] = perServiceSelections[slug] || {};
+        perServiceSelections[slug].useEmployee = true;
+        perServiceSelections[slug].selection = 'employee';
+      }
+      if (key.startsWith('custom-practitioner-')) {
+        const slug = key.replace('custom-practitioner-', '');
+        perServiceSelections[slug] = perServiceSelections[slug] || {};
+        perServiceSelections[slug].customPractitioner = String(value);
+      }
+    }
+
+    // Resolve service titles from slugs for nicer email output
+    const services = await getCollection('services');
+    const serviceTitleBySlug = services.reduce<Record<string, string>>((acc, svc: any) => {
+      if (svc && (svc as any).slug) acc[(svc as any).slug] = svc.data?.title || (svc as any).slug;
+      return acc;
+    }, {});
+
+    const projectSizeRaw = (formData.get('project-size') as string) || 'medium';
+    const projectSize = (['small','medium','large'].includes(projectSizeRaw) ? projectSizeRaw : 'medium') as 'small'|'medium'|'large';
+
     const fulfillmentData = {
       projectName: projectName,
       issueNumber: issueNumber,
       githubUrl: githubUrl,
       maintainer: maintainer,
       fundedServices: fundedServices,
+      fundedServiceSlugs,
+      perServiceSelections,
       additionalItems: formData.get('additional-items'),
-      practitionerChoice: formData.get('practitioner-choice'),
-      selectedPractitioner: formData.get('selected-practitioner'),
-      customPractitionerName: formData.get('custom-practitioner-name'),
-      processAgreement: formData.get('process-agreement'),
+      includeSponsorship: formData.get('include-sponsorship') === 'yes',
+      processAgreement: !!formData.get('process-agreement'),
       timeline: formData.get('timeline'),
       contactPerson: formData.get('contact-person'),
       email: formData.get('email'),
       company: formData.get('company'),
       reason: formData.get('reason'),
+      projectSize,
       timestamp: new Date().toISOString()
     };
 
     // Create email subject
     const emailSubject = `🎉 New Wishlist Fulfillment Request: ${projectName}`;
     
-    // Create email content
-    const emailBody = `
-# New OSS Wishlist Fulfillment Request Received
+    // Build per-service section with selections
+    const perServiceLines: string[] = [];
+    // Prefer slugs from checked services if provided; otherwise include all
+    const slugsToReport = fundedServiceSlugs.length > 0 ? fundedServiceSlugs : Object.keys(perServiceSelections);
+    if (slugsToReport.length > 0) {
+      for (const slug of slugsToReport) {
+        const title = serviceTitleBySlug[slug] || slug;
+        const sel = perServiceSelections[slug];
+        let choice: string = sel && sel.selection ? '' : 'No selection provided';
+        if (sel && sel.selection === 'practitioner' && sel.practitionerSlug) {
+          choice = `Specific practitioner: ${sel.practitionerSlug}`;
+        } else if (sel && sel.selection === 'provide-own') {
+          choice = 'Provide own practitioner';
+        } else if (sel && sel.selection === 'employee') {
+          choice = 'Use own employee practitioner';
+        } else if (sel && sel.selection === 'no-preference') {
+          choice = 'No preference';
+        }
+        const custom = sel && sel.customPractitioner ? ` (Custom details: ${sel.customPractitioner})` : '';
+        const priceVal = getPriceForService(slug, fulfillmentData.projectSize, services as any);
+        const priceText = priceVal ? formatPrice(priceVal) : 'Custom pricing';
+        perServiceLines.push(`- ${title}: ${choice}${custom} — Price: ${priceText}`);
+      }
+    } else {
+      // Only names from fundedServices list
+      for (const name of fundedServices) {
+        // We don't have slugs here, so price unknown
+        perServiceLines.push(`- ${name}`);
+      }
+    }
 
-## WISHLIST DETAILS
-- **Project:** ${projectName}
-- **Issue Number:** #${issueNumber}
-- **GitHub URL:** ${githubUrl}
-- **Maintainer:** @${maintainer}
-- **Timeline:** ${fulfillmentData.timeline}
+    // Create email content
+  const emailBody = `
+# New OSS Wishlist Fulfillment Request Received
 
 ## CONTACT INFORMATION
 - **Name:** ${fulfillmentData.contactPerson}
@@ -56,21 +129,22 @@ export const POST: APIRoute = async ({ request, redirect }) => {
 - **Company:** ${fulfillmentData.company || 'Not specified'}
 
 ## SELECTED SERVICES
-${fundedServices.length > 0 ? fundedServices.map(service => `- ${service}`).join('\n') : '- None selected'}
+${perServiceLines.length > 0 ? perServiceLines.join('\n') : '- None selected'}
+
+**Project size:** ${fulfillmentData.projectSize.charAt(0).toUpperCase() + fulfillmentData.projectSize.slice(1)}
+${fulfillmentData.timeline ? `\n**Timeline:** ${fulfillmentData.timeline}` : ''}
 
 ## ADDITIONAL ITEMS
 ${fulfillmentData.additionalItems || 'None specified'}
 
-## EXPERT SELECTION
-- **Choice:** ${fulfillmentData.practitionerChoice}
-${fulfillmentData.practitionerChoice === 'select' ? `- **Selected Practitioner:** ${fulfillmentData.selectedPractitioner}` : ''}
-${fulfillmentData.practitionerChoice === 'provide' ? `- **Custom Practitioner:** ${fulfillmentData.customPractitionerName}` : ''}
+## HONORARIUM (Maintainer)
+${fulfillmentData.includeSponsorship ? '✅ Include one-time honorarium' : '—'}
 
 ## REASON FOR FULFILLMENT
 ${fulfillmentData.reason}
 
 ## PROCESS AGREEMENT
-${fulfillmentData.processAgreement ? '✅ Agreed' : '❌ Not agreed'}
+${fulfillmentData.processAgreement ? '✅ Agreed: Employee/practitioner will complete the service using OSS Wishlist process' : '❌ Not agreed'}
 
 ---
 *Submitted: ${new Date(fulfillmentData.timestamp).toLocaleString()}*

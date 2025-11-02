@@ -5,6 +5,7 @@ import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
 
 const allPractitioners = await getCollection('practitioners');
+const allServices = await getCollection('services');
 
 export const prerender = false;
 
@@ -67,32 +68,22 @@ if (wishlistSlug) {
           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
           id="serviceFilter"
         >
-          <option value="">All Services</option>
-          <option value="governance">Governance</option>
-          <option value="security">Security Audit</option>
-          <option value="succession">Succession Planning</option>
-          <option value="maintainer-relief">Maintainer Relief</option>
-          <option value="funding">Funding Strategy</option>
-        </select>
-        
-        <!-- Technology Filter -->
-        <select 
-          class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
-          id="technologyFilter"
-        >
-          <option value="">All Technologies</option>
-          <option value="javascript">JavaScript</option>
-          <option value="python">Python</option>
-          <option value="rust">Rust</option>
-          <option value="java">Java</option>
-          <option value="go">Go</option>
+          <option value="" selected>All Services</option>
+          {allServices.map(svc => (
+            <option value={(svc as any).slug}>{svc.data.title}</option>
+          ))}
         </select>
       </div>
 
       <!-- Practitioners Grid -->
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div id="practitionersGrid" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {allPractitioners.map((practitioner) => (
-          <div key={practitioner.slug} class="bg-white rounded-lg shadow-sm border p-6">
+          <div 
+            key={practitioner.slug} 
+            class="bg-white rounded-lg shadow-sm border p-6 practitioner-card"
+            data-name={`${practitioner.data.name} ${practitioner.data.title || ''} ${practitioner.data.company || ''} ${practitioner.data.bio || ''}`.toLowerCase()}
+            data-services={(practitioner.data.services || []).join(',')}
+          >
             <div class="flex items-start space-x-4 mb-4">
               {practitioner.data.avatar_url && (
                 <img 
@@ -177,3 +168,39 @@ if (wishlistSlug) {
     </div>
   </div>
 </Layout>
+<script>
+  const searchInput = document.getElementById('practitionerSearch');
+  const serviceFilter = document.getElementById('serviceFilter');
+  const cards = Array.from(document.querySelectorAll('.practitioner-card'));
+
+  function applyFilters() {
+    const q = (searchInput.value || '').toLowerCase().trim();
+    const service = (serviceFilter.value || '').trim();
+
+    cards.forEach(card => {
+      const nameBlob = card.getAttribute('data-name') || '';
+      const services = (card.getAttribute('data-services') || '').split(',').filter(Boolean);
+
+      const matchesSearch = q === '' || nameBlob.includes(q);
+      const matchesService = service === '' || services.includes(service);
+
+      card.style.display = (matchesSearch && matchesService) ? '' : 'none';
+    });
+  }
+
+  searchInput?.addEventListener('input', applyFilters);
+  serviceFilter?.addEventListener('change', applyFilters);
+  // Initialize default selection: if URL has ?service=slug, use it; otherwise default to "All Services"
+  (function initServiceFilterDefault() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const serviceFromQuery = params.get('service');
+      if (serviceFromQuery && serviceFilter?.querySelector(`option[value="${serviceFromQuery}"]`)) {
+        serviceFilter.value = serviceFromQuery;
+      } else if (serviceFilter) {
+        serviceFilter.value = '';
+      }
+    } catch {}
+    applyFilters();
+  })();
+</script>

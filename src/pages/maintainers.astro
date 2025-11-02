@@ -2,8 +2,9 @@
 import Layout from '../components/Layout.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import WishlistForm from '../components/WishlistForms.tsx';
-import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
 import { getCollection } from 'astro:content';
+import { getBasePath } from '../lib/paths';
+import { fetchUserRepositories } from '../lib/github-oauth';
 
 const services = await getCollection('services');
 const maintainerServices = services.filter(service => 
@@ -15,12 +16,45 @@ const servicesData = services.map(service => ({
   id: service.slug,
   title: service.data.title,
   description: service.data.description,
-  tags: service.data.tags,
   slug: service.slug
 }));
 
 // Get user from middleware
 const user = Astro.locals.user;
+
+// Handle authentication redirect server-side to prevent flash
+if (!user) {
+  const basePath = getBasePath();
+  const currentPath = Astro.url.pathname;
+  const searchParams = Astro.url.search;
+  
+  // Strip the base path if it exists to get the relative path
+  let relativePath = currentPath.startsWith(basePath.slice(0, -1)) 
+    ? currentPath.slice(basePath.slice(0, -1).length)
+    : currentPath;
+  
+  // Ensure relativePath starts with /
+  if (relativePath && !relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath;
+  }
+  if (!relativePath) {
+    relativePath = '/';
+  }
+  
+  // Redirect to login page with return URL
+  const fullReturnPath = relativePath + searchParams;
+  const returnTo = encodeURIComponent(fullReturnPath);
+  return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
+}
+
+// Fetch user's repositories server-side to eliminate client-side loading
+let userRepositories = [];
+try {
+  userRepositories = await fetchUserRepositories(user.login);
+} catch (error) {
+  console.error('Error fetching repositories:', error);
+  // Continue with empty array - component will handle gracefully
+}
 ---
 
 <Layout title="Services for Open Source Maintainers - OSS Wishlist" description="Practitioner services to help open source maintainers scale projects, build communities, and create sustainable funding.">
@@ -44,10 +78,8 @@ const user = Astro.locals.user;
   <!-- Wishlist Form Section -->
   <section id="wishlist-form-section" class="py-4 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Wishlist Form Component with Auth -->
-      <AuthenticatedForm client:load user={user}>
-        <WishlistForm client:load services={servicesData} />
-      </AuthenticatedForm>
+      <!-- Wishlist Form Component (user already authenticated, repos fetched server-side) -->
+      <WishlistForm client:load services={servicesData} user={user} initialRepositories={userRepositories} />
     </div>
   </section>
 

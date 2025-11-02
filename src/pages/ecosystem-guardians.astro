@@ -43,80 +43,31 @@ const sortedGuardians = guardians.sort((a, b) => a.data.name.localeCompare(b.dat
                 <img 
                   src={guardian.data.logo_url} 
                   alt={guardian.data.name}
-                  class="w-12 h-12 object-contain"
+                  class="w-12 h-12 object-contain grayscale"
                 />
               )}
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 text-lg mb-1">{guardian.data.name}</h3>
-                <p class="text-sm text-gray-600 capitalize">{guardian.data.type}</p>
+                <h3 class="font-semibold text-gray-800 text-lg mb-1">{guardian.data.name}</h3>
               </div>
             </div>
-            
-            <p class="text-sm text-gray-700 mb-4 line-clamp-2">{guardian.data.description}</p>
-            
-            <div class="flex flex-wrap gap-1 mb-4">
-              {guardian.data.focus_areas.slice(0, 2).map((area) => (
-                <span key={area} class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                  {area}
-                </span>
-              ))}
+            <p class="text-sm text-gray-600 mb-4 line-clamp-2">{guardian.data.description}</p>
+            <div class="mb-4">
+              {guardian.data.social_media?.linkedin && (
+                <a href={`https://linkedin.com/company/${guardian.data.social_media.linkedin}`} target="_blank" rel="noopener noreferrer" class="inline-block text-gray-500 hover:text-gray-700 text-xs px-2 py-1 rounded">
+                  LinkedIn
+                </a>
+              )}
             </div>
-            
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
-                {guardian.data.verified && (
-                  <div class="flex items-center text-gray-700 text-xs">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                    </svg>
-                    Verified
-                  </div>
-                )}
+                <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                  Wishes fulfilled: {guardian.data.projects_supported ?? 0}
+                </span>
               </div>
-              <a 
-                href={`${basePath}guardians/${guardian.slug}`}
-                class="text-gray-600 hover:text-gray-700 text-sm font-medium flex items-center"
-              >
-                View
-                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </a>
             </div>
           </div>
         ))}
       </div>
     </section>
 
-  <!-- Impact Stats -->
-  <section class="py-16 bg-gray-900 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold mb-4">Sponsor Impact</h2>
-        <p class="text-xl text-gray-300">Every contribution makes open source more sustainable</p>
-      </div>
-      
-      <div class="grid md:grid-cols-4 gap-8">
-        <div class="text-center">
-          <div class="text-4xl font-bold text-white mb-2">$0</div>
-          <p class="text-gray-300">Wishes funded</p>
-        </div>
-        
-        <div class="text-center">
-          <div class="text-4xl font-bold text-white mb-2">0</div>
-          <p class="text-gray-300">Projects supported</p>
-        </div>
-        
-        <div class="text-center">
-          <div class="text-4xl font-bold text-gray-400 mb-2">0</div>
-          <p class="text-gray-300">Practitioner hours delivered</p>
-        </div>
-        
-        <div class="text-center">
-          <div class="text-4xl font-bold text-gray-400 mb-2">0</div>
-          <p class="text-gray-300">Active sponsors</p>
-        </div>
-      </div>
-    </div>
-  </section>
 </Layout>

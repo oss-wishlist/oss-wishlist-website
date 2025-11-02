@@ -15,8 +15,8 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
 
-    // Verify the session signature
-    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
+  // Verify the session signature
+  const sessionSecret = import.meta.env.OAUTH_STATE_SECRET || process.env.OAUTH_STATE_SECRET;
     const session = verifySession(sessionCookie.value, sessionSecret);
     
     if (!session || !session.authenticated) {
@@ -28,19 +28,11 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
     
-    // Check if session has accessToken (new format)
-    if (!session.accessToken) {
-      // Old session format without accessToken - clear it and require re-auth
-      cookies.delete('github_session', { path: '/' });
-      return new Response(JSON.stringify({ error: 'Session expired - please re-authenticate' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    // Note: accessToken is optional here since we only need the username and hit a public API
 
     // Fetch public repositories from GitHub API using the username
     // This uses the public API endpoint and doesn't require repo OAuth scopes
-    const repositories = await fetchUserRepositories(session.user.login);
+  const repositories = await fetchUserRepositories(session.user.login);
 
     return new Response(JSON.stringify({ 
       repositories,

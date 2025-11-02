@@ -1,7 +1,7 @@
 ---
-name: "Example Company 1"
+name: "Your company name here"
 type: "foundation"
-description: "A technology foundation focused on supporting open source security initiatives and helping projects implement best practices for secure software development."
+description: "When you sponsor, your company or name will be added to the main page as a supporter of the open source ecosystem. Support open source sustainability and be recognized for your impact."
 website: "https://example1.org"
 location: "Global"
 

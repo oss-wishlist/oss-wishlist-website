@@ -49,6 +49,8 @@ interface Service {
 
 interface WishlistFormProps {
   services?: Service[];
+  user?: GitHubUser | null;
+  initialRepositories?: GitHubRepository[];
 }
 
 interface GitHubUser {
@@ -71,10 +73,42 @@ interface GitHubRepository {
   language: string | null;
 }
 
-const WishlistForm = ({ services = [] }: WishlistFormProps) => {
-  const [user, setUser] = useState<GitHubUser | null>(null);
-  const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
-  const [loadingRepos, setLoadingRepos] = useState(false);
+const WishlistForm = ({ services = [], user: initialUser = null, initialRepositories = [] }: WishlistFormProps) => {
+  const MAX_WISHES = 3;
+  
+  // Check cache only if we don't have server-provided data
+  const initializeFromCache = () => {
+    // If we have server-provided repos, use those
+    if (initialRepositories && initialRepositories.length > 0) {
+      return { repos: initialRepositories, loading: false };
+    }
+    
+    // Otherwise check cache
+    if (typeof window === 'undefined') return { repos: [], loading: true };
+    
+    const cachedRepos = sessionStorage.getItem('github_repositories');
+    const cacheTimestamp = sessionStorage.getItem('github_repositories_timestamp');
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    
+    if (cachedRepos && cacheTimestamp) {
+      const age = Date.now() - parseInt(cacheTimestamp);
+      if (age < CACHE_DURATION) {
+        try {
+          const parsedRepos = JSON.parse(cachedRepos);
+          return { repos: parsedRepos, loading: false };
+        } catch (e) {
+          return { repos: [], loading: true };
+        }
+      }
+    }
+    return { repos: [], loading: true };
+  };
+  
+  const cachedData = initializeFromCache();
+  
+  const [user, setUser] = useState<GitHubUser | null>(initialUser);
+  const [repositories, setRepositories] = useState<GitHubRepository[]>(cachedData.repos);
+  const [loadingRepos, setLoadingRepos] = useState(cachedData.loading);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepository | null>(null);
   const [selectedAction, setSelectedAction] = useState<'create' | 'edit' | 'close' | null>(null);
   const [existingWishlists, setExistingWishlists] = useState<Record<string, { issueUrl: string; issueNumber: number; isApproved?: boolean }>>({});
@@ -129,7 +163,18 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
   ];
 
   useEffect(() => {
-    // Check for auth callback first
+    // If we have server-provided repos, cache them for future visits
+    if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined') {
+      sessionStorage.setItem('github_repositories', JSON.stringify(initialRepositories));
+      sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
+    }
+    
+    // If we have cached repos, check for existing wishlists
+    if (repositories.length > 0 && !loadingRepos) {
+      checkExistingWishlists(repositories.map((r: GitHubRepository) => r.html_url));
+    }
+    
+    // Check for auth callback
     const urlParams = new URLSearchParams(window.location.search);
     const authStatus = urlParams.get('auth');
     const error = urlParams.get('error');
@@ -140,12 +185,14 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
         const basePath = getBasePath();
         window.history.replaceState({}, '', `${basePath}maintainers`);
       }
-      // Check if user is authenticated
-      checkUserSession();
+      // Only check user session if we don't have initial user data
+      if (!initialUser) {
+        checkUserSession();
+      }
     } else if (error) {
       setError(`Authentication failed: ${error.replace('_', ' ')}`);
-    } else {
-      // No auth callback, just check if user is logged in
+    } else if (!initialUser && repositories.length === 0) {
+      // No initial data and no cache - need to check session
       checkUserSession();
     }
   }, []);
@@ -160,6 +207,26 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
 
   const checkUserSession = async () => {
     try {
+      // Check if we already have repositories loaded (from cache initialization)
+      // If so, don't show loading state - just verify session in background
+      const alreadyHasRepos = repositories.length > 0;
+      
+      if (alreadyHasRepos) {
+        // Verify session in background without showing loading
+        fetch(getApiPath('/api/auth/session'))
+          .then(response => response.ok ? response.json() : null)
+          .then(data => {
+            if (data) {
+              setUser(data.user);
+              // Optionally refresh repos in background
+              fetchUserRepositories();
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      
+      // No repos yet - need to fetch, show loading
       setLoadingRepos(true);
       const response = await fetch(getApiPath('/api/auth/session'));
       
@@ -188,6 +255,10 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
         const data = await response.json();
         const repos = data.repositories || [];
         setRepositories(repos);
+        
+        // Cache repositories in sessionStorage
+        sessionStorage.setItem('github_repositories', JSON.stringify(repos));
+        sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
         
         // Check for existing wishlists for these repositories
         if (repos.length > 0) {
@@ -255,9 +326,16 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
       
       const cachedData = await response.json();
       
+      // Enforce max wishes when loading existing data
+      let incomingWishes: string[] = cachedData.wishes || [];
+      if (Array.isArray(incomingWishes) && incomingWishes.length > MAX_WISHES) {
+        incomingWishes = incomingWishes.slice(0, MAX_WISHES);
+        setError(`This wishlist currently has more than ${MAX_WISHES} wishes. We trimmed the selection to the first ${MAX_WISHES}.`);
+      }
+
       const updatedData: any = {
         projectTitle: cachedData.projectTitle || '',
-        selectedServices: cachedData.wishes || [],
+        selectedServices: incomingWishes,
         urgency: cachedData.urgency || 'medium',
         projectSize: cachedData.projectSize || 'medium',
         timeline: cachedData.timeline || '',
@@ -269,7 +347,7 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
       };
       
       // Set original services for comparison
-      setOriginalServices(cachedData.wishes || []);
+      setOriginalServices(incomingWishes);
       
       // Update all form data directly (not using prev callback)
       setWishlistData(updatedData);
@@ -358,12 +436,20 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
   };
 
   const handleServiceToggle = (serviceId: string) => {
-    setWishlistData(prev => ({
-      ...prev,
-      selectedServices: prev.selectedServices.includes(serviceId)
-        ? prev.selectedServices.filter(id => id !== serviceId)
-        : [...prev.selectedServices, serviceId]
-    }));
+    setError('');
+    setWishlistData(prev => {
+      const isSelected = prev.selectedServices.includes(serviceId);
+      if (!isSelected && prev.selectedServices.length >= MAX_WISHES) {
+        setError(`You can select up to ${MAX_WISHES} services.`);
+        return prev;
+      }
+      return {
+        ...prev,
+        selectedServices: isSelected
+          ? prev.selectedServices.filter(id => id !== serviceId)
+          : [...prev.selectedServices, serviceId]
+      };
+    });
   };
 
   const handleSubmitWishlist = async (e: React.FormEvent) => {
@@ -376,6 +462,11 @@ const WishlistForm = ({ services = [] }: WishlistFormProps) => {
     
     if (wishlistData.selectedServices.length === 0) {
       setError('Please select at least one service');
+      return;
+    }
+
+    if (wishlistData.selectedServices.length > MAX_WISHES) {
+      setError(`You can select up to ${MAX_WISHES} services.`);
       return;
     }
 
@@ -682,8 +773,8 @@ ${wishlistData.additionalNotes || 'None provided'}
       );
     }
 
-    // Loading repositories
-    if (loadingRepos) {
+    // Loading repositories - only show if actually loading AND no repos yet
+    if (loadingRepos && repositories.length === 0) {
       return (
         <div className="max-w-4xl mx-auto">
           <div className="bg-white p-8 rounded-lg shadow-sm border text-center">
@@ -1312,6 +1403,12 @@ ${wishlistData.additionalNotes || 'None provided'}
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Services Needed <span className="text-red-500">*</span>
             </h3>
+            <p className="text-sm mb-3">
+              <span className={`font-medium ${wishlistData.selectedServices.length >= MAX_WISHES ? 'text-red-700' : 'text-gray-600'}`}>
+                Select up to {MAX_WISHES} services
+              </span>
+              <span className="text-gray-500"> — {wishlistData.selectedServices.length} selected</span>
+            </p>
             {isEditingExisting && originalServices.length > 0 && (
               <p className="text-sm text-gray-600 mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
                 <span className="font-medium">Currently selected services</span> are highlighted. You can modify your selection below.
@@ -1320,6 +1417,7 @@ ${wishlistData.additionalNotes || 'None provided'}
             <div className="grid gap-4 md:grid-cols-2">
               {availableServices.map((service) => {
                 const isSelected = wishlistData.selectedServices.includes(service.id);
+                const reachedMax = wishlistData.selectedServices.length >= MAX_WISHES;
                 const wasOriginallySelected = originalServices.includes(service.id);
                 
                 return (
@@ -1329,7 +1427,9 @@ ${wishlistData.additionalNotes || 'None provided'}
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                       isSelected
                         ? 'border-gray-900 bg-gray-100'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : reachedMax
+                          ? 'border-gray-200 opacity-60 cursor-not-allowed'
+                          : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -1526,7 +1626,12 @@ ${wishlistData.additionalNotes || 'None provided'}
               </button>
               <button
                 type="submit"
-                disabled={loading || wishlistData.selectedServices.length === 0 || !wishlistData.projectTitle.trim()}
+                disabled={
+                  loading ||
+                  wishlistData.selectedServices.length === 0 ||
+                  wishlistData.selectedServices.length > MAX_WISHES ||
+                  !wishlistData.projectTitle.trim()
+                }
                 className="flex-1 px-8 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2 order-1 sm:order-2"
               >
                 {loading ? (

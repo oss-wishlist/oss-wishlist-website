@@ -7,6 +7,7 @@ import { GITHUB_CONFIG } from '../../config/github.js';
 import { wishlistSubmissionSchema, formatZodError } from '../../lib/validation.js';
 import { jsonSuccess, jsonError, ApiErrors } from '../../lib/api-response.js';
 import { formatIssueFormBody } from '../../lib/issue-form-parser.js';
+import { withBaseUrl } from '../../lib/paths.js';
 
 export const prerender = false;
 
@@ -124,13 +125,13 @@ export const POST: APIRoute = async ({ request }) => {
       }
       
       // Then, add a comment to notify about the update
-      const commentBody = `## 📝 Wishlist Updated
+  const commentBody = `## Wishlist Updated
 
 This wishlist has been updated.
 
-**Last Updated:** ${updateTimestamp}
+Last Updated: ${updateTimestamp}
 
-*Updated via [OSS Wishlist Platform](${import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com'})*`;
+Updated via [OSS Wishlist Platform](${import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com'})`;
 
       const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}/comments`, {
         method: 'POST',
@@ -213,7 +214,8 @@ This wishlist has been updated.
     
     // Add fulfillment link to the issue body if we have a predicted issue number
     if (nextIssueNumber) {
-      finalIssueBody += `\n\n---\n\n**🎯 Fulfill this wishlist:** ${origin}${basePath}fulfill?issue=${nextIssueNumber}`;
+      const fulfillUrl = withBaseUrl(`fulfill?issue=${nextIssueNumber}`, origin);
+      finalIssueBody += `\n\n---\n\nFulfill this wishlist: ${fulfillUrl}`;
     }
     
     const response = await fetch(GITHUB_CONFIG.API_ISSUES_URL, {

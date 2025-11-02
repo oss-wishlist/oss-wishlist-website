@@ -89,9 +89,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Get session
   const session = getSession(cookies);
   
+  // Backward-compatible user object for templates/components that expect `login`
+  const userForTemplates = session?.user
+    ? ({
+        ...session.user,
+        // Many pages/components check `user.login`; map it from our unified `username`
+        login: (session.user as any).login ?? session.user.username,
+      } as any)
+    : null;
+
   // Add session to locals for access in pages
-  locals.session = session;
-  locals.user = session?.user ?? null;
+  (locals as any).session = session 
+    ? ({ ...session, user: userForTemplates } as any)
+    : null;
+  (locals as any).user = userForTemplates;
   
   // Protect routes that require auth
   if (requiresAuth && !session) {

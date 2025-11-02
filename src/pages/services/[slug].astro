@@ -21,9 +21,58 @@ if (!service) {
   return Astro.redirect('/404');
 }
 
-// Find a related playbook (by service slug)
-const playbooks = await getCollection('playbooks');
-const relatedPlaybook = playbooks.find((pb) => pb.data.service === service.slug);
+// Load playbooks from submodule and resolve matches robustly
+const allPlaybooks = await getCollection('playbooks-external');
+
+// Helper to resolve a playbook entry by a folder hint
+function findPlaybookByFolder(folder: string) {
+  // Prefer an exact `folder/playbook` file if present
+  const exact = allPlaybooks.find((pb) => pb.slug === `${folder}/playbook`);
+  if (exact) return exact;
+  // Fallback: some entries may be published as `folder` or nested under `folder/...`
+  const direct = allPlaybooks.find((pb) => pb.slug === folder);
+  if (direct) return direct;
+  return allPlaybooks.find((pb) => pb.slug.startsWith(`${folder}/`));
+}
+
+// If the service frontmatter specifies playbook(s), use those; otherwise try to infer
+let playbookFolders: string[] = Array.isArray(service.data.playbooks)
+  ? service.data.playbooks
+  : (service.data.playbook ? [service.data.playbook] : []);
+
+if (playbookFolders.length === 0) {
+  // Try to infer via reverse link (playbook frontmatter `service`) or a static mapping
+  const linked = allPlaybooks.find((pb) => pb.data?.service === service.slug);
+  if (linked) {
+    // Derive folder from slug (portion before the first slash)
+    playbookFolders = [linked.slug.split('/')[0]];
+  } else {
+    // Last-resort static map for known legacy slugs
+    const serviceToPlaybook: Record<string, string> = {
+      'dependency-security-audit': 'security-audit',
+      'governance-setup': 'project-and-community-governance',
+      'leadership-onboarding': 'succession-planning',
+      'funding-strategy': 'funding-strategy',
+      'maintainer-task-contributor': 'maintainer-relief',
+      'developer-relations-strategy': 'devrel-strategy',
+    };
+    if (serviceToPlaybook[service.slug]) {
+      playbookFolders = [serviceToPlaybook[service.slug]];
+    }
+  }
+}
+
+const relatedPlaybooks = playbookFolders
+  .map((folder) => findPlaybookByFolder(folder))
+  .filter(Boolean);
+
+// Pre-render playbook content so we can render without inline await in template
+const relatedWithContent = await Promise.all(
+  relatedPlaybooks.map(async (pb) => {
+    const { Content } = await pb.render();
+    return { slug: pb.slug, Content };
+  })
+);
 
 const { Content } = await service.render();
 ---
@@ -33,7 +82,7 @@ const { Content } = await service.render();
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Back Button -->
       <div class="mb-8">
-        <a href={`${basePath}/catalog`} class="text-gray-600 hover:text-gray-700 flex items-center">
+  <a href={`${basePath}catalog`} class="text-gray-600 hover:text-gray-700 flex items-center">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
@@ -43,82 +92,52 @@ const { Content } = await service.render();
 
       <!-- Service Header -->
       <div class="bg-white p-8 rounded-lg shadow-sm border mb-8">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">{service.data.title}</h1>
-            <p class="text-xl text-gray-600">{service.data.description}</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{service.data.title}</h1>
+        <p class="text-xl text-gray-600 mb-4">{service.data.description}</p>
+        {service.data.impact && (
+          <div class="mb-6 p-4 rounded-lg border bg-gray-50">
+            <h2 class="text-sm font-bold text-gray-800 mb-2">Sponsor and Ecosystem Impact</h2>
+            <p class="text-gray-700 text-sm">{service.data.impact}</p>
           </div>
+        )}
+        <div class="flex flex-wrap gap-4 items-center border-t pt-6">
+          <a href={`${basePath}pricing#${service.slug}`} class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+            Pricing
+          </a>
+          {/* Playbook link removed */}
+          <a href={`${basePath}maintainers`} class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+            Need this service?
+          </a>
         </div>
+      </div>
 
-        <div class="pt-6 border-t">
-          <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <p class="text-sm text-gray-700">
-              💰 <strong>Pricing:</strong> Visit our <a href={`${basePath}pricing#${service.slug}`} class="text-blue-600 hover:text-blue-800 underline">pricing page</a> to see our tiered pricing for this service based on project size.
-            </p>
-          </div>
-        </div>
+      <!-- Call to Action removed -->
 
-        {relatedPlaybook && (
-          <div class="pt-4">
-            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-between">
-              <div class="text-sm text-gray-700">
-                📘 <strong>Playbook available:</strong> Practitioner guidance and rubric for this service.
+      <!-- Playbook Only -->
+      {relatedWithContent.length > 0 && (
+        <div class="bg-white p-8 rounded-lg shadow-sm border">
+          {relatedWithContent.map(({ slug, Content }, idx) => (
+            <div class={idx > 0 ? 'mt-12' : ''}>
+              <div class="mb-6 pb-6 border-b">
+                <a 
+                  href={`https://github.com/oss-wishlist/wishlist-playbooks/tree/main/${slug.replace('/playbook','')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                  <span>Improve this Playbook</span>
+                </a>
               </div>
-              <a
-                href={`${basePath}playbooks/${relatedPlaybook.slug}`}
-                class="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition-colors"
-              >
-                View Playbook
-              </a>
+              <div class="prose prose-lg max-w-none playbook-content">
+                <Content />
+              </div>
             </div>
-          </div>
-        )}
-
-        {service.data.prerequisites && (
-          <div class="pt-6 border-t mt-6">
-            <h3 class="font-medium text-gray-900 mb-3">Prerequisites</h3>
-            <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <p class="text-blue-800">{service.data.prerequisites}</p>
-            </div>
-          </div>
-        )}
-
-        {service.data.tags && (
-          <div class="pt-6 border-t mt-6">
-            <h3 class="font-medium text-gray-900 mb-3">Tags</h3>
-            <div class="flex flex-wrap gap-2">
-              {service.data.tags.map(tag => (
-                <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <!-- Call to Action -->
-      <div class="mb-8 text-center">
-        <div class="bg-blue-50 p-8 rounded-lg border border-blue-200">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">
-            Need this service for your project?
-          </h2>
-          <p class="text-gray-600 mb-6">
-            Add it to your wishlist and share with your community to get support
-          </p>
-          <button disabled 
-             class="bg-gray-300 text-gray-500 px-8 py-3 rounded-lg font-semibold cursor-not-allowed">
-            Add to Wishlist (Coming Soon)
-          </button>
+          ))}
         </div>
-      </div>
-
-      <!-- Service Content -->
-      <div class="bg-white p-8 rounded-lg shadow-sm border">
-        <div class="prose prose-lg max-w-none">
-          <Content />
-        </div>
-      </div>
+      )}
     </div>
   </section>
 </Layout>
@@ -133,5 +152,34 @@ const { Content } = await service.render();
   .prose h2 {
     border-bottom: 1px solid #e5e7eb;
     padding-bottom: 0.5rem;
+  }
+  
+  /* Adjust playbook heading hierarchy */
+  .playbook-content :global(h1) {
+    font-size: 1.875rem; /* 30px - H2 size */
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .playbook-content :global(h2) {
+    font-size: 1.5rem; /* 24px - H3 size */
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .playbook-content :global(h3) {
+    font-size: 1.25rem; /* 20px - H4 size */
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .playbook-content :global(h4) {
+    font-size: 1.125rem; /* 18px - H5 size */
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
   }
 </style>
