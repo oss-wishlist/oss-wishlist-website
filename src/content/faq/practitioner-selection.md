@@ -5,12 +5,13 @@ category: "For Open Source Practitioners"
 order: 1
 ---
 
-Our practitioner selection process ensures quality and reliability:
+For our first pilot we will only select up to 10 practitioners. We are SUPER mindful that there are many qualified people. The approval process is not intended to gatekeep but rather to keep things small at first, to get to know people, and expand from there. We will have our own leadership and governance strategies to ensure that this project represents the best in sustainability as well.
+
+
+Our practitioner selection process looks like this:
 
 1. **Application Review**: We evaluate experience, expertise areas, and past work in open source
-2. **Background Verification**: We verify credentials, references, and previous project outcomes
-3. **Skills Assessment**: Practitioners demonstrate knowledge in their claimed specialty areas
-4. **Community Standing**: We check reputation within open source communities and professional networks
-5. **Ongoing Evaluation**: Performance is monitored through project outcomes and client feedback
+2. **Matching Assessment**: We learn more about you, what you want to focus on, preferences, limitations, timezone (etc.), potential conflicts of interest — and finally your goals around being matched with a wish.
+5. **Ongoing Evaluation**: We will provide maintainers, sponsors, and practitioners with ways to evaluate their experiences.
 
-We prioritize practitioners who understand the unique challenges of open source projects and demonstrate commitment to the ecosystem's long-term health.
+Once approved, practitioners will be asked to attend an onboarding, and will have a profile added to our practitioners page.  

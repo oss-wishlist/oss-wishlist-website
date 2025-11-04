@@ -7,16 +7,41 @@ import { getBasePath } from '../lib/paths';
 import { fetchUserRepositories } from '../lib/github-oauth';
 
 const services = await getCollection('services');
+const practitioners = await getCollection('practitioners');
 const maintainerServices = services.filter(service => 
   service.data.target_audience === 'maintainer' || service.data.target_audience === 'both'
 );
 
+// Build a quick lookup of practitioner counts per service slug (informational only)
+const practitionerCounts = services.reduce((acc, s) => {
+  const slug = s.slug;
+  const count = practitioners.filter(p => Array.isArray(p.data.services) && p.data.services.includes(slug)).length;
+  acc[slug] = count;
+  return acc;
+}, {} as Record<string, number>);
+
 // Prepare services data for the form component
-const servicesData = services.map(service => ({
-  id: service.slug,
-  title: service.data.title,
-  description: service.data.description,
-  slug: service.slug
+// Availability is driven solely by service frontmatter (do not infer from practitioner counts)
+const servicesData = services.map(service => {
+  const slug = service.slug;
+  const declaredAvailable = service.data.available ?? true;
+  const count = practitionerCounts[slug] ?? 0;
+  return {
+    id: slug,
+    title: service.data.title,
+    description: service.data.description,
+    slug,
+    available: declaredAvailable,
+    practitionerCount: count,
+    unavailableReason: service.data.unavailable_reason ?? undefined,
+  };
+});
+
+// Prepare compact practitioners list for preference selection
+const practitionersData = practitioners.map(p => ({
+  slug: p.slug,
+  name: p.data.name,
+  github: p.data.github || '',
 }));
 
 // Get user from middleware
@@ -79,7 +104,7 @@ try {
   <section id="wishlist-form-section" class="py-4 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Wishlist Form Component (user already authenticated, repos fetched server-side) -->
-      <WishlistForm client:load services={servicesData} user={user} initialRepositories={userRepositories} />
+  <WishlistForm client:load services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
     </div>
   </section>
 

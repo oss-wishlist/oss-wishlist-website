@@ -17,7 +17,11 @@ const WishlistDataSchema = z.object({
   url: z.string().url(),
   wishlistUrl: z.string().url().optional(), // Optional for backward compatibility
   projectTitle: z.string().min(1),
+  projectName: z.string().min(1).optional(), // Add for compatibility with wishlists browse page
   maintainerName: z.string().min(1),
+  maintainerUsername: z.string().min(1).optional(), // Add for compatibility with wishlists browse page
+  maintainerAvatarUrl: z.string().url().optional(), // Add for compatibility with wishlists browse page
+  repositoryUrl: z.string().url().optional(), // Add for compatibility with wishlists browse page
   wishes: z.array(z.string()).min(1),
   technologies: z.array(z.string()).optional(),
   urgency: z.enum(['low', 'medium', 'high']),
@@ -34,8 +38,9 @@ const WishlistDataSchema = z.object({
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
   timeline: z.string().optional(),
-  organizationType: z.enum(['individual', 'company', 'nonprofit', 'foundation']).optional(),
+  organizationType: z.enum(['single-maintainer', 'community-team', 'company-team', 'foundation-team', 'other']).optional(),
   organizationName: z.string().optional(),
+  otherOrganizationType: z.string().optional(),
   additionalNotes: z.string().optional(),
 });
 
@@ -45,7 +50,11 @@ interface WishlistData {
   url: string;
   wishlistUrl?: string; // Optional for backward compatibility
   projectTitle: string;
+  projectName?: string; // Add for compatibility with wishlists browse page
   maintainerName: string;
+  maintainerUsername?: string; // Add for compatibility with wishlists browse page
+  maintainerAvatarUrl?: string; // Add for compatibility with wishlists browse page
+  repositoryUrl?: string; // Add for compatibility with wishlists browse page
   wishes: string[];
   technologies?: string[];
   urgency: 'low' | 'medium' | 'high';
@@ -59,8 +68,9 @@ interface WishlistData {
   created_at: string;
   updated_at: string;
   timeline?: string;
-  organizationType?: 'individual' | 'company' | 'nonprofit' | 'foundation';
+  organizationType?: 'single-maintainer' | 'community-team' | 'company-team' | 'foundation-team' | 'other';
   organizationName?: string;
+  otherOrganizationType?: string;
   additionalNotes?: string;
 }
 
@@ -206,14 +216,21 @@ async function fetchAndCacheWishlist(issueNumber: number): Promise<WishlistData 
       return 'medium'; // Default fallback
     };
     
-    // Create wishlist data
+    // Get base path for constructing wishlist URLs that match the wishlists API format
+    const maintainerUsername = parsed.maintainer || issue.user?.login || 'Unknown';
+    
+    // Create wishlist data - using structure that matches /api/wishlists for consistency
     const wishlistData: WishlistData = {
       id: issue.number,
       title: issue.title,
       url: issue.html_url,
       wishlistUrl: wishlistUrl,
       projectTitle: parsed.project,
+      projectName: parsed.project, // Add for compatibility with wishlists page
       maintainerName: parsed.maintainer || issue.user?.login || 'Unknown',
+      maintainerUsername: maintainerUsername, // Add for compatibility with wishlists page
+      maintainerAvatarUrl: `https://github.com/${maintainerUsername}.png`, // Add for compatibility
+      repositoryUrl: parsed.repository, // Add for compatibility with wishlists page
       wishes: parsed.services,
       technologies: parsed.technologies,
       urgency: normalizeUrgency(parsed.urgency),
@@ -232,6 +249,7 @@ async function fetchAndCacheWishlist(issueNumber: number): Promise<WishlistData 
       timeline: parsed.timeline,
       organizationType: parsed.organizationType,
       organizationName: parsed.organizationName,
+      otherOrganizationType: parsed.otherOrganizationType,
       additionalNotes: parsed.additionalNotes
     };
 

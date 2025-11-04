@@ -12,7 +12,7 @@ email: "christos@example.com"
 website: "https://example.com"
 github: "octocat"
 mastodon: ""
-linkedin: ""
+linkedin: "https://de.linkedin.com/in/christosbacharakis?trk=public_post_feed-actor-name"
 
 
 services:

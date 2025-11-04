@@ -43,12 +43,22 @@ interface Service {
   id: string;
   title: string;
   description: string;
-  category: string;
+  category?: string;
   slug?: string;
+  available?: boolean;
+  practitionerCount?: number;
+  unavailableReason?: string;
+}
+
+interface Practitioner {
+  slug: string;
+  name: string;
+  github: string;
 }
 
 interface WishlistFormProps {
   services?: Service[];
+  practitioners?: Practitioner[];
   user?: GitHubUser | null;
   initialRepositories?: GitHubRepository[];
 }
@@ -73,9 +83,9 @@ interface GitHubRepository {
   language: string | null;
 }
 
-const WishlistForm = ({ services = [], user: initialUser = null, initialRepositories = [] }: WishlistFormProps) => {
+const WishlistForm = ({ services = [], practitioners = [], user: initialUser = null, initialRepositories = [] }: WishlistFormProps) => {
   const MAX_WISHES = 3;
-  
+
   // Check cache only if we don't have server-provided data
   const initializeFromCache = () => {
     // If we have server-provided repos, use those
@@ -103,7 +113,7 @@ const WishlistForm = ({ services = [], user: initialUser = null, initialReposito
     }
     return { repos: [], loading: true };
   };
-  
+
   const cachedData = initializeFromCache();
   
   const [user, setUser] = useState<GitHubUser | null>(initialUser);
@@ -143,10 +153,15 @@ const WishlistForm = ({ services = [], user: initialUser = null, initialReposito
     urgency: 'medium' as 'low' | 'medium' | 'high',
     projectSize: 'medium' as 'small' | 'medium' | 'large',
     timeline: '',
-    organizationType: 'individual' as 'individual' | 'company' | 'nonprofit' | 'foundation',
+    organizationType: 'single-maintainer' as 'single-maintainer' | 'community-team' | 'company-team' | 'foundation-team' | 'other',
     organizationName: '',
+    otherOrganizationType: '',
     additionalNotes: '',
-    openToSponsorship: false
+    openToSponsorship: false,
+    preferredPractitioner: '',
+    nomineeName: '',
+    nomineeEmail: '',
+    nomineeGithub: ''
   });
   
   // Checkbox for FUNDING.yml PR
@@ -339,11 +354,16 @@ const WishlistForm = ({ services = [], user: initialUser = null, initialReposito
         urgency: cachedData.urgency || 'medium',
         projectSize: cachedData.projectSize || 'medium',
         timeline: cachedData.timeline || '',
-        organizationType: cachedData.organizationType || 'individual',
+        organizationType: cachedData.organizationType || 'single-maintainer',
         organizationName: cachedData.organizationName || '',
+        otherOrganizationType: cachedData.otherOrganizationType || '',
         additionalNotes: cachedData.additionalNotes || '',
         technologies: cachedData.technologies || [],
         openToSponsorship: cachedData.openToSponsorship || false,
+        preferredPractitioner: cachedData.preferredPractitioner || '',
+        nomineeName: cachedData.nomineeName || '',
+        nomineeEmail: cachedData.nomineeEmail || '',
+        nomineeGithub: cachedData.nomineeGithub || ''
       };
       
       // Set original services for comparison
@@ -593,7 +613,14 @@ ${wishlistData.additionalNotes || 'None provided'}
             additionalNotes: wishlistData.additionalNotes || '',
             repositories: repositories, // Include all repositories
             createFundingPR: createFundingPR, // Include FUNDING.yml PR flag
-            openToSponsorship: wishlistData.openToSponsorship // Include sponsorship opt-in
+            openToSponsorship: wishlistData.openToSponsorship, // Include sponsorship opt-in
+            preferredPractitioner: wishlistData.preferredPractitioner,
+            nomineeName: wishlistData.nomineeName,
+            nomineeEmail: wishlistData.nomineeEmail,
+            nomineeGithub: wishlistData.nomineeGithub,
+            organizationType: wishlistData.organizationType,
+            organizationName: wishlistData.organizationName,
+            otherOrganizationType: wishlistData.otherOrganizationType
           }
         })
       });
@@ -790,205 +817,172 @@ ${wishlistData.additionalNotes || 'None provided'}
       <div className="max-w-4xl mx-auto">
         {/* Success Message */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-green-900">{success.issueTitle}</h3>
-                <p className="text-sm text-green-700">The wishlist has been closed and removed from your list.</p>
-              </div>
-            </div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <p className="text-green-800 text-sm">{success.issueTitle}</p>
           </div>
         )}
 
-        {/* Show user's repositories if authenticated */}
-        {repositories.length > 0 && (
-          <div className="bg-white p-8 rounded-lg shadow-sm border mb-8">
-            <div className="max-w-2xl mx-auto">
-              <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">Select Your Repository</h3>
-              <p className="text-gray-600 text-xs mb-6 text-center">
-                {selectedRepo ? '1 selected' : 'No repository selected'}
-              </p>
-              
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                  <p className="text-red-800 text-sm">{error}</p>
-                </div>
-              )}
-              
-              <div className="space-y-2 max-h-96 overflow-y-auto mb-6">
-                {repositories.map((repo) => {
-                  const isSelected = selectedRepo?.id === repo.id;
-                  const hasExistingWishlist = existingWishlists[repo.html_url];
-                  
-                  return (
-                    <div
-                      key={repo.id}
-                      onClick={() => {
-                        if (isSelected) {
-                          setSelectedRepo(null);
-                          setSelectedAction(null);
+        {/* Repositories Section */}
+        <div className="bg-white p-8 rounded-lg shadow-sm border mb-8">
+          <div className="max-w-2xl mx-auto">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Select a Repository</h3>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-red-800 text-sm">{error}</p>
+              </div>
+            )}
+
+            <div className="space-y-2 max-h-96 overflow-y-auto mb-6">
+              {repositories.map((repo) => {
+                const isSelected = selectedRepo?.id === repo.id;
+                const hasExistingWishlist = existingWishlists[repo.html_url];
+
+                return (
+                  <div
+                    key={repo.id}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedRepo(null);
+                        setSelectedAction(null);
+                      } else {
+                        setSelectedRepo(repo);
+                        // If no wishlist, default to create action
+                        if (!hasExistingWishlist) {
+                          setSelectedAction('create');
                         } else {
-                          setSelectedRepo(repo);
-                          // If no wishlist, default to create action
-                          if (!hasExistingWishlist) {
-                            setSelectedAction('create');
-                          } else {
-                            // Reset action when selecting a repo with existing wishlist
-                            setSelectedAction(null);
-                          }
+                          // Reset action when selecting a repo with existing wishlist
+                          setSelectedAction(null);
                         }
-                      }}
-                      className={`w-full text-left p-4 border rounded-lg transition-colors cursor-pointer ${
-                        isSelected 
-                          ? 'border-gray-900 bg-gray-100' 
-                          : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          checked={isSelected}
-                          readOnly
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-semibold text-gray-900">{repo.name}</h4>
-                            <div className="flex items-center gap-2 flex-wrap justify-end">
-                              {hasExistingWishlist ? (
-                                <>
-                                  {hasExistingWishlist.isApproved ? (
-                                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 border border-green-200 flex items-center gap-1 shrink-0">
-                                      ✓ Approved
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-1 shrink-0">
-                                      ⏳ Pending
-                                    </span>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedRepo(repo);
-                                      setSelectedAction('edit');
-                                    }}
-                                    className={`text-xs px-2 py-1 rounded border transition-colors flex items-center gap-1 shrink-0 ${
-                                      isSelected && selectedAction === 'edit'
-                                        ? 'bg-gray-200 text-gray-900 border-gray-400'
-                                        : 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200'
-                                    }`}
-                                  >
-                                    <PencilIcon />
-                                    <span>Edit</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedRepo(repo);
-                                      setSelectedAction('close');
-                                    }}
-                                    className={`text-xs px-2 py-1 rounded border transition-colors flex items-center gap-1 shrink-0 ${
-                                      isSelected && selectedAction === 'close'
-                                        ? 'bg-gray-300 text-gray-900 border-gray-500'
-                                        : 'bg-gray-200 text-gray-800 border-gray-400 hover:bg-gray-300'
-                                    }`}
-                                    title="Close this wishlist"
-                                  >
-                                    <TrashIcon />
-                                    <span>Close</span>
-                                  </button>
-                                </>
-                              ) : (
-                                <span className="text-xs px-2 py-1 rounded border bg-gray-50 text-gray-700 border-gray-300 flex items-center gap-1 shrink-0">
-                                  <SparklesIcon />
-                                  <span>Create Wishlist</span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {repo.description && (
-                            <p className="text-sm text-gray-600 mt-1">{repo.description}</p>
-                          )}
-                          <div className="flex items-center gap-3 mt-2">
-                            {repo.language && (
-                              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                                {repo.language}
+                      }
+                    }}
+                    className={`w-full text-left p-4 border rounded-lg transition-colors cursor-pointer ${
+                      isSelected ? 'border-gray-900 bg-gray-100' : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input type="radio" checked={isSelected} readOnly className="mt-1" />
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-semibold text-gray-900">{repo.name}</h4>
+                          <div className="flex items-center gap-2 flex-wrap justify-end">
+                            {hasExistingWishlist ? (
+                              <>
+                                {hasExistingWishlist.isApproved ? (
+                                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 border border-green-200 flex items-center gap-1 shrink-0">
+                                    ✓ Approved
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-1 shrink-0">
+                                    ⏳ Pending
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedRepo(repo);
+                                    setSelectedAction('edit');
+                                  }}
+                                  className={`text-xs px-2 py-1 rounded border transition-colors flex items-center gap-1 shrink-0 ${
+                                    isSelected && selectedAction === 'edit'
+                                      ? 'bg-gray-200 text-gray-900 border-gray-400'
+                                      : 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  <PencilIcon />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedRepo(repo);
+                                    setSelectedAction('close');
+                                  }}
+                                  className={`text-xs px-2 py-1 rounded border transition-colors flex items-center gap-1 shrink-0 ${
+                                    isSelected && selectedAction === 'close'
+                                      ? 'bg-gray-300 text-gray-900 border-gray-500'
+                                      : 'bg-gray-200 text-gray-800 border-gray-400 hover:bg-gray-300'
+                                  }`}
+                                  title="Close this wishlist"
+                                >
+                                  <TrashIcon />
+                                  <span>Close</span>
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-xs px-2 py-1 rounded border bg-gray-50 text-gray-700 border-gray-300 flex items-center gap-1 shrink-0">
+                                <SparklesIcon />
+                                <span>Create Wishlist</span>
                               </span>
                             )}
-                            <span className="text-xs text-gray-500 flex items-center gap-1">
-                              <StarIcon />
-                              {repo.stargazers_count}
-                            </span>
                           </div>
+                        </div>
+                        {repo.description && <p className="text-sm text-gray-600 mt-1">{repo.description}</p>}
+                        <div className="flex items-center gap-3 mt-2">
+                          {repo.language && <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{repo.language}</span>}
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <StarIcon />
+                            {repo.stargazers_count}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-              
-              {selectedRepo && selectedAction && (
-                <button
-                  onClick={async () => {
-                    const hasExisting = selectedRepo && existingWishlists[selectedRepo.html_url];
-                    
-                    if (selectedAction === 'close') {
-                      // Handle close action
-                      if (hasExisting) {
-                        setExistingIssueNumber(hasExisting.issueNumber);
-                        await handleCloseWishlist();
-                      }
-                    } else if (selectedAction === 'edit') {
-                      // Handle edit action
-                      if (hasExisting) {
-                        setLoading(true);
-                        setError(''); // Clear any previous errors
-                        // Set editing state FIRST before loading data
-                        setIsEditingExisting(true);
-                        setExistingIssueNumber(hasExisting.issueNumber);
-                        const success = await loadExistingWishlistData(hasExisting.issueNumber);
-                        setLoading(false);
-                        // Only navigate if data loaded successfully
-                        if (success) {
-                          setCurrentStep('wishlist');
-                        } else {
-                          setError('Failed to load wishlist data. Please try again.');
-                        }
-                      }
-                    } else if (selectedAction === 'create') {
-                      // Handle create action
-                      setIsEditingExisting(false);
-                      setExistingIssueNumber(null);
-                      setCurrentStep('wishlist');
-                    }
-                  }}
-                  disabled={loading}
-                  className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      Processing...
-                    </span>
-                  ) : selectedAction === 'close' ? (
-                    'Continue to Close Wishlist'
-                  ) : selectedAction === 'edit' ? (
-                    'Continue to Edit Wishlist'
-                  ) : (
-                    'Continue with Repository'
-                  )}
-                </button>
-              )}
+                  </div>
+                );
+              })}
             </div>
+
+            {selectedRepo && selectedAction && (
+              <button
+                onClick={async () => {
+                  const hasExisting = selectedRepo && existingWishlists[selectedRepo.html_url];
+
+                  if (selectedAction === 'close') {
+                    if (hasExisting) {
+                      setExistingIssueNumber(hasExisting.issueNumber);
+                      await handleCloseWishlist();
+                    }
+                  } else if (selectedAction === 'edit') {
+                    if (hasExisting) {
+                      setLoading(true);
+                      setError('');
+                      setIsEditingExisting(true);
+                      setExistingIssueNumber(hasExisting.issueNumber);
+                      const success = await loadExistingWishlistData(hasExisting.issueNumber);
+                      setLoading(false);
+                      if (success) {
+                        setCurrentStep('wishlist');
+                      } else {
+                        setError('Failed to load wishlist data. Please try again.');
+                      }
+                    }
+                  } else if (selectedAction === 'create') {
+                    setIsEditingExisting(false);
+                    setExistingIssueNumber(null);
+                    setCurrentStep('wishlist');
+                  }
+                }}
+                disabled={loading}
+                className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Processing...
+                  </span>
+                ) : selectedAction === 'close' ? (
+                  'Continue to Close Wishlist'
+                ) : selectedAction === 'edit' ? (
+                  'Continue to Edit Wishlist'
+                ) : (
+                  'Continue with Repository'
+                )}
+              </button>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Manual Entry Form */}
         <div className="bg-white p-8 rounded-lg shadow-sm border mb-8">
@@ -1190,10 +1184,15 @@ ${wishlistData.additionalNotes || 'None provided'}
                       urgency: 'medium',
                       projectSize: 'medium',
                       timeline: '',
-                      organizationType: 'individual',
+                      organizationType: 'single-maintainer',
                       organizationName: '',
+                      otherOrganizationType: '',
                       additionalNotes: '',
-                      openToSponsorship: false
+                      openToSponsorship: false,
+                      preferredPractitioner: '',
+                      nomineeName: '',
+                      nomineeEmail: '',
+                      nomineeGithub: ''
                     });
                   }}
                   className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300"
@@ -1419,6 +1418,8 @@ ${wishlistData.additionalNotes || 'None provided'}
                 const isSelected = wishlistData.selectedServices.includes(service.id);
                 const reachedMax = wishlistData.selectedServices.length >= MAX_WISHES;
                 const wasOriginallySelected = originalServices.includes(service.id);
+                // Availability is controlled only by service frontmatter
+                const notAvailable = service.available === false;
                 
                 return (
                   <div
@@ -1441,15 +1442,37 @@ ${wishlistData.additionalNotes || 'None provided'}
                               Currently selected
                             </span>
                           )}
+                          {notAvailable && (
+                            <span className="text-xs bg-gray-200 text-gray-800 px-2 py-0.5 rounded border border-gray-400">
+                              Currently Unavailable
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                        {notAvailable && (
+                          <p className="text-xs text-gray-700 mt-2">
+                            You can still select this. We’ll add you to our waitlist for this service and notify you when a practitioner is available.{' '}
+                            <a
+                              href={`${getBasePath()}faq#service-availability-waitlist`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline text-gray-800 hover:text-gray-900"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Learn more
+                            </a>
+                            .
+                          </p>
+                        )}
                         <div className="flex items-center justify-between mt-2">
-                          <span className="inline-block bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">
-                            {service.category}
-                          </span>
+                          {service.category && (
+                            <span className="inline-block bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">
+                              {service.category}
+                            </span>
+                          )}
                           {service.slug && (
                             <a
-                              href={`/services/${service.slug}`}
+                              href={`${getBasePath()}services/${service.slug}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-gray-700 hover:text-gray-900 underline"
@@ -1467,6 +1490,10 @@ ${wishlistData.additionalNotes || 'None provided'}
                   </div>
                 );
               })}
+            </div>
+            <div className="mt-4 text-xs text-gray-600">
+              Note: Services marked “Currently Unavailable” can still be selected. We’ll place you on our waitlist and follow up as soon as capacity opens.{' '}
+              <a href={`${getBasePath()}faq#service-availability-waitlist`} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">Learn more</a>.
             </div>
           </div>
 
@@ -1543,27 +1570,124 @@ ${wishlistData.additionalNotes || 'None provided'}
             </div>
           </div>
 
+          {/* Practitioner Preferences and Nomination */}
+          {practitioners && practitioners.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Practitioner Preferences (Optional)</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                You can select a preferred practitioner or nominate someone from your community. 
+                Preferences are considered but not guaranteed.{' '}
+                <a 
+                  href={`${getBasePath()}faq#practitioner-preferences`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline hover:text-gray-900"
+                >
+                  Learn more
+                </a>
+              </p>
+
+              {/* Preferred Practitioner (single select) */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Preferred Practitioner
+                </label>
+                <select
+                  value={wishlistData.preferredPractitioner}
+                  onChange={(e) => setWishlistData(prev => ({ ...prev, preferredPractitioner: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                >
+                  <option value="">No preference</option>
+                  {practitioners.map(p => (
+                    <option key={p.slug} value={p.slug}>
+                      {p.name} {p.github && `(@${p.github})`}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select a practitioner you'd prefer to work with from our directory.
+                </p>
+              </div>
+
+              {/* Nominate a Practitioner */}
+              <div className="pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Or nominate someone from your community</h4>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Nominee Name</label>
+                    <input
+                      type="text"
+                      value={wishlistData.nomineeName}
+                      onChange={(e) => setWishlistData(prev => ({ ...prev, nomineeName: e.target.value }))}
+                      placeholder="Full name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Nominee Email</label>
+                    <input
+                      type="email"
+                      value={wishlistData.nomineeEmail}
+                      onChange={(e) => setWishlistData(prev => ({ ...prev, nomineeEmail: e.target.value }))}
+                      placeholder="email@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Nominee GitHub</label>
+                    <input
+                      type="text"
+                      value={wishlistData.nomineeGithub}
+                      onChange={(e) => setWishlistData(prev => ({ ...prev, nomineeGithub: e.target.value }))}
+                      placeholder="@username"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Nominees will be vetted against our practitioner criteria before they can fulfill wishes.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Organization Details */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Organization Details</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Ownership</h3>
             <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Organization Type
+                  Who owns/runs this project?
                 </label>
                 <select
                   value={wishlistData.organizationType}
                   onChange={(e) => setWishlistData(prev => ({ ...prev, organizationType: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 >
-                  <option value="individual">Individual maintainer</option>
-                  <option value="company">Company</option>
-                  <option value="nonprofit">Nonprofit organization</option>
-                  <option value="foundation">Foundation</option>
+                  <option value="single-maintainer">Single maintainer</option>
+                  <option value="community-team">Community team</option>
+                  <option value="company-team">Company/employee team</option>
+                  <option value="foundation-team">Foundation/employee team</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 
-              {wishlistData.organizationType !== 'individual' && (
+              {wishlistData.organizationType === 'other' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Please specify
+                  </label>
+                  <input
+                    type="text"
+                    value={wishlistData.otherOrganizationType}
+                    onChange={(e) => setWishlistData(prev => ({ ...prev, otherOrganizationType: e.target.value }))}
+                    placeholder="Describe ownership structure"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+
+              {(wishlistData.organizationType === 'company-team' || wishlistData.organizationType === 'foundation-team') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Organization Name

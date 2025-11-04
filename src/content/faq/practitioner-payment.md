@@ -5,12 +5,10 @@ category: "For Open Source Practitioners"
 order: 2
 ---
 
-Practitioners are compensated directly by the Wishlist Sponsors who sponsor the work:
+Practitioners are compensated directly by the Wishlist Sponsors via one of two platforms (Open Collective of GitHub Sponsors):
 
-- **Direct Payment**: Sponsors pay practitioners directly, not through the platform
-- **Fair Rates**: We provide guidance on market rates to ensure fair compensation
-- **Flexible Terms**: Payment schedules and methods are negotiated between sponsors and practitioners
-- **Milestone-Based**: Most projects use milestone-based payments to ensure progress and accountability
-- **Documentation**: All payment agreements are documented for transparency and dispute resolution
+- **Direct Payment**: Sponsors pay practitioners directly, not through `Open Source Wishlist`
+- **Fair Rates**: We provide guidance on market rates to ensure fair compensation based on USD, sponsors may pay more, but not less
+- **Milestone-Based**: Wish match obligations are considered met on successful rubric scoring.  
 
-The platform facilitates the connection and provides frameworks for agreements, but does not handle payment processing directly.
+Please see [Terms and COnditions](oss-wishlist-website/terms) for more on obligations. 

@@ -5,4 +5,4 @@ category: "For Wishlist Sponsors"
 order: 10
 ---
 
-Wishlist Sponsors are companies, foundations, government agencies, and other organizations that depend on open source software and want to contribute to its sustainability. They sponsor the fulfillment of maintainer wishes to strengthen their supply chain and the broader ecosystem.
+Wishlist Sponsors can be companies, foundations, government agencies, individuals and others that depend on open source software and want to contribute to its sustainability. They sponsor the fulfillment of maintainer wishes to strengthen their supply chain and the broader ecosystem.

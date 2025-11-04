@@ -21,7 +21,7 @@ When picking a size for your wishlist, choose the option that best reflects the 
   - High downstream dependencies or community impact
 
 Notes:
-- These sizes are a starting point—not a gate. Practitioners will confirm fit during scoping.
+- These sizes are a starting point - not a gate. Practitioners will confirm fit during scoping.
 - If you’re unsure, choose Medium. We’ll help calibrate together.
 - See the Catalogue Pricing page for example deliverables and outcomes by tier.
 

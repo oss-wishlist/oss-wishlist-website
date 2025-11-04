@@ -5,6 +5,7 @@
 import type { APIRoute } from 'astro';
 import { GITHUB_CONFIG } from '../../config/github.js';
 import { parseIssueForm } from '../../lib/issue-form-parser.js';
+import { getBasePath } from '../../lib/paths.js';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -80,95 +81,6 @@ async function fetchGitHubIssues(): Promise<GitHubIssue[]> {
   return approvedWishlists;
 }
 
-async function fetchProjectBoardData(): Promise<Map<number, string>> {
-  // GraphQL query to get project board data
-  const query = `
-    query($owner: String!, $number: Int!) {
-      organization(login: $owner) {
-        projectV2(number: $number) {
-          items(first: 100) {
-            nodes {
-              id
-              content {
-                ... on Issue {
-                  number
-                }
-              }
-              fieldValues(first: 10) {
-                nodes {
-                  ... on ProjectV2ItemFieldSingleSelectValue {
-                    field {
-                      ... on ProjectV2SingleSelectField {
-                        name
-                      }
-                    }
-                    name
-                  }
-                  ... on ProjectV2ItemFieldTextValue {
-                    field {
-                      ... on ProjectV2Field {
-                        name
-                      }
-                    }
-                    text
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const response = await fetch('https://api.github.com/graphql', {
-    method: 'POST',
-    headers: {
-      'Authorization': `token ${GITHUB_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query,
-      variables: {
-        owner: GITHUB_CONFIG.ORG,
-        number: GITHUB_CONFIG.PROJECT_NUMBER,
-      },
-    }),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('GraphQL error:', response.status, errorText);
-    throw new Error(`GitHub GraphQL API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  
-  if (data.errors) {
-    console.error('GraphQL query errors:', data.errors);
-    throw new Error('GraphQL query failed');
-  }
-  
-  const statusMap = new Map<number, string>();
-
-  if (data.data?.organization?.projectV2?.items?.nodes) {
-    for (const item of data.data.organization.projectV2.items.nodes) {
-      if (item.content?.number) {
-        // Look for Status field
-        const statusField = item.fieldValues.nodes.find(
-          (field: any) => field.field?.name === 'Status'
-        );
-        
-        if (statusField?.name) {
-          statusMap.set(item.content.number, statusField.name);
-        }
-      }
-    }
-  }
-
-  return statusMap;
-}
-
 export const GET: APIRoute = async ({ url }) => {
   try {
     if (!GITHUB_TOKEN) {
@@ -227,74 +139,38 @@ export const GET: APIRoute = async ({ url }) => {
       })
     ]);
     
-    // Fetch project board with timeout (optional, can fail)
-    const statusMapPromise = Promise.race([
-      fetchProjectBoardData(),
-      new Promise<Map<number, string>>((resolve) => {
-        setTimeout(() => {
-          console.warn('GraphQL timeout after 3s, continuing without status data');
-          resolve(new Map());
-        }, 3000); // 3 second timeout
-      })
-    ]).catch((error) => {
-      console.warn('Project board fetch failed:', error.message);
-      return new Map(); // Fallback if project board fails
-    });
-    
-    const [issues, statusMap] = await Promise.all([
-      issuesPromise,
-      statusMapPromise
-    ]);
+    const issues = await issuesPromise;
 
     const wishlists = issues.map(issue => {
       // Use the new issue form parser
       const parsed = parseIssueForm(issue.body);
-      const status = statusMap.get(issue.number) || 'Open';
+      const status = 'Open'; // Default status since we're not reading from project board
       
-      // Combine services and resources into wishes array
-      const wishes = [...parsed.services, ...parsed.resources];
+      // Get base path for constructing wishlist URLs
+      const basePath = getBasePath();
+      const wishlistUrl = `${basePath}wishlist/${issue.number}`;
       
-      // Add dummy technologies for existing test wishlists if none exist
-      let technologies = parsed.technologies;
-      if (!technologies || technologies.length === 0) {
-        // Assign random dummy technologies for testing
-        const dummyTechSets = [
-          ['JavaScript', 'Node.js', 'React'],
-          ['Python', 'Django', 'PostgreSQL'],
-          ['Rust', 'WebAssembly'],
-          ['Go', 'Docker', 'Kubernetes'],
-          ['TypeScript', 'Vue', 'MongoDB'],
-          ['Java', 'Spring'],
-          ['Ruby', 'Rails', 'Redis'],
-          ['C++', 'CMake']
-        ];
-        technologies = dummyTechSets[issue.number % dummyTechSets.length];
+      // Use the maintainer from the parsed form (authenticated user who created the wishlist)
+      // not issue.user which is the bot account
+      const maintainerUsername = parsed.maintainer || issue.user.login;
+      const maintainerAvatarUrl = `https://github.com/${maintainerUsername}.png`;
+      
+      // Debug: Log when we're falling back to bot user
+      if (!parsed.maintainer) {
+        console.log(`Issue #${issue.number}: No maintainer in parsed form, falling back to ${issue.user.login}`);
       }
       
+      // Return minimal public data only
       return {
         id: issue.number,
-        title: issue.title,
-        url: issue.html_url,
-        projectTitle: parsed.project || issue.title,
-        maintainerName: parsed.maintainer || issue.user.login,
+        projectName: parsed.project || issue.title,
         repositoryUrl: parsed.repository,
-        wishes: wishes,
-        technologies: technologies,
-        urgency: parsed.urgency,
-        projectSize: parsed.projectSize || undefined,
+        wishlistUrl: wishlistUrl,
+        maintainerUsername: maintainerUsername,
+        maintainerAvatarUrl: maintainerAvatarUrl,
         status,
-        labels: issue.labels,
-        author: {
-          login: issue.user.login,
-          avatar_url: issue.user.avatar_url,
-        },
         created_at: issue.created_at,
         updated_at: issue.updated_at,
-        // Optional fields
-        timeline: parsed.timeline,
-        organizationType: parsed.organizationType,
-        organizationName: parsed.organizationName,
-        additionalNotes: parsed.additionalNotes,
       };
     });
 

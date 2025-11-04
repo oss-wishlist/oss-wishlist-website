@@ -5,4 +5,4 @@ category: "General"
 order: 1
 ---
 
-Open Source Wishlist is a platform that connects open source maintainers with the resources, services, and practitioners they need to build sustainable, secure, and thriving projects. We help bridge the gap between project needs and available expertise.
+Open Source Wishlist is the bridge between knowing what makes projects sustainable and actually getting there. Based on exsiting ecosystem standards, we provide the missing vocabulary for maintainers to request specific help, the validated pathways to deliver it, and the metrics to prove it worked.

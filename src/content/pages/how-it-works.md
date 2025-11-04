@@ -3,7 +3,7 @@ title: "How Open Source Wishlist Works"
 description: "Connecting open source maintainers with the resources they need for sustainable project health"
 ---
 
-Open Source Wishlist bridges the gap between open source projects that need support and the ecosystem that depends on them. We provide a structured pathway for maintainers to get expert help in critical areas like security, governance, funding strategy, and community building.
+Open Source Wishlist is the bridge between knowing what makes projects sustainable and actually getting there. Based on exsiting industry standards, we provide the missing vocabulary for maintainers to request specific help, the validated pathways to deliver it, and the metrics to prove it worked.
 
 ## The Process
 

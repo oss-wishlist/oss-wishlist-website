@@ -50,13 +50,17 @@ export const wishlistFormDataSchema = z.object({
   
   additionalNotes: createOptionalModeratedString(),
   
-  organizationType: z.enum(['individual', 'company', 'nonprofit', 'foundation']).optional(),
-  
-  organizationName: createOptionalModeratedString(),
-  
   timeline: createOptionalModeratedString(),
   
   technologies: z.array(z.string()).optional(),
+  
+  // Preferred practitioner (single selection, optional)
+  preferredPractitioner: z.string().optional(),
+
+  // Nominee details (optional). Maintainer can nominate a practitioner from their community.
+  nomineeName: createOptionalModeratedString(),
+  nomineeEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
+  nomineeGithub: createOptionalModeratedString(),
   
   repositories: z.array(z.object({
     name: z.string(),
@@ -66,7 +70,15 @@ export const wishlistFormDataSchema = z.object({
   })).optional(),
   
   // Flag to indicate if a FUNDING.yml PR should be created by GitHub Action
-  createFundingPR: z.boolean().optional()
+  createFundingPR: z.boolean().optional(),
+
+  // Honorarium/sponsorship opt-in
+  openToSponsorship: z.boolean().optional(),
+  
+  // Project ownership structure
+  organizationType: z.enum(['single-maintainer', 'community-team', 'company-team', 'foundation-team', 'other']).optional(),
+  organizationName: createOptionalModeratedString(),
+  otherOrganizationType: createOptionalModeratedString()
 });
 
 // Wishlist submission schema

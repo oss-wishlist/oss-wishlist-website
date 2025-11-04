@@ -5,6 +5,6 @@ category: "General"
 order: 4
 ---
 
-Open Source Wishlist is developed and maintained by a team of open source advocates and sustainability practitioners. The platform is designed to be community-driven and transparent, with governance structures that ensure accountability to all stakeholders - maintainers, practitioners, and wishlist sponsors alike.
+Open Source Wishlist is an indpendant open source, open content, community project created by [Emma Irwin](https://www.linkedin.com/in/emmamirwin/), in partnership open source collaborator [Christos Bacharakis](https://de.linkedin.com/in/christosbacharakis) and with feedback from many of our peers, maintainers and potential funders (thanks to everyone who has chatted with us so far!) .  
 
-Our mission is to create sustainable pathways for open source project health by connecting those who need help with those who can provide it, funded by organizations that depend on these critical projects.
+We hope more people will get involved, and join the [community](https://discord.gg/9BY9P5FD).
