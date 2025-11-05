@@ -1,135 +1,101 @@
-name: Run OSS Wishlist Analyzer (manual)
+name: 'OSS Wishlist Analyzer'
+description: 'Analyze your project dependencies across all ecosystems (npm, PyPI, Cargo, Maven, etc.) using SBOM and ecosyste.ms data to identify sustainability risks'
+branding:
+  icon: 'shield'
+  color: 'blue'
 
-on:
-  workflow_dispatch:
-    inputs:
-      generate-sbom:
-        description: "Generate SBOM before analysis"
-        type: boolean
-        default: true
-      sbom-format:
-        description: "SBOM format to generate (if generating)"
-        type: choice
-        options:
-          - spdx-json
-          - cyclonedx-json
-        default: spdx-json
-      sbom-path:
-        description: "Path to SBOM file to analyze"
-        type: string
-        default: sbom.json
-      include-bigtech-backed:
-        description: "Include dependencies whose maintainers use Big Tech email domains"
-        type: boolean
-        default: false
-      filter-scorecard:
-        description: "Filter by OpenSSF Scorecard score range"
-        type: boolean
-        default: false
-      scorecard-min:
-        description: "Min Scorecard score (0.0 - 10.0)"
-        type: string
-        default: "7.0"
-      scorecard-max:
-        description: "Max Scorecard score (0.0 - 10.0)"
-        type: string
-        default: "10.0"
-      filter-criticality:
-        description: "Filter by OpenSSF Criticality score range (if available)"
-        type: boolean
-        default: false
-      criticality-min:
-        description: "Min Criticality score (0.0 - 1.0)"
-        type: string
-        default: "0.70"
-      criticality-max:
-        description: "Max Criticality score (0.0 - 1.0)"
-        type: string
-        default: "1.0"
+inputs:
+  sbom-path:
+    description: 'Path to SBOM file (SPDX JSON or CycloneDX JSON format)'
+    required: false
+    default: 'sbom.json'
+  
+  token:
+    description: 'GitHub token for API access and commenting'
+    required: true
+    default: ${{ github.token }}
+  
+  dependency-threshold:
+    description: '[DEPRECATED] This input is no longer used for filtering. All dependencies with wishlists are reported.'
+    required: false
+    default: '1000'
+  
+  create-issue:
+    description: 'Create GitHub issue for high-risk dependencies'
+    required: false
+    default: 'false'
+  
+  comment-pr:
+    description: 'Comment on PR with analysis results'
+    required: false
+    default: 'true'
 
-permissions:
-  contents: read
+  # Local wishlists JSON (stand-in for ecosyste.ms field)
+  use-wishlists-json:
+    description: 'Use a local wishlists JSON file as the primary wishlist filter (overrides funding signals)'
+    required: false
+    default: 'false'
+  wishlists-path:
+    description: 'Path to local wishlists JSON file'
+    required: false
+    default: 'wishlists.json'
 
-jobs:
-  analyze-dependencies:
-    runs-on: ubuntu-latest
+  # Optional: mock wishlist mapping file
+  wishlist-map-path:
+    description: 'Path to a JSON file that lists packages with wishlists (temporary stand-in until ecosyste.ms exposes an official field)'
+    required: false
+    default: ''
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # Optional filtering by OpenSSF Scorecard
+  filter-scorecard:
+    description: 'Filter results by OpenSSF Scorecard overall score range'
+    required: false
+    default: 'false'
+  scorecard-min:
+    description: 'Minimum OpenSSF Scorecard score (0.0 - 10.0)'
+    required: false
+    default: '7.0'
+  scorecard-max:
+    description: 'Maximum OpenSSF Scorecard score (0.0 - 10.0)'
+    required: false
+    default: '10.0'
 
-      # Optionally generate an SBOM if you don't already have one
-      - name: Generate SBOM
-        if: ${{ inputs.generate-sbom }}
-        uses: anchore/sbom-action@v0
-        with:
-          path: ./
-          format: ${{ inputs.sbom-format }}
-          output-file: ${{ inputs.sbom-path }}
+  # Optional filtering by OpenSSF Criticality Score (if available)
+  filter-criticality:
+    description: 'Filter results by OpenSSF Criticality score range (requires metric availability)'
+    required: false
+    default: 'false'
+  criticality-min:
+    description: 'Minimum OpenSSF Criticality score (0.0 - 1.0)'
+    required: false
+    default: '0.70'
+  criticality-max:
+    description: 'Maximum OpenSSF Criticality score (0.0 - 1.0)'
+    required: false
+    default: '1.0'
 
-      - name: Summarize SBOM
-        if: ${{ inputs.generate-sbom }}
-        run: |
-          {
-            echo "## SBOM Summary";
-            echo;
-            echo "- Format: ${{ inputs.sbom-format }}";
-            echo "- File: ${{ inputs.sbom-path }}";
-            COUNT=$(jq 'if has("components") then (.components|length) else (.packages|length) end' "${{ inputs.sbom-path }}" 2>/dev/null || echo 0);
-            echo "- Component count: ${COUNT}";
-            UNIQUE_PURLS=$(jq -r 'if has("components") then [.components[]?.purl] else [.packages[]?.externalRefs[]? | select(.referenceType=="purl") | .referenceLocator] end | map(select(.!=null)) | unique | length' "${{ inputs.sbom-path }}" 2>/dev/null || echo 0);
-            echo "- Unique PURLs: ${UNIQUE_PURLS}";
-            echo;
-            echo "Note: Transitive coverage depends on lockfiles or scanning built artifacts. For Node, ensure package-lock.json/yarn.lock are present; for Python, use Poetry.lock/pip-compile or scan an image/venv.";
-          } >> $GITHUB_STEP_SUMMARY
+  # Include Big Tech–backed dependencies
+  include-bigtech-backed:
+    description: 'Include dependencies with Big Tech backing (opt-in). If false, only show packages without Big Tech backing.'
+    required: false
+    default: 'false'
 
-      - name: Upload SBOM artifact
-        if: ${{ inputs.generate-sbom }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom
-          path: ${{ inputs.sbom-path }}
-          retention-days: 7
+  # Optional mock wishlists JSON (temporary until ecosyste.ms exposes official field)
+  mock-wishlists-path:
+    description: 'Path to a JSON file that mimics ecosyste.ms wishlists. Relative to workspace. If provided, entries in this file will be treated as having wishlists.'
+    required: false
+    default: ''
 
-      - name: Run OSS Wishlist Analyzer
-        id: analyze
-        uses: oss-wishlist/oss-wishlist-dependency-report@main
-        with:
-          sbom-path: ${{ inputs.sbom-path }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          comment-pr: 'false'
-          create-issue: 'false'
-          include-bigtech-backed: ${{ inputs.include-bigtech-backed }}
-          filter-scorecard: ${{ inputs.filter-scorecard }}
-          scorecard-min: ${{ inputs.scorecard-min }}
-          scorecard-max: ${{ inputs.scorecard-max }}
-          filter-criticality: ${{ inputs.filter-criticality }}
-          criticality-min: ${{ inputs.criticality-min }}
-          criticality-max: ${{ inputs.criticality-max }}
+outputs:
+  with-wishlist-count:
+    description: 'Number of dependencies with wishlists (currently GitHub Sponsors)'
+  
+  without-backing-count:
+    description: 'Number of dependencies with wishlists but without maintainers using Big Tech email aliases'
+  
+  report-path:
+    description: 'Path to detailed analysis report'
 
-      - name: Add report to job summary
-        if: always()
-        run: |
-          {
-            echo "## OSS Wishlist Analysis";
-            echo;
-            echo "- Dependencies with wishlists: ${{ steps.analyze.outputs.with-wishlist-count }}";
-            echo "- Without maintainer Big Tech email alias: ${{ steps.analyze.outputs.without-backing-count }}";
-            echo "- Report file: oss-wishlist-report.md (also attached as artifact 'oss-analysis-report')";
-            echo;
-            echo "<details><summary>Report preview (first 400 lines)</summary>";
-            echo;
-            echo '```markdown';
-            head -n 400 oss-wishlist-report.md || true;
-            echo '```';
-            echo;
-            echo "</details>";
-          } >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload analysis report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: oss-analysis-report
-          path: oss-wishlist-report.md
-          retention-days: 30
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
