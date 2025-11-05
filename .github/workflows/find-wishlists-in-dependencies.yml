@@ -42,7 +42,7 @@ on:
       use-wishlists-json:
         description: "Use a local wishlists.json file as the primary wishlist filter (overrides funding signals)"
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read
