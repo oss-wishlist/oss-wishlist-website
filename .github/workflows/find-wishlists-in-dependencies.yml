@@ -7,13 +7,6 @@ on:
         description: "Generate SBOM before analysis"
         type: boolean
         default: true
-      sbom-format:
-        description: "SBOM format to generate (if generating)"
-        type: choice
-        options:
-          - spdx-json
-          - cyclonedx-json
-        default: spdx-json
       sbom-path:
         description: "Path to SBOM file to analyze"
         type: string
@@ -46,6 +39,10 @@ on:
         description: "Max Criticality score (0.0 - 1.0)"
         type: string
         default: "1.0"
+      use-wishlists-json:
+        description: "Use a local wishlists.json file as the primary wishlist filter (overrides funding signals)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -64,7 +61,7 @@ jobs:
         uses: anchore/sbom-action@v0
         with:
           path: ./
-          format: ${{ inputs.sbom-format }}
+          format: spdx-json
           output-file: ${{ inputs.sbom-path }}
 
       - name: Summarize SBOM
@@ -73,7 +70,7 @@ jobs:
           {
             echo "## SBOM Summary";
             echo;
-            echo "- Format: ${{ inputs.sbom-format }}";
+            echo "- Format: spdx-json";
             echo "- File: ${{ inputs.sbom-path }}";
             COUNT=$(jq 'if has("components") then (.components|length) else (.packages|length) end' "${{ inputs.sbom-path }}" 2>/dev/null || echo 0);
             echo "- Component count: ${COUNT}";
@@ -106,6 +103,7 @@ jobs:
           filter-criticality: ${{ inputs.filter-criticality }}
           criticality-min: ${{ inputs.criticality-min }}
           criticality-max: ${{ inputs.criticality-max }}
+          use-wishlists-json: ${{ inputs.use-wishlists-json }}
 
       - name: Add report to job summary
         if: always()
