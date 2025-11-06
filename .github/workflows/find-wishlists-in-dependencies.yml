@@ -104,6 +104,7 @@ jobs:
           criticality-min: ${{ inputs.criticality-min }}
           criticality-max: ${{ inputs.criticality-max }}
           use-wishlists-json: ${{ inputs.use-wishlists-json }}
+          wishlists-path: 'wishlists-ideal.json'
 
       - name: Add report to job summary
         if: always()
