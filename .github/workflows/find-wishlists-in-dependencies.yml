@@ -88,9 +88,14 @@ jobs:
           path: ${{ inputs.sbom-path }}
           retention-days: 7
 
+      - name: Download test wishlists JSON
+        if: ${{ inputs.use-wishlists-json }}
+        run: |
+          curl -sSL https://raw.githubusercontent.com/oss-wishlist/oss-wishlist-dependency-report/main/wishlists-ideal.json -o wishlists-ideal.json
+
       - name: Run OSS Wishlist Analyzer
         id: analyze
-        uses: ./
+        uses: oss-wishlist/oss-wishlist-dependency-report@main
         with:
           sbom-path: ${{ inputs.sbom-path }}
           token: ${{ secrets.GITHUB_TOKEN }}
