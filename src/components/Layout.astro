@@ -6,9 +6,10 @@ import Header from './Header.astro';
 export interface Props {
   title: string;
   description?: string;
+  showHeader?: boolean;
 }
 
-const { title, description = "Get the help your open source project needs" } = Astro.props;
+const { title, description = "Get the help your open source project needs", showHeader = true } = Astro.props as Props;
 // Use centralized path utility for consistent handling
 const basePath = getBasePath(); // Returns with trailing slash
 const logoUrl = `${basePath}logo.png`;
@@ -30,7 +31,7 @@ const logoUrl = `${basePath}logo.png`;
       Skip to main content
     </a>
 
-    <Header />
+  {showHeader && <Header />}
 
     <main id="main-content"  tabindex="-1">
       <slot />

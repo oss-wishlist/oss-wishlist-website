@@ -20,7 +20,7 @@ const companyServices = services.filter(service =>
 );
 ---
 
-<Layout title="Open Source Wishlist - Connect projects with sustainability support">
+<Layout title="Open Source Wishlist - Connect projects with sustainability support" showHeader={!isPlaceholder}>
   {isPlaceholder ? (
     <PlaceholderPage />
   ) : (
