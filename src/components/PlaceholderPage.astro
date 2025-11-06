@@ -1,246 +1,38 @@
 ---
-import { getBasePath } from '../lib/paths';
-
-const basePath = getBasePath();
-// For public assets, use base URL + path (ensure proper slash)
-const logoUrl = `${basePath}logo.png`;
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="OSS Wishlist - Coming November 2025" />
-    <link rel="icon" type="image/png" href={logoUrl} />
-    <title>OSS Wishlist - Coming Soon</title>
-  </head>
-  <body>
-    <div class="container">
-      <img src={logoUrl} alt="OSS Wishlist Logo" class="logo" />
-      <h1>Make open source sustainability a reality</h1>
-      <p class="subtitle">
+<!-- Match the index hero layout and Tailwind styling -->
+<section class="bg-gradient-to-br from-gray-50 to-gray-100 py-20" aria-labelledby="placeholder-hero">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div class="max-w-4xl mx-auto">
+      <h1 id="placeholder-hero" class="text-5xl font-bold text-gray-950 mb-4">
+        Make open source sustainability a reality
+      </h1>
+      <p class="text-2xl font-medium text-gray-700 mb-2">
         See what your dependencies actually need. Sponsor the work. Track measurable impact.
       </p>
-      <div class="coming-soon">
-        <p>A community project launching November 2025</p>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <h3>Open Source Maintainers</h3>
-          <p>Create a wishlist of services your project needs for long-term health and sustainability.</p>
-        </div>
-        <div class="card">
-          <h3>Wishlist Sponsors</h3>
-          <p><b>Your company name here</b></p>
-          <p>When you sponsor, your company or name will be added to the main page as a supporter of the open source ecosystem.</p>
-          <p>Fulfill specific, validated needs in projects you depend on. See exactly how your support creates impact.</p>
-        </div>
-        <div class="card">
-          <h3>Open Source Practitioners</h3>
-          <p>Get paid to strengthen open source sustainability with work that values your expertise.</p>
-        </div>
+      <p class="text-sm text-gray-600 italic mb-8">Launching November 2025</p>
+
+      <!-- Audience Cards (same layout as index) -->
+      <div class="grid md:grid-cols-3 gap-6 mb-8" role="list">
+        <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
+          <h2 class="text-xl font-semibold text-gray-950 mb-2">Open Source Maintainers</h2>
+          <p class="text-gray-700 mb-2 flex-grow">Create a wishlist of services, or promote a campaign to support your project's long-term sustainability.</p>
+          <div class="text-xs text-gray-600 mt-auto"></div>
+        </article>
+
+        <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
+          <h2 class="text-xl font-semibold text-gray-950 mb-2">Wishlist Sponsors</h2>
+          <p class="text-gray-700 mb-2 flex-grow">Fulfill specific, validated needs in projects you depend on. See exactly how your support creates impact.</p>
+          <div class="text-xs text-gray-600 mt-auto"></div>
+        </article>
+
+        <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
+          <h2 class="text-xl font-semibold text-gray-950 mb-2">Helper Community</h2>
+          <p class="text-gray-700 mb-2 flex-grow">Get matched with wishes, share or contribute to campaigns, challenge and include others.</p>
+          <div class="text-xs text-gray-600 mt-auto"></div>
+        </article>
       </div>
     </div>
-    <footer>
-      <div class="footer-content">
-        <div>
-          <a href="https://github.com/oss-wishlist" target="_blank" rel="noopener noreferrer">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-            GitHub
-          </a>
-          <span style="margin: 0 1rem; color: #4b5563;">|</span>
-          <a href="mailto:info@oss-wishlist.com">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
-              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-            </svg>
-            info@oss-wishlist.com
-          </a>
-        </div>
-      </div>
-    </footer>
-  </body>
-</html>
-
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
-    padding: 5rem 1.25rem;
-    flex: 1;
-  }
-  
-  .logo {
-    height: 128px;
-    width: 128px;
-    margin: 0 auto 2rem;
-    display: block;
-  }
-  
-  h1 {
-    font-size: 3rem;
-    font-weight: bold;
-    color: #111827;
-    margin-bottom: 1.5rem;
-  }
-  
-  .tagline {
-    font-size: 1.25rem;
-    color: #4b5563;
-    margin-bottom: 2rem;
-  }
-  
-  .subtitle {
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 2rem;
-  }
-  
-  .sustainable {
-    color: #059669;
-  }
-  
-  .thriving {
-    color: #2563eb;
-  }
-  
-  .coming-soon {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-  }
-  
-  .coming-soon p {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #059669;
-    font-style: italic;
-    margin-bottom: 1.5rem;
-  }
-  
-  .taxonomy-blocks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: center;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .taxonomy-tag {
-    display: inline-block;
-    background: transparent;
-    color: #111827;
-    padding: 0.25rem 0.75rem;
-    font-size: 1rem;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-  
-  .taxonomy-tag:hover {
-    color: #4b5563;
-  }
-  
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-top: 2rem;
-    max-width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
-  .card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    border: 1px solid #e5e7eb;
-  }
-  
-  .card h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.5rem;
-  }
-  
-  .card p {
-    color: #4b5563;
-    line-height: 1.5;
-  }
-  
-  footer {
-    background-color: #111827;
-    color: white;
-    padding: 3rem 0;
-    margin-top: 5rem;
-  }
-  
-  footer .footer-content {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    text-align: center;
-  }
-  
-  footer p {
-    color: #9ca3af;
-    margin-bottom: 1rem;
-  }
-  
-  footer a {
-    color: #9ca3af;
-    text-decoration: none;
-  }
-  
-  footer a:hover {
-    color: white;
-  }
-  
-  @media (max-width: 768px) {
-    h1 {
-      font-size: 2.5rem;
-    }
-    
-    .tagline {
-      font-size: 1.25rem;
-    }
-    
-    .subtitle {
-      font-size: 1rem;
-    }
-    
-    .coming-soon h2 {
-      font-size: 1.875rem;
-    }
-    
-    .taxonomy-tag {
-      font-size: 0.875rem;
-      padding: 0.5rem 1rem;
-    }
-    
-    .cards {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
+  </div>
+</section>
