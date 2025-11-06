@@ -150,6 +150,8 @@ if (user?.login) {
             aria-labelledby="community-dropdown-button"
           >
             <div class="py-1" role="none">
+              <a href={`${basePath}helpers`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Helpers (Practitioners & Campaigns)</a>
+              <a href={`${basePath}campaigns`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Campaigns</a>
               <a href="https://discord.gg/9BY9P5FD" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Join the Community (Discord)</a>
               {userPractitionerSlug && user ? (
                 <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">View Your Practitioner Profile</a>
@@ -222,6 +224,8 @@ if (user?.login) {
         <a href={`${basePath}wishlists`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">View wishlists</a>
   <a href={`${basePath}catalog`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Wish Catalogue</a>
         <a href={`${basePath}practitioners`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Browse Practitioners</a>
+  <a href={`${basePath}helpers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Helpers (Practitioners & Campaigns)</a>
+  <a href={`${basePath}campaigns`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Campaigns</a>
   <a href={`${basePath}about-us`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">About Us</a>
   <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Information Sessions</a>
         {userPractitionerSlug && user ? (
