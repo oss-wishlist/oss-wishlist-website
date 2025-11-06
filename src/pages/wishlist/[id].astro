@@ -1,41 +1,105 @@
 ---
 import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
-import { getEntry } from 'astro:content';
+import { GITHUB_CONFIG } from '../../config/github.js';
+import { parseIssueForm } from '../../lib/issue-form-parser.js';
+import { getCollection } from 'astro:content';
 
 const basePath = getBasePath();
 
 export const prerender = false;
 
-// Server-rendered: resolve content dynamically at request time
+const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
 
-// Get the wishlist from props (static) or params (SSR fallback)
-const { wishlist: propsWishlist } = Astro.props;
+// Fetch all services from content collection
+const allServices = await getCollection('services');
+const serviceMap = new Map(allServices.map(service => [service.slug, service]));
+
+// Get the wishlist ID from URL params
 const { id } = Astro.params;
 
-// Use props wishlist if available, otherwise fetch dynamically
-const wishlist = propsWishlist || await getEntry('wishlists', id);
+if (!id || !GITHUB_TOKEN) {
+  return Astro.redirect('/404');
+}
 
-// If wishlist doesn't exist, return 404
-if (!wishlist) {
+// Fetch the wishlist from GitHub Issues API
+let wishlistData = null;
+
+try {
+  const response = await fetch(
+    `${GITHUB_CONFIG.API_ISSUES_URL}/${id}`,
+    {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    console.error(`Failed to fetch wishlist ${id}:`, response.status);
+    return Astro.redirect('/404');
+  }
+
+  const issue = await response.json();
+  
+  // Check if it's an approved wishlist
+  const isApproved = issue.labels?.some((label: any) => label.name === 'approved-wishlist');
+  if (!isApproved) {
+    return Astro.redirect('/404');
+  }
+
+  // Parse the issue body
+  const parsed = parseIssueForm(issue.body);
+  
+  // Use the maintainer from the parsed form (authenticated user who created the wishlist)
+  // not issue.user which is the bot account
+  const maintainerUsername = parsed.maintainer || issue.user.login;
+  const maintainerAvatarUrl = maintainerUsername 
+    ? `https://github.com/${maintainerUsername}.png`
+    : `https://github.com/${issue.user.login}.png`;
+  
+  wishlistData = {
+    id: issue.number,
+    title: issue.title,
+    projectName: parsed.project || issue.title,
+    repositoryUrl: parsed.repository,
+    maintainer: maintainerUsername,
+    maintainerAvatar: maintainerAvatarUrl,
+    services: parsed.services || [],
+    resources: parsed.resources || [],
+    technologies: parsed.technologies || [],
+    urgency: parsed.urgency || 'medium',
+    projectSize: parsed.projectSize,
+    timeline: parsed.timeline,
+    organizationType: parsed.organizationType,
+    organizationName: parsed.organizationName,
+    additionalNotes: parsed.additionalNotes,
+    openToSponsorship: parsed.openToSponsorship,
+    preferredPractitioner: parsed.preferredPractitioner,
+    nomineeName: parsed.nomineeName,
+    nomineeEmail: parsed.nomineeEmail,
+    nomineeGithub: parsed.nomineeGithub,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
+} catch (error) {
+  console.error('Error fetching wishlist:', error);
+  return Astro.redirect('/404');
+}
+
+if (!wishlistData) {
   return Astro.redirect('/404');
 }
 
 const urgencyColors = {
-  low: 'bg-green-100 text-green-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-red-100 text-red-800',
-  critical: 'bg-purple-100 text-purple-800'
-};
-
-const stageColors = {
-  early: 'bg-blue-100 text-blue-800',
-  growing: 'bg-green-100 text-green-800',
-  mature: 'bg-gray-100 text-gray-800',
-  established: 'bg-purple-100 text-purple-800'
+  low: 'bg-gray-100 text-gray-700',
+  medium: 'bg-gray-200 text-gray-800',
+  high: 'bg-gray-600 text-white',
+  critical: 'bg-gray-800 text-white'
 };
 ---
-<Layout title={`${wishlist.data.project_name} Wishlist - OSS Wishlist`} description={`Support ${wishlist.data.project_name}: ${wishlist.data.description}`}>
+<Layout title={`${wishlistData.projectName} Wishlist - OSS Wishlist`} description={`Support ${wishlistData.projectName}`}>
   <!-- Back Navigation -->
   <div class="bg-gray-50 py-4">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,96 +118,118 @@ const stageColors = {
       <div class="grid md:grid-cols-3 gap-8">
         <div class="md:col-span-2">
           <div class="flex items-start space-x-4 mb-6">
-            <img src={`${basePath}oss-wish.webp`} alt={wishlist.data.project_name} class="w-16 h-16 rounded-lg" />
+            <img 
+              src={wishlistData.maintainerAvatar} 
+              alt={wishlistData.maintainer} 
+              class="w-16 h-16 rounded-full border-2 border-gray-200"
+              onerror="this.src='https://github.com/github.png'"
+            />
             <div class="flex-1">
-              <h1 class="text-4xl font-bold text-gray-900 mb-2">{wishlist.data.project_name}</h1>
-              <p class="text-lg text-gray-600 mb-4">@{wishlist.data.maintainer.username}</p>
+              <h1 class="text-4xl font-bold text-gray-900 mb-2">{wishlistData.projectName}</h1>
+              <p class="text-lg text-gray-600 mb-4">
+                Maintainer: <a href={`https://github.com/${wishlistData.maintainer}`} target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">@{wishlistData.maintainer}</a>
+              </p>
               
               <div class="flex flex-wrap gap-3 mb-4">
-                <span class={`px-3 py-1 text-sm rounded-full ${urgencyColors[wishlist.data.urgency]}`}>
-                  {wishlist.data.urgency} priority
-                </span>
-                <span class={`px-3 py-1 text-sm rounded-full ${stageColors[wishlist.data.project_stage]}`}>
-                  {wishlist.data.project_stage}
-                </span>
-                <span class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
-                  {wishlist.data.license}
-                </span>
+                {wishlistData.urgency && (
+                  <span class={`px-3 py-1 text-sm rounded-full ${urgencyColors[wishlistData.urgency] || urgencyColors.medium}`}>
+                    {wishlistData.urgency} priority
+                  </span>
+                )}
+                {wishlistData.projectSize && (
+                  <span class="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-800">
+                    {wishlistData.projectSize} project
+                  </span>
+                )}
+                {wishlistData.organizationType && (
+                  <span class="px-3 py-1 text-sm rounded-full bg-gray-300 text-gray-900">
+                    {wishlistData.organizationType}
+                  </span>
+                )}
+                {wishlistData.openToSponsorship && (
+                  <span class="px-3 py-1 text-sm rounded-full bg-gray-400 text-white">
+                    Open to honorarium
+                  </span>
+                )}
               </div>
               
-              <!-- Project Stats -->
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span class="text-gray-600">GitHub Stars</span>
-                  <div class="font-semibold">{wishlist.data.github_stars?.toLocaleString() || 'N/A'}</div>
+              {/* Technologies */}
+              {wishlistData.technologies && wishlistData.technologies.length > 0 && (
+                <div class="text-sm mb-3">
+                  <span class="text-gray-600">Technologies: </span>
+                  <span class="font-semibold">{wishlistData.technologies.join(', ')}</span>
                 </div>
-                <div>
-                  <span class="text-gray-600">Monthly Downloads</span>
-                  <div class="font-semibold">{wishlist.data.monthly_downloads || 'N/A'}</div>
+              )}
+              
+              {/* Preferred Practitioner */}
+              {wishlistData.preferredPractitioner && (
+                <div class="text-sm mb-3">
+                  <span class="text-gray-600">Preferred Practitioner: </span>
+                  <span class="font-semibold">{wishlistData.preferredPractitioner}</span>
                 </div>
-                <div>
-                  <span class="text-gray-600">Technologies</span>
-                  <div class="font-semibold">{wishlist.data.technologies?.slice(0, 2).join(', ')}</div>
+              )}
+              
+              {/* Nominated Community Member */}
+              {wishlistData.nomineeName && (
+                <div class="text-sm mb-3">
+                  <span class="text-gray-600">Nominated Community Member: </span>
+                  <span class="font-semibold">{wishlistData.nomineeName}</span>
+                  {wishlistData.nomineeGithub && (
+                    <a href={`https://github.com/${wishlistData.nomineeGithub}`} target="_blank" rel="noopener noreferrer" class="ml-2 text-blue-600 hover:underline">
+                      @{wishlistData.nomineeGithub}
+                    </a>
+                  )}
                 </div>
-                <div>
-                  <span class="text-gray-600">Stage</span>
-                  <div class="font-semibold">{wishlist.data.project_stage}</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
           
-          <p class="text-lg text-gray-700 mb-6">{wishlist.data.description}</p>
-          
-          <div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-h2:text-xl prose-h2:font-bold prose-h2:mb-4 prose-h2:mt-8 prose-h3:text-lg prose-h3:font-semibold prose-h3:mb-3 prose-h3:mt-6 prose-p:text-gray-700 prose-ul:text-gray-700 prose-li:mb-2">
-            <div set:html={wishlist.body} />
-          </div>
+          {/* Additional Notes */}
+          {wishlistData.additionalNotes && (
+            <div class="prose prose-lg max-w-none mt-6">
+              <h2>Project Details</h2>
+              <p class="text-gray-700 whitespace-pre-wrap">{wishlistData.additionalNotes}</p>
+            </div>
+          )}
         </div>
         
         <!-- Support CTA Sidebar -->
         <div class="bg-gray-50 p-6 rounded-lg h-fit">
           <h2 class="text-xl font-bold text-gray-900 mb-4">Support This Project</h2>
           
-          <div class="mb-6">
-            <div class="text-sm text-gray-600 mb-1">Budget Range</div>
-            <div class="text-2xl font-bold text-green-600">{wishlist.data.budget_range || 'To be discussed'}</div>
-          </div>
+          {wishlistData.timeline && (
+            <div class="mb-6">
+              <div class="text-sm text-gray-600 mb-1">Timeline</div>
+              <div class="text-lg font-semibold text-gray-900">{wishlistData.timeline}</div>
+            </div>
+          )}
           
           <div class="space-y-3 mb-6">
             <a 
-              href={`mailto:${wishlist.data.maintainer.email}?subject=Support for ${wishlist.data.project_name}&body=Hi! I'm interested in supporting your project. Let's discuss how I can help.`}
+              href={`${basePath}fulfill?issue=${wishlistData.id}`}
               class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors text-center block font-semibold"
             >
-              Contact to Support
+              Fulfill This Wishlist
             </a>
-            <a 
-              href={wishlist.data.repo_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-full border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-center block"
-            >
-              View on GitHub
-            </a>
+            {wishlistData.repositoryUrl && (
+              <a 
+                href={wishlistData.repositoryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="w-full border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-center block"
               >
-                Visit Website
+                View Project
               </a>
             )}
           </div>
           
           <!-- Contact Methods -->
           <div class="border-t pt-4">
-            <h3 class="font-semibold text-gray-900 mb-3">Contact</h3>
+            <h3 class="font-semibold text-gray-900 mb-3">Maintainer</h3>
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Email</span>
-                <a href={`mailto:${wishlist.data.maintainer.email}`} class="text-gray-600 hover:text-gray-700">{wishlist.data.maintainer.email}</a>
-              </div>
-              <div class="flex justify-between text-sm">
                 <span class="text-gray-600">GitHub</span>
-                <a href={`https://github.com/${wishlist.data.maintainer.username}`} target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-gray-700">@{wishlist.data.maintainer.username}</a>
+                <a href={`https://github.com/${wishlistData.maintainer}`} target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">@{wishlistData.maintainer}</a>
               </div>
             </div>
           </div>
@@ -153,45 +239,77 @@ const stageColors = {
   </section>
 
   <!-- Services Needed -->
-  <section class="py-12 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="text-3xl font-bold text-gray-900 mb-8">Services Needed</h2>
-      
-      <div class="grid md:grid-cols-2 gap-6">
-        {wishlist.data.services_needed.map(service => (
-          <div class="bg-white p-6 rounded-lg border shadow-sm">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">{service}</h3>
-          </div>
-        ))}
+  {wishlistData.services && wishlistData.services.length > 0 && (
+    <section class="py-12 bg-gray-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">Services Needed</h2>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {wishlistData.services.map((serviceSlug: string) => {
+            const service = serviceMap.get(serviceSlug);
+            return service ? (
+              <a 
+                href={`${basePath}services/${service.slug}`}
+                class="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow block"
+              >
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{service.data.title}</h3>
+                <p class="text-sm text-gray-600 mb-3">{service.data.description}</p>
+                <span class="text-sm text-blue-600 hover:underline">Learn more →</span>
+              </a>
+            ) : (
+              <div class="bg-white p-6 rounded-lg border shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-900">{serviceSlug}</h3>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
-  <!-- Tags -->
-  <section class="py-8 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-wrap gap-2">
-        {wishlist.data.tags.map(tag => (
-          <span class="px-3 py-1 bg-white text-gray-700 text-sm rounded border">{tag}</span>
-        ))}
+  <!-- Resources Needed -->
+  {wishlistData.resources && wishlistData.resources.length > 0 && (
+    <section class="py-12 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">Resources Needed</h2>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {wishlistData.resources.map((resourceSlug: string) => {
+            const resource = serviceMap.get(resourceSlug);
+            return resource ? (
+              <a 
+                href={`${basePath}services/${resource.slug}`}
+                class="bg-gray-50 p-6 rounded-lg border hover:shadow-md transition-shadow block"
+              >
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{resource.data.title}</h3>
+                <p class="text-sm text-gray-600 mb-3">{resource.data.description}</p>
+                <span class="text-sm text-blue-600 hover:underline">Learn more →</span>
+              </a>
+            ) : (
+              <div class="bg-gray-50 p-6 rounded-lg border">
+                <h3 class="text-lg font-semibold text-gray-900">{resourceSlug}</h3>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <!-- CTA Section -->
   <section class="py-12 bg-blue-600">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h2 class="text-3xl font-bold text-white mb-4">Ready to Support {wishlist.data.project_name}?</h2>
-      <p class="text-xl text-blue-100 mb-8">Get in touch to discuss how you can help make this project thrive</p>
+      <h2 class="text-3xl font-bold text-white mb-4">Ready to Support {wishlistData.projectName}?</h2>
+      <p class="text-xl text-blue-100 mb-8">Help this open source project thrive by fulfilling their wishlist</p>
       <div class="flex justify-center space-x-4">
         <a 
-          href={`mailto:${wishlist.data.maintainer.email}?subject=Support for ${wishlist.data.project_name}`}
-          class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+          href={`${basePath}fulfill?issue=${wishlistData.id}`}
+          class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
         >
-          Contact Maintainer
+          Fulfill This Wishlist
         </a>
-        <a href={`${basePath}wishlists`} class="border border-orange-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors">
-          Browse Other Projects
+        <a href={`${basePath}wishlists`} class="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+          Browse Other Wishlists
         </a>
       </div>
     </div>

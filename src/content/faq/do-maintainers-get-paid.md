@@ -1,7 +1,7 @@
 ---
 title: "Don't the maintainers also get paid?"
 description: "Learn about maintainer compensation and optional honorariums through OSS Wishlist"
-category: "general"
+category: "For Maintainers"
 order: 7
 ---
 

@@ -152,7 +152,7 @@ if (user?.login) {
             <div class="py-1" role="none">
               <a href="https://discord.gg/9BY9P5FD" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Join the Community (Discord)</a>
               {userPractitionerSlug && user ? (
-                <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">View Your Profile</a>
+                <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">View Your Practitioner Profile</a>
               ) : (
                 <a href={`${basePath}apply-practitioner`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Become a Practitioner</a>
               )}
@@ -225,7 +225,7 @@ if (user?.login) {
   <a href={`${basePath}about-us`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">About Us</a>
   <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Information Sessions</a>
         {userPractitionerSlug && user ? (
-          <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">View Your Profile</a>
+          <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">View Your Practitioner Profile</a>
         ) : (
           <a href={`${basePath}apply-practitioner`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Become a Practitioner</a>
         )}

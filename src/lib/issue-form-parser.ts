@@ -15,9 +15,15 @@ interface ParsedIssueForm {
   openToSponsorship: boolean;
   // Optional form fields
   timeline?: string;
-  organizationType?: 'individual' | 'company' | 'nonprofit' | 'foundation';
+  organizationType?: 'single-maintainer' | 'community-team' | 'company-team' | 'foundation-team' | 'other';
   organizationName?: string;
+  otherOrganizationType?: string;
   additionalNotes?: string;
+  // Practitioner preferences and nomination
+  preferredPractitioner?: string;
+  nomineeName?: string;
+  nomineeEmail?: string;
+  nomineeGithub?: string;
 }
 
 export function parseIssueForm(body: string): ParsedIssueForm {
@@ -127,13 +133,20 @@ export function parseIssueForm(body: string): ParsedIssueForm {
         break;
       
       case 'Organization Type':
-        const orgTypeMap: Record<string, 'individual' | 'company' | 'nonprofit' | 'foundation'> = {
-          'Individual maintainer': 'individual',
-          'Company': 'company',
-          'Nonprofit organization': 'nonprofit',
-          'Foundation': 'foundation'
+      case 'Who owns/runs this project?':
+        const orgTypeMap: Record<string, 'single-maintainer' | 'community-team' | 'company-team' | 'foundation-team' | 'other'> = {
+          'Single maintainer': 'single-maintainer',
+          'Community team': 'community-team',
+          'Company/employee team': 'company-team',
+          'Foundation/employee team': 'foundation-team',
+          'Other': 'other',
+          // Legacy mappings for backwards compatibility
+          'Individual maintainer': 'single-maintainer',
+          'Company': 'company-team',
+          'Nonprofit organization': 'foundation-team',
+          'Foundation': 'foundation-team'
         };
-        result.organizationType = orgTypeMap[content] || 'individual';
+        result.organizationType = orgTypeMap[content] || 'single-maintainer';
         break;
       
       case 'Organization Name':
@@ -142,9 +155,40 @@ export function parseIssueForm(body: string): ParsedIssueForm {
         }
         break;
       
+      case 'Other Organization Type':
+      case 'Please specify':
+        if (content !== '_No response_') {
+          result.otherOrganizationType = content;
+        }
+        break;
+      
       case 'Additional Notes':
         if (content !== '_No response_') {
           result.additionalNotes = content;
+        }
+        break;
+      
+      case 'Preferred Practitioner':
+        if (content !== '_No response_') {
+          result.preferredPractitioner = content.trim();
+        }
+        break;
+      
+      case 'Nominee Name':
+        if (content !== '_No response_') {
+          result.nomineeName = content;
+        }
+        break;
+      
+      case 'Nominee Email':
+        if (content !== '_No response_') {
+          result.nomineeEmail = content;
+        }
+        break;
+      
+      case 'Nominee GitHub':
+        if (content !== '_No response_') {
+          result.nomineeGithub = content;
         }
         break;
     }
@@ -166,10 +210,15 @@ export function formatIssueFormBody(data: {
   wantsFundingYml?: boolean;
   openToSponsorship?: boolean;
   timeline?: string;
-  organizationType?: 'individual' | 'company' | 'nonprofit' | 'foundation';
+  organizationType?: 'single-maintainer' | 'community-team' | 'company-team' | 'foundation-team' | 'other';
   organizationName?: string;
+  otherOrganizationType?: string;
   additionalNotes?: string;
   technologies?: string[];
+  preferredPractitioner?: string;
+  nomineeName?: string;
+  nomineeEmail?: string;
+  nomineeGithub?: string;
 }): string {
   const urgencyDisplay: Record<string, string> = {
     'low': 'Low - Planning for future',
@@ -228,12 +277,17 @@ export function formatIssueFormBody(data: {
   
   if (data.organizationType) {
     const orgTypeDisplay: Record<string, string> = {
-      'individual': 'Individual maintainer',
-      'company': 'Company',
-      'nonprofit': 'Nonprofit organization',
-      'foundation': 'Foundation'
+      'single-maintainer': 'Single maintainer',
+      'community-team': 'Community team',
+      'company-team': 'Company/employee team',
+      'foundation-team': 'Foundation/employee team',
+      'other': 'Other'
     };
-    body += `### Organization Type\n\n${orgTypeDisplay[data.organizationType]}\n\n`;
+    body += `### Who owns/runs this project?\n\n${orgTypeDisplay[data.organizationType]}\n\n`;
+  }
+  
+  if (data.otherOrganizationType) {
+    body += `### Please specify\n\n${data.otherOrganizationType}\n\n`;
   }
   
   if (data.organizationName) {
@@ -246,6 +300,22 @@ export function formatIssueFormBody(data: {
   
   if (data.openToSponsorship !== undefined) {
     body += `### Open to Honorarium\n\n${data.openToSponsorship ? 'Yes' : 'No'}\n\n`;
+  }
+  
+  if (data.preferredPractitioner) {
+    body += `### Preferred Practitioner\n\n${data.preferredPractitioner}\n\n`;
+  }
+  
+  if (data.nomineeName) {
+    body += `### Nominee Name\n\n${data.nomineeName}\n\n`;
+  }
+  
+  if (data.nomineeEmail) {
+    body += `### Nominee Email\n\n${data.nomineeEmail}\n\n`;
+  }
+  
+  if (data.nomineeGithub) {
+    body += `### Nominee GitHub\n\n${data.nomineeGithub}\n\n`;
   }
   
   if (data.wantsFundingYml) {

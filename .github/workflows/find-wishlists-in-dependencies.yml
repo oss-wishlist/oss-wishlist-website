@@ -90,7 +90,7 @@ jobs:
 
       - name: Run OSS Wishlist Analyzer
         id: analyze
-        uses: oss-wishlist/oss-wishlist-dependency-report@main
+        uses: ./
         with:
           sbom-path: ${{ inputs.sbom-path }}
           token: ${{ secrets.GITHUB_TOKEN }}

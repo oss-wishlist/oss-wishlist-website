@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import { GITHUB_CONFIG } from '../config/github.js';
 import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
+import { parseIssueForm } from '../lib/issue-form-parser.js';
 
 const basePath = getBasePath();
 const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
@@ -47,62 +48,28 @@ if (issueNumber && GITHUB_TOKEN) {
     if (response.ok) {
       githubIssue = await response.json();
       
-      // Parse the issue body to extract wishes/services
-      const body = githubIssue.body || '';
-      const wishes: string[] = [];
-      const lines = body.split('\n');
+      // Parse the issue body using the same parser as the API
+      const parsed = parseIssueForm(githubIssue.body || '');
       
-      let inServicesSection = false;
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        
-        if (line === '## Services Requested' || line.includes('Services Requested')) {
-          inServicesSection = true;
-          continue;
-        }
-        
-        // Stop if we hit another section
-        if (inServicesSection && (line.startsWith('##') || line.startsWith('---'))) {
-          break;
-        }
-        
-        // Parse service items
-        if (inServicesSection && line.startsWith('- ')) {
-          const service = line
-            .replace(/^-\s*(\[\s*[x\s]?\s*\])?\s*/, '')
-            .trim();
-          if (service) {
-            wishes.push(service);
-          }
-        }
-      }
+      // Extract project name from parsed data or title
+      const projectName = parsed.project || githubIssue.title.replace(/^Wishlist:\s*/i, '').trim();
       
-      // Try to detect Project Size section
-      const sizeMatch = body.match(/###\s*Project Size\s*\n+([A-Za-z]+)/);
-      if (sizeMatch) {
-        const size = sizeMatch[1].trim().toLowerCase();
-        if (size === 'small' || size === 'medium' || size === 'large') {
-          projectSize = size as 'small' | 'medium' | 'large';
-        }
-      }
-
-      // Extract project name from title or body
-      let projectName = githubIssue.title.replace(/^Wishlist:\s*/i, '').trim();
-      
-      // Extract open_to_sponsorship flag from issue body
-      let openToSponsorship = false;
-      const sponsorshipMatch = body.match(/Open to (Sponsorship|Honorarium):\*\*\s*(Yes|No)/i);
-      if (sponsorshipMatch && sponsorshipMatch[2].toLowerCase() === 'yes') {
-        openToSponsorship = true;
+      // Set project size from parsed data
+      if (parsed.projectSize) {
+        projectSize = parsed.projectSize;
       }
       
       wishlistData = {
         issueNumber: githubIssue.number,
         projectName: projectName,
-        wishes: wishes,
+        wishes: parsed.services,  // Use parsed services instead of manual parsing
         url: githubIssue.html_url,
         maintainer: githubIssue.user.login,
-        openToSponsorship: openToSponsorship
+        openToSponsorship: parsed.openToSponsorship,
+        preferredPractitioner: parsed.preferredPractitioner || null,
+        nomineeName: parsed.nomineeName || null,
+        nomineeEmail: parsed.nomineeEmail || null,
+        nomineeGithub: parsed.nomineeGithub || null
       };
     }
   } catch (error) {
@@ -174,6 +141,64 @@ if (issueNumber && GITHUB_TOKEN) {
               </div>
             )}
           </div>
+
+          <!-- Maintainer's Practitioner Preferences (if any) -->
+          {wishlistData && (wishlistData.preferredPractitioner || wishlistData.nomineeName) && (
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 class="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Maintainer's Practitioner Preferences
+              </h3>
+              <p class="text-sm text-blue-800 mb-3">
+                The maintainer has expressed the following preferences. These will be considered alongside your selection when finalizing the match.{' '}
+                <a href={`${basePath}faq#practitioner-matching-preferences`} target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-900">
+                  Learn more
+                </a>
+              </p>
+              
+              {wishlistData.preferredPractitioner && (
+                <div class="mb-3">
+                  <p class="text-xs font-medium text-blue-900 mb-1">Preferred Practitioner:</p>
+                  <p class="text-sm text-blue-800">
+                    {(() => {
+                      // Try to find the practitioner in our collection
+                      const practitioner = practitioners.find(p => p.slug === wishlistData.preferredPractitioner);
+                      return practitioner ? (
+                        <>
+                          <strong>{practitioner.data.name}</strong>
+                          {practitioner.data.github && ` (@${practitioner.data.github})`}
+                          {practitioner.data.title && ` — ${practitioner.data.title}`}
+                        </>
+                      ) : (
+                        wishlistData.preferredPractitioner
+                      );
+                    })()}
+                  </p>
+                </div>
+              )}
+              
+              {wishlistData.nomineeName && (
+                <div>
+                  <p class="text-xs font-medium text-blue-900 mb-1">Nominated Practitioner:</p>
+                  <p class="text-sm text-blue-800">
+                    <strong>{wishlistData.nomineeName}</strong>
+                  </p>
+                  {(wishlistData.nomineeEmail || wishlistData.nomineeGithub) && (
+                    <p class="text-xs text-blue-800 mt-1">
+                      {wishlistData.nomineeEmail && `Email: ${wishlistData.nomineeEmail}`}
+                      {wishlistData.nomineeEmail && wishlistData.nomineeGithub && ' • '}
+                      {wishlistData.nomineeGithub && `GitHub: ${wishlistData.nomineeGithub}`}
+                    </p>
+                  )}
+                  <p class="text-xs text-blue-700 mt-1 italic">
+                    Note: Nominees must be vetted and approved before they can fulfill wishes.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <!-- Items to Fund (Wishes) -->
           {wishlistData && wishlistData.wishes && wishlistData.wishes.length > 0 && (

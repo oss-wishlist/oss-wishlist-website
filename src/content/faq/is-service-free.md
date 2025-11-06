@@ -5,4 +5,4 @@ category: "General"
 order: 3
 ---
 
-For maintainers, creating and managing wishlists is completely free. The platform is funded by Wishlist Sponsors who sponsor the fulfillment of wishes, and practitioners are compensated for their work through these sponsorships.
+This program is completely free. Pracitioners are compensated for their work through  sponsorships and if requested maintainers may also recieve a honorarium.  The platform itself is run by volunteers and accepts sponsorship through [Open Collective](https://opencollective.com/oss-wishlist) and [GitHub Sponsors](https://github.com/oss-wishlist/.github/blob/main/.github/FUNDING.yml).

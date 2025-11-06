@@ -43,12 +43,12 @@ const urgencyColors = {
       <!-- Search & Filter Inline -->
       <div class="grid md:grid-cols-12 gap-4 items-center">
         <!-- Search Bar -->
-        <div class="md:col-span-5">
+        <div class="md:col-span-9">
           <div class="relative">
             <input 
               type="text" 
               id="searchInput"
-              placeholder="Search projects..."
+              placeholder="Search projects by name, maintainer, or repository..."
               class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 pl-10"
             />
             <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,18 +57,9 @@ const urgencyColors = {
           </div>
         </div>
         
-        <!-- Quick Filters -->
-        <div class="md:col-span-4 flex flex-wrap gap-2">
-          <button id="filterAll" class="px-3 py-1.5 text-sm bg-gray-900 text-white border border-gray-900 rounded-lg hover:bg-gray-800 transition-colors">All</button>
-          <button id="filterUrgent" class="px-3 py-1.5 text-sm bg-white border rounded-lg hover:bg-gray-50 transition-colors">High Urgency</button>
-        </div>
-        
-        <!-- Dropdowns -->
-        <div class="md:col-span-3 flex gap-2">
-          <select id="techFilter" class="flex-1 px-3 py-2 text-sm bg-white border rounded-lg">
-            <option value="all">All Tech</option>
-          </select>
-          <select id="sortSelect" class="flex-1 px-3 py-2 text-sm bg-white border rounded-lg">
+        <!-- Sort Dropdown -->
+        <div class="md:col-span-3">
+          <select id="sortSelect" class="w-full px-3 py-2 text-sm bg-white border rounded-lg">
             <option value="recent">Sort: Recent</option>
             <option value="oldest">Sort: Oldest</option>
           </select>
@@ -79,7 +70,6 @@ const urgencyColors = {
       <div class="mt-4 flex items-center justify-between text-sm text-gray-600">
         <div class="flex gap-6">
           <span><strong id="wishlist-count" class="text-gray-900">Loading...</strong> active wishlists</span>
-          <span><strong id="technologies-count" class="text-gray-900">0</strong> technologies</span>
         </div>
         <div id="searchResults" class="hidden">
           <span id="resultCount">0</span> project(s) found
@@ -151,9 +141,7 @@ const urgencyColors = {
     critical: 'bg-gray-800 text-white'
   };
 
-  // UI state for filters and sorting
-  let activeUrgency = 'all'; // 'all' | 'high'
-  let activeTech = 'all'; // 'all' | '<tech>'
+  // UI state for search and sorting
   let searchQuery = '';
   let sortBy = 'recent'; // 'recent' | 'oldest'
 
@@ -177,24 +165,11 @@ const urgencyColors = {
       allWishlists = data;
       
       // Update stats
-      document.getElementById('wishlist-count').textContent = allWishlists.length;
+      const wishlistCountEl = document.getElementById('wishlist-count');
+      if (wishlistCountEl) wishlistCountEl.textContent = allWishlists.length;
       
-  // Count unique technologies
-  const allTechnologies = new Set();
-      allWishlists.forEach(wishlist => {
-        if (wishlist.technologies && Array.isArray(wishlist.technologies)) {
-          wishlist.technologies.forEach(tech => {
-            if (tech && tech.trim()) {
-              allTechnologies.add(tech.trim().toLowerCase());
-            }
-          });
-        }
-      });
-  document.getElementById('technologies-count').textContent = allTechnologies.size;
-
-  // Populate technology filter and render initial list
-  populateTechFilter(Array.from(allTechnologies).sort());
-  applyFilters();
+      // Render initial list
+      applyFilters();
       
     } catch (error) {
       console.error('[fetchWishlists] Error:', error);
@@ -247,13 +222,6 @@ const urgencyColors = {
   }
 
   // Populate technologies dropdown dynamically
-  function populateTechFilter(techs) {
-    const techSelect = document.getElementById('techFilter');
-    if (!techSelect) return;
-    techSelect.innerHTML = '<option value="all">All Tech</option>' +
-      techs.map(t => `<option value="${t}">${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('');
-  }
-
   function sortWishlists(list) {
     const arr = [...list];
     if (sortBy === 'recent') {
@@ -266,26 +234,18 @@ const urgencyColors = {
 
   function applyFilters() {
     let filtered = allWishlists;
+    console.log('[applyFilters] Total wishlists:', allWishlists.length);
+    console.log('[applyFilters] Search query:', searchQuery);
 
-    // Urgency filter: High includes 'high' and 'critical'
-    if (activeUrgency === 'high') {
-      filtered = filtered.filter(w => w.urgency === 'high' || w.urgency === 'critical');
-    }
-
-    // Tech filter
-    if (activeTech !== 'all') {
-      filtered = filtered.filter(w => Array.isArray(w.technologies) && w.technologies.map(t => (t || '').toLowerCase()).includes(activeTech));
-    }
-
-    // Search filter
+    // Search filter - only search project name, maintainer username, and repo URL
     const q = (searchQuery || '').toLowerCase().trim();
     if (q) {
       filtered = filtered.filter(w =>
-        (w.title || '').toLowerCase().includes(q) ||
-        (w.projectTitle || '').toLowerCase().includes(q) ||
-        (w.maintainerName || '').toLowerCase().includes(q) ||
-        (Array.isArray(w.wishes) && w.wishes.some(wish => (wish || '').toLowerCase().includes(q)))
+        (w.projectName || '').toLowerCase().includes(q) ||
+        (w.maintainerUsername || '').toLowerCase().includes(q) ||
+        (w.repositoryUrl || '').toLowerCase().includes(q)
       );
+      console.log('[applyFilters] Filtered results:', filtered.length);
     }
 
     // Sort and display
@@ -297,7 +257,7 @@ const urgencyColors = {
 
     if (resultCount) resultCount.textContent = String(result.length);
     if (searchResults) {
-      if (q || activeUrgency !== 'all' || activeTech !== 'all') {
+      if (q) {
         searchResults.classList.remove('hidden');
       } else {
         searchResults.classList.add('hidden');
@@ -314,33 +274,24 @@ const urgencyColors = {
   // Create wishlist card HTML
   function createWishlistCard(wishlist) {
     const statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';
-    const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-800';
-    const sizeLabel = wishlist.projectSize ? (wishlist.projectSize.charAt(0).toUpperCase() + wishlist.projectSize.slice(1)) : null;
-    const orgTypeMap = { individual: 'Individual', company: 'Company', nonprofit: 'Nonprofit', foundation: 'Foundation' };
-    const orgTypeLabel = wishlist.organizationType ? (orgTypeMap[wishlist.organizationType] || wishlist.organizationType) : null;
-    const repoLink = wishlist.repositoryUrl ? `<a href="${wishlist.repositoryUrl}" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-gray-900 underline text-xs">Repository</a>` : '';
+    const maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`;
     
-    // Check if wishlist is approved
-    const isApproved = wishlist.labels.some(label => label.name === 'approved-wishlist');
-    const approvalBadge = isApproved 
-      ? '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 border border-green-200">✓ Approved</span>'
-      : '<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">⏳ Pending Approval</span>';
+    // API already filters for approved wishlists only
     
     return `
-      <div class="wishlist-card bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow p-6" data-title="${wishlist.title.toLowerCase()}" data-maintainer="${wishlist.maintainerName.toLowerCase()}">
+      <div class="wishlist-card bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow p-6" data-project="${(wishlist.projectName || '').toLowerCase()}" data-maintainer="${(wishlist.maintainerUsername || '').toLowerCase()}">
         <!-- Project Header -->
         <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center space-x-3">
-            <img src="${wishlist.author.avatar_url}" alt="${wishlist.author.login}" class="w-10 h-10 rounded-full" />
+          <div class="flex items-start gap-3 flex-1">
+            <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+              <img src="${maintainerAvatar}" alt="${wishlist.maintainerUsername}" class="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors" />
+            </a>
             <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-lg font-semibold text-gray-900">${wishlist.projectTitle}</h3>
-              </div>
-              <p class="text-sm text-gray-600">@${wishlist.maintainerName}</p>
+              <h3 class="text-lg font-semibold text-gray-900">${wishlist.projectName}</h3>
+              <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-gray-900">@${wishlist.maintainerUsername}</a>
             </div>
           </div>
           <div class="flex flex-col space-y-1">
-            ${approvalBadge}
             ${wishlist.status && wishlist.status !== 'Open' ? `
               <span class="px-2 py-1 text-xs rounded-full ${statusColorClass}">
                 ${wishlist.status}
@@ -349,50 +300,22 @@ const urgencyColors = {
           </div>
         </div>
 
-        <!-- Services Needed -->
-        <div class="mb-4">
-          <h4 class="font-medium text-gray-900 mb-2">Looking for:</h4>
-          <ul class="text-sm text-gray-600 space-y-1">
-            ${wishlist.wishes.slice(0, 3).map(wish => `
-              <li class="flex items-start">
-                <span class="text-gray-600 mr-2">•</span>
-                ${wish}
-              </li>
-            `).join('')}
-            ${wishlist.wishes.length > 3 ? `
-              <li class="text-gray-600 text-xs">+ ${wishlist.wishes.length - 3} more...</li>
-            ` : ''}
-          </ul>
-        </div>
-
-        <!-- Meta: size, org, priority -->
-        <div class="flex flex-wrap gap-2 mb-4 text-xs">
-          ${sizeLabel ? `<span class="px-2 py-1 rounded bg-gray-100 text-gray-800 border border-gray-200">Size: ${sizeLabel}</span>` : ''}
-          ${orgTypeLabel ? `<span class="px-2 py-1 rounded bg-gray-100 text-gray-800 border border-gray-200">Organization: ${orgTypeLabel}</span>` : ''}
-          <span class="px-2 py-1 rounded ${urgencyColorClass} border border-gray-200">Priority: ${wishlist.urgency}</span>
-        </div>
-
         <!-- Actions -->
         <div class="flex items-center justify-between pt-4 border-t">
           <div class="flex space-x-2">
             <a 
-              href="${wishlist.wishlistUrl || `${basePath}fulfill?issue=${wishlist.id}`}"
+              href="${wishlist.wishlistUrl}"
               class="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
+            >
+              View full wish details
+            </a>
+            <a 
+              href="${basePath}fulfill?issue=${wishlist.id}"
+              class="bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors"
             >
               Fulfill this wish
             </a>
-            ${wishlist.repositoryUrl ? `
-            <a 
-              href="${wishlist.repositoryUrl}"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors"
-            >
-              View Project
-            </a>
-            ` : ''}
           </div>
-          
         </div>
       </div>
     `;
@@ -402,6 +325,7 @@ const urgencyColors = {
   function performSearch() {
     const input = document.getElementById('searchInput');
     searchQuery = (input?.value || '');
+    console.log('[performSearch] Search query:', searchQuery);
     applyFilters();
   }
 
@@ -412,50 +336,19 @@ const urgencyColors = {
     
     // Set up search
     const searchInput = document.getElementById('searchInput');
+    console.log('[DOMContentLoaded] Search input found:', !!searchInput);
     let searchTimeout;
     
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(performSearch, 300);
-    });
-
-    // Filters
-    const btnAll = document.getElementById('filterAll');
-    const btnUrgent = document.getElementById('filterUrgent');
-    const techSelect = document.getElementById('techFilter');
-    const sortSelect = document.getElementById('sortSelect');
-
-    function updateUrgencyButtons() {
-      if (!btnAll || !btnUrgent) return;
-      if (activeUrgency === 'all') {
-        btnAll.classList.add('bg-gray-900','text-white','border-gray-900');
-        btnAll.classList.remove('bg-white');
-        btnUrgent.classList.remove('bg-gray-900','text-white','border-gray-900');
-        btnUrgent.classList.add('bg-white');
-      } else {
-        btnUrgent.classList.add('bg-gray-900','text-white','border-gray-900');
-        btnUrgent.classList.remove('bg-white');
-        btnAll.classList.remove('bg-gray-900','text-white','border-gray-900');
-        btnAll.classList.add('bg-white');
-      }
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        console.log('[input] Search triggered');
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300);
+      });
     }
 
-    btnAll?.addEventListener('click', function() {
-      activeUrgency = 'all';
-      updateUrgencyButtons();
-      applyFilters();
-    });
-
-    btnUrgent?.addEventListener('click', function() {
-      activeUrgency = 'high';
-      updateUrgencyButtons();
-      applyFilters();
-    });
-
-    techSelect?.addEventListener('change', function(e) {
-      activeTech = (e.target?.value || 'all');
-      applyFilters();
-    });
+    // Filters
+    const sortSelect = document.getElementById('sortSelect');
 
     sortSelect?.addEventListener('change', function(e) {
       sortBy = (e.target?.value || 'recent');

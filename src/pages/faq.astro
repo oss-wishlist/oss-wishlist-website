@@ -25,6 +25,25 @@ const faqByCategory = faqWithContent.reduce((acc, faq) => {
 Object.keys(faqByCategory).forEach(category => {
   faqByCategory[category].sort((a, b) => (a.data.order || 999) - (b.data.order || 999));
 });
+
+// Define category order
+const categoryOrder = ['General', 'For Sponsors', 'For Maintainers', 'Wishlists'];
+const sortedCategories = Object.keys(faqByCategory).sort((a, b) => {
+  const indexA = categoryOrder.indexOf(a);
+  const indexB = categoryOrder.indexOf(b);
+  
+  // If both categories are in the order list, sort by their position
+  if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+  
+  // If only A is in the order list, it comes first
+  if (indexA !== -1) return -1;
+  
+  // If only B is in the order list, it comes first
+  if (indexB !== -1) return 1;
+  
+  // If neither is in the order list, sort alphabetically
+  return a.localeCompare(b);
+});
 ---
 
 <Layout title="FAQ - OSS Wishlist" description="Frequently asked questions about the Open Source Wishlist platform">
@@ -37,7 +56,9 @@ Object.keys(faqByCategory).forEach(category => {
 
     <!-- FAQ Content -->
     <div class="space-y-4">
-      {Object.entries(faqByCategory).map(([category, faqs], index) => (
+      {sortedCategories.map((category, index) => {
+        const faqs = faqByCategory[category];
+        return (
         <section key={category} class="bg-white rounded-lg shadow-sm border">
           <button 
             class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -63,18 +84,22 @@ Object.keys(faqByCategory).forEach(category => {
             aria-labelledby={`faq-button-${index}`}
           >
             <div class="space-y-4 pt-2">
-              {faqs.map((faq) => (
-                <div key={faq.slug} id={faq.slug} class="bg-gray-50 rounded-lg p-4">
-                  <h3 class="text-lg font-semibold text-gray-900 mb-3">{faq.data.title}</h3>
-                  <div class="text-gray-700 prose prose-gray max-w-none prose-sm prose-headings:text-gray-900 prose-h2:text-base prose-h2:font-semibold prose-h3:text-sm prose-h3:font-medium">
-                    <faq.Content />
+              {faqs.map((faq) => {
+                const { Content } = faq;
+                return (
+                  <div key={faq.slug} id={faq.slug} class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{faq.data.title}</h3>
+                    <div class="text-gray-700 prose prose-gray max-w-none prose-sm prose-headings:text-gray-900 prose-h2:text-base prose-h2:font-semibold prose-h3:text-sm prose-h3:font-medium">
+                      <Content />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
-      ))}
+        );
+      })}
 
       <!-- Contact -->
       <section class="bg-gray-50 rounded-lg p-8 text-center">
