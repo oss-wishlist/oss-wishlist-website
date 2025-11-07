@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { getPriceForService, formatPrice } from '../../lib/pricing';
-import { sendAdminEmail } from '../../lib/mail';
+import { sendAdminEmail, sendEmail } from '../../lib/mail';
 import { withBasePath } from '../../lib/paths';
 
 export const prerender = false;
@@ -156,6 +156,48 @@ ${fulfillmentData.processAgreement ? '✅ Agreed: Employee/practitioner will com
     if (!emailResult.success) {
       console.error('Failed to send fulfillment email:', emailResult.error);
       return redirect(withBasePath(`fulfill?issue=${issueNumber}&error=email_failed`));
+    }
+
+    // Send confirmation email to requester (non-blocking for redirect)
+    const requesterEmail = String(fulfillmentData.email || '').trim();
+    if (requesterEmail) {
+      const confirmSubject = `We've received your wishlist fulfillment request: ${projectName}`;
+      const confirmBody = `Hi ${fulfillmentData.contactPerson || 'there'},
+
+Thank you for submitting a wishlist fulfillment request for "${projectName}".
+We've received your details and will review and follow up within 2-3 business days.
+
+Summary:
+- Project: ${projectName}
+- GitHub: ${githubUrl}
+- Issue #: ${issueNumber}
+- Contact: ${fulfillmentData.contactPerson} (${requesterEmail})
+- Project size: ${fulfillmentData.projectSize}
+${fulfillmentData.timeline ? `- Timeline: ${fulfillmentData.timeline}` : ''}
+
+Next steps:
+• We'll review your selections and reach out with any questions.
+• If practitioners were selected, we’ll coordinate introductions.
+
+Questions? Email us at info@oss-wishlist.com
+
+Helpful links:
+• Community Discord: https://discord.gg/9BY9P5FD
+• FAQ: https://oss-wishlist.org/faq
+
+Best,
+OSS Wishlist Team`;
+
+      try {
+        await sendEmail({
+          to: requesterEmail,
+          subject: confirmSubject,
+          text: confirmBody,
+        });
+      } catch (e) {
+        // Do not block user flow on confirmation failure
+        console.error('Failed to send fulfillment confirmation email:', e);
+      }
     }
 
     // Redirect to success page

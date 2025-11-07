@@ -539,6 +539,45 @@ if (issueNumber && GITHUB_TOKEN) {
       });
     });
 
+    // Field validation helpers
+    const fieldErrors = {};
+    
+    function clearFieldError(fieldName) {
+      const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
+      if (field) {
+        field.classList.remove('border-red-500', 'border-2');
+        field.classList.add('border-gray-300');
+      }
+      const errorMsg = field?.parentElement?.querySelector('.field-error-message');
+      if (errorMsg) errorMsg.remove();
+      delete fieldErrors[fieldName];
+    }
+    
+    function highlightInvalidField(fieldName, message = 'This field is required') {
+      const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
+      if (field) {
+        field.classList.remove('border-gray-300');
+        field.classList.add('border-red-500', 'border-2');
+        
+        const parent = field.parentElement;
+        if (parent && !parent.querySelector('.field-error-message')) {
+          const errorMsg = document.createElement('p');
+          errorMsg.className = 'field-error-message text-red-600 text-sm mt-1';
+          errorMsg.textContent = message;
+          parent.appendChild(errorMsg);
+        }
+        fieldErrors[fieldName] = message;
+      }
+    }
+
+    // Add input listeners to clear errors
+    const allInputs = document.querySelectorAll('input, select, textarea');
+    allInputs.forEach(input => {
+      input.addEventListener('input', function() {
+        clearFieldError(this.name || this.id);
+      });
+    });
+
     // Handle per-service "use employee" checkbox toggling
     useEmployeeCheckboxes.forEach(cb => {
       cb.addEventListener('change', function() {
@@ -562,15 +601,45 @@ if (issueNumber && GITHUB_TOKEN) {
     // Form validation to ensure at least one service is selected (if checkboxes are present)
     const form = document.querySelector('form');
     form.addEventListener('submit', function(e) {
+      // Clear previous errors
+      Object.keys(fieldErrors).forEach(clearFieldError);
+      let hasErrors = false;
+      
       const serviceCheckboxes = document.querySelectorAll('.funded-service-checkbox');
       
       if (serviceCheckboxes.length > 0) {
         const checkedServices = document.querySelectorAll('.funded-service-checkbox:checked');
         if (checkedServices.length === 0) {
           e.preventDefault();
-          alert('Please select at least one wish from the wishlist to fulfill.');
-          return false;
+          highlightInvalidField('services-section', 'Please select at least one wish from the wishlist to fulfill.');
+          hasErrors = true;
         }
+      }
+      
+      // Validate required fields
+      const requiredFields = [
+        { name: 'contact-person', message: 'Contact person name is required' },
+        { name: 'email', message: 'Email address is required' },
+        { name: 'reason', message: 'Please provide a reason for fulfillment' }
+      ];
+      
+      requiredFields.forEach(({ name, message }) => {
+        const field = document.querySelector(`[name="${name}"]`);
+        if (field && !field.value.trim()) {
+          highlightInvalidField(name, message);
+          hasErrors = true;
+        }
+      });
+      
+      if (hasErrors) {
+        e.preventDefault();
+        // Scroll to first error
+        const firstError = document.querySelector('.border-red-500');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => firstError.focus(), 500);
+        }
+        return false;
       }
     });
   </script>

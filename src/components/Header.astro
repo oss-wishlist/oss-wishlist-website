@@ -39,125 +39,62 @@ if (user?.login) {
       
       <!-- Desktop Navigation -->
   <div class="hidden md:flex space-x-6 items-center">
-        <!-- Wishlist Services Dropdown -->
-        <div class="relative" id="wishlist-services-dropdown">
-          <button 
-            class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 flex items-center space-x-1 min-h-[44px]"
-            aria-expanded="false"
-            aria-haspopup="true"
-            aria-label="Wishlist Services menu"
-            id="wishlist-services-dropdown-button"
-          >
-            <span>Wishlist Services</span>
-            <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div 
-            id="wishlist-services-menu"
-            class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50"
-            role="menu"
-            aria-orientation="vertical"
-            aria-labelledby="wishlist-services-dropdown-button"
-          >
-            <div class="py-1" role="none">
-              <a href={`${basePath}catalog`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Wish Catalogue</a>
-              <!-- Playbooks link removed -->
-            </div>
-          </div>
-        </div>
         
-        <!-- For Maintainers Dropdown -->
-        <div class="relative" id="maintainers-dropdown">
+        <!-- Wishlists Dropdown -->
+        <div class="relative" id="wishlists-dropdown">
           <button 
             class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 flex items-center space-x-1 min-h-[44px]"
             aria-expanded="false"
             aria-haspopup="true"
-            aria-label="For Maintainers menu"
-            id="maintainers-dropdown-button"
+            aria-label="Wishlists menu"
+            id="wishlists-dropdown-button"
           >
-            <span>For Maintainers</span>
+            <span>Wishlists</span>
             <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
           
           <div 
-            id="maintainers-menu"
-            class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50"
-            role="menu"
-            aria-orientation="vertical"
-            aria-labelledby="maintainers-dropdown-button"
-          >
-            <div class="py-1" role="none">
-              <a href={`${basePath}maintainers`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Create and Manage Your Wishlists</a>
-              <a href={`${basePath}practitioners`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Browse Practitioners</a>
-              <a href={`${basePath}browse-sponsors`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Browse Sponsors</a>
-            </div>
-          </div>
-        </div>
-        
-        <!-- For Sponsors Dropdown -->
-        <div class="relative" id="sponsors-dropdown">
-          <button 
-            class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 flex items-center space-x-1 min-h-[44px]"
-            aria-expanded="false"
-            aria-haspopup="true"
-            aria-label="For Sponsors menu"
-            id="sponsors-dropdown-button"
-          >
-            <span>For Sponsors</span>
-            <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          
-          <div 
-            id="sponsors-menu"
+            id="wishlists-menu"
             class="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50"
             role="menu"
             aria-orientation="vertical"
-            aria-labelledby="sponsors-dropdown-button"
+            aria-labelledby="wishlists-dropdown-button"
           >
             <div class="py-1" role="none">
-              <a href={`${basePath}wishlists`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Fulfill a Wish</a>
-              <a href={`${basePath}practitioners`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Browse Practitioners</a>
-              <a href={`${basePath}ecosystem-guardians`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Sponsor Directory</a>
+              <a href={`${basePath}catalog`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Wishlist Catalogue</a>
+              <a href={`${basePath}wishlists`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Current Wishlists</a>
+              <a href={`${basePath}maintainers`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Your Wishlists</a>
             </div>
           </div>
         </div>
         
-        <!-- Community Dropdown -->
-        <div class="relative" id="community-dropdown">
+        <!-- Helper Community Dropdown -->
+        <div class="relative" id="helper-community-dropdown">
           <button 
             class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 flex items-center space-x-1 min-h-[44px]"
             aria-expanded="false"
             aria-haspopup="true"
-            aria-label="Community menu"
-            id="community-dropdown-button"
+            aria-label="Helper Community menu"
+            id="helper-community-dropdown-button"
           >
-            <span>Community</span>
+            <span>Helper Community</span>
             <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
           
           <div 
-            id="community-menu"
+            id="helper-community-menu"
             class="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50"
             role="menu"
             aria-orientation="vertical"
-            aria-labelledby="community-dropdown-button"
+            aria-labelledby="helper-community-dropdown-button"
           >
             <div class="py-1" role="none">
-              <a href={`${basePath}helpers`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Helpers (Practitioners & Campaigns)</a>
-              <a href={`${basePath}campaigns`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Campaigns</a>
-              <a href="https://discord.gg/9BY9P5FD" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Join the Community (Discord)</a>
-              {userPractitionerSlug && user ? (
-                <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">View Your Practitioner Profile</a>
-              ) : (
-                <a href={`${basePath}apply-practitioner`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Become a Practitioner</a>
-              )}
+              <a href={`${basePath}helpers`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Helper Community Efforts</a>
+              <a href="https://discord.gg/9BY9P5FD" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Join the Community</a>
               <a href={`${basePath}code-of-conduct`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Code of Conduct</a>
             </div>
           </div>
@@ -188,8 +125,6 @@ if (user?.login) {
             <div class="py-1" role="none">
               <a href={`${basePath}about-us`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">About Us</a>
               <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Information Sessions</a>
-              <a href={`${basePath}how-it-works`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">How It Works</a>
-              <a href={`${basePath}pricing`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Pricing</a>
               <a href={`${basePath}faq`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">FAQ</a>
               <a href={`${basePath}terms`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Terms & Conditions</a>
               <div class="border-t my-1"></div>
@@ -220,23 +155,16 @@ if (user?.login) {
     <!-- Mobile Navigation Menu -->
     <div id="mobile-menu" class="hidden md:hidden pb-4" role="navigation" aria-label="Mobile navigation">
       <div class="space-y-1">
-        <a href={`${basePath}maintainers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Create and Manage Your Wishlists</a>
-        <a href={`${basePath}wishlists`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">View wishlists</a>
-  <a href={`${basePath}catalog`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Wish Catalogue</a>
-        <a href={`${basePath}practitioners`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Browse Practitioners</a>
-  <a href={`${basePath}helpers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Helpers (Practitioners & Campaigns)</a>
-  <a href={`${basePath}campaigns`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Campaigns</a>
-  <a href={`${basePath}about-us`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">About Us</a>
-  <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Information Sessions</a>
-        {userPractitionerSlug && user ? (
-          <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">View Your Practitioner Profile</a>
-        ) : (
-          <a href={`${basePath}apply-practitioner`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Become a Practitioner</a>
-        )}
-        <a href={`${basePath}ecosystem-guardians`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Wishlist Sponsors</a>
-        <a href={`${basePath}how-it-works`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">How it works</a>
-  <!-- Playbooks link removed -->
-        <a href={`${basePath}pricing`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Pricing</a>
+        <a href={`${basePath}catalog`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Wishlist Catalogue</a>
+        <a href={`${basePath}wishlists`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Current Wishlists</a>
+        <a href={`${basePath}maintainers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Your Wishlists</a>
+        <a href={`${basePath}helpers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Helper Community Efforts</a>
+  <a href={`${basePath}practitioners`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Practitioners</a>
+        <a href="https://discord.gg/9BY9P5FD" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Join the Community</a>
+        <a href={`${basePath}about-us`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">About Us</a>
+        <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Information Sessions</a>
+        <a href={`${basePath}about-us`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">About Us</a>
+        <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Information Sessions</a>
         <a href={`${basePath}faq`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">FAQ</a>
         {user ? (
           <a href={`${basePath}api/auth/logout`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Logout</a>
@@ -264,10 +192,8 @@ if (user?.login) {
     
     // Dropdown IDs
     const dropdowns = [
-      { id: 'wishlist-services', button: 'wishlist-services-dropdown-button', menu: 'wishlist-services-menu', container: 'wishlist-services-dropdown' },
-      { id: 'maintainers', button: 'maintainers-dropdown-button', menu: 'maintainers-menu', container: 'maintainers-dropdown' },
-      { id: 'community', button: 'community-dropdown-button', menu: 'community-menu', container: 'community-dropdown' },
-      { id: 'sponsors', button: 'sponsors-dropdown-button', menu: 'sponsors-menu', container: 'sponsors-dropdown' },
+      { id: 'wishlists', button: 'wishlists-dropdown-button', menu: 'wishlists-menu', container: 'wishlists-dropdown' },
+      { id: 'helper-community', button: 'helper-community-dropdown-button', menu: 'helper-community-menu', container: 'helper-community-dropdown' },
       { id: 'about', button: 'about-dropdown-button', menu: 'about-menu', container: 'about-dropdown' }
     ];
     

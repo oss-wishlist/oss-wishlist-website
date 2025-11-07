@@ -24,7 +24,7 @@ services:
 availability: "available"
 accepts_pro_bono: true
 pro_bono_criteria: "non-profit or solo maintainer; Not an employee of any big tech companies or paid for their role; Updates or adds Code of Conduct as part of engagement"
-pro_bono_capacity_per_month: 2
+pro_bono_hours_per_month: 6
 
 
 years_experience: 18

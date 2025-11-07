@@ -1,0 +1,36 @@
+---
+import Layout from "../../components/Layout.astro";
+import { getCollection } from "astro:content";
+import { getBasePath } from "../../lib/paths";
+
+export const prerender = false;
+
+const basePath = getBasePath();
+const slug = Astro.params.slug as string;
+const all = await getCollection('campaigns');
+const entry = all.find(e => e.slug === slug);
+if (!entry) {
+  throw new Error(`Campaign not found: ${slug}`);
+}
+const { Content } = await entry.render();
+---
+
+<Layout title={entry.data.title} description={entry.data.description}>
+  <article class="max-w-3xl mx-auto px-4 py-12 prose prose-gray">
+    <header class="not-prose mb-6">
+      <a href={`${basePath}campaigns`} class="text-sm text-gray-600">← Back to Campaigns</a>
+      <h1 class="text-4xl font-bold text-gray-900 mt-2">{entry.data.title}</h1>
+      {entry.data.organization && (
+        <p class="text-gray-700">Organized by {entry.data.organization}</p>
+      )}
+      {entry.data.website && (
+        <p><a href={entry.data.website} target="_blank" rel="noopener noreferrer" class="text-gray-700">Official website →</a></p>
+      )}
+      {entry.data.contact_email && (
+        <p><a href={`mailto:${entry.data.contact_email}`} class="text-gray-700">Contact: {entry.data.contact_email}</a></p>
+      )}
+    </header>
+
+    <Content />
+  </article>
+</Layout>

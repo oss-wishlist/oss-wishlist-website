@@ -10,8 +10,9 @@ import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = () => {
   const disableIndexing = import.meta.env.DISABLE_INDEXING === 'true';
+  const isPlaceholder = import.meta.env.PUBLIC_SITE_MODE === 'placeholder';
   
-  const robotsTxt = disableIndexing
+  const robotsTxt = (disableIndexing || isPlaceholder)
     ? `# Staging Environment - No Indexing
 User-agent: *
 Disallow: /

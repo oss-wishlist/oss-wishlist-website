@@ -32,10 +32,10 @@ const urgencyColors = {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
           Project Wishlists
         </h1>
-        <p class="text-gray-600 max-w-2xl">
+        <p class="text-xl text-gray-600 max-w-2xl">
           Browse open source maintainers seeking support. <a href={`${basePath}/maintainers`} class="text-gray-700 underline hover:text-gray-900">Create your wishlist</a>
         </p>
       </div>
@@ -234,8 +234,6 @@ const urgencyColors = {
 
   function applyFilters() {
     let filtered = allWishlists;
-    console.log('[applyFilters] Total wishlists:', allWishlists.length);
-    console.log('[applyFilters] Search query:', searchQuery);
 
     // Search filter - only search project name, maintainer username, and repo URL
     const q = (searchQuery || '').toLowerCase().trim();
@@ -245,7 +243,7 @@ const urgencyColors = {
         (w.maintainerUsername || '').toLowerCase().includes(q) ||
         (w.repositoryUrl || '').toLowerCase().includes(q)
       );
-      console.log('[applyFilters] Filtered results:', filtered.length);
+      
     }
 
     // Sort and display
@@ -325,7 +323,6 @@ const urgencyColors = {
   function performSearch() {
     const input = document.getElementById('searchInput');
     searchQuery = (input?.value || '');
-    console.log('[performSearch] Search query:', searchQuery);
     applyFilters();
   }
 
@@ -336,12 +333,10 @@ const urgencyColors = {
     
     // Set up search
     const searchInput = document.getElementById('searchInput');
-    console.log('[DOMContentLoaded] Search input found:', !!searchInput);
     let searchTimeout;
     
     if (searchInput) {
       searchInput.addEventListener('input', function() {
-        console.log('[input] Search triggered');
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(performSearch, 300);
       });

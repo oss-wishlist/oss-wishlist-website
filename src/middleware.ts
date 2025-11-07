@@ -72,10 +72,32 @@ export const onRequest = defineMiddleware(async (context, next) => {
   
   // Add X-Robots-Tag header if indexing is disabled (for staging environments)
   const disableIndexing = import.meta.env.DISABLE_INDEXING === 'true';
+  const isPlaceholder = import.meta.env.PUBLIC_SITE_MODE === 'placeholder';
   
   // Get current path (without base path)
   const pathname = url.pathname.replace(getBasePath(), '/').replace('//', '/');
   
+  // If in placeholder mode, only allow the homepage and static assets; redirect everything else
+  if (isPlaceholder) {
+    const basePath = getBasePath();
+    // Allowed relative paths when placeholder is active
+    const allowedPrefixes = [
+      '/',
+      '/favicon.ico',
+      '/robots.txt',
+      '/logo.png',
+      '/_astro/',
+      '/assets/',
+      '/images/',
+      '/public/'
+    ];
+    const isAllowed = allowedPrefixes.some((p) => pathname === p || pathname.startsWith(p));
+    if (!isAllowed) {
+      const redirectUrl = `${basePath}`; // basePath already has trailing slash
+      return redirect(redirectUrl);
+    }
+  }
+
   // Check if route requires authentication
   const requiresAuth = PROTECTED_ROUTES.some(route => 
     pathname === route || pathname.startsWith(`${route}/`)
@@ -122,7 +144,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
   
   // Add noindex header if indexing is disabled
-  if (disableIndexing) {
+  if (disableIndexing || isPlaceholder) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   }
   

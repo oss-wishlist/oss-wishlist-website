@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ request }) => {
       const origin = new URL(request.url).origin;
       const basePath = import.meta.env.PUBLIC_BASE_PATH || '/oss-wishlist-website';
       
-      console.log('Cache not found, populating from API...');
+  // Populate cache from API if local cache missing
       const apiResponse = await fetch(`${origin}${basePath}/api/wishlists?refresh=true`, {
         headers: {
           'User-Agent': 'OSS-Wishlist-Cache-Generator'

@@ -113,7 +113,10 @@ const practitioners = defineCollection({
   availability: z.enum(['available', 'limited', 'unavailable']).default('available'),
   accepts_pro_bono: z.boolean().default(false),
   pro_bono_criteria: z.string().optional(),
-  pro_bono_capacity_per_month: z.number().optional(), // How many pro bono contracts per month
+  // Pro bono hours available per month (replaces previous contract count)
+  pro_bono_hours_per_month: z.number().optional(),
+  // Deprecated: kept for backward compatibility with older profiles
+  pro_bono_capacity_per_month: z.number().optional(),
     
     // Experience & Credentials
     years_experience: z.number().optional(),
