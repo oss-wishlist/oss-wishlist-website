@@ -14,13 +14,14 @@ Open source projects cannot be sustainable without help. Direct funding helps in
 
 Sponsors often fund projects, but have a hard time describing how those funds had impact on sustainability.
 
-# Practitioners
+# Look for the Helpers
 
-**Practitioners** We are open source practitioners, but one of MANY open source practitioners with availability, skill, and empathy who can easily step in to help open source projects repair, uplevel, and build a more sustainable future. Guided by industry standards, we've all helped write, build, and improve — our time can really make a difference — and yet that connection is missing. 
+> "When I was a boy and I would see scary things in the news, my mother would say to me, 'Look for the helpers. You will always find people who are helping.'" — Fred Rogers
 
-We believe that by creating this connection, we can really make a huge difference for open source sustainability. 
+At OSS Wishlist, we're bringing together a community of helpers: practitioners, sponsors, and other contributors who are ready to make a real difference for open source sustainability using tools, resources,  metrics and standards that already exist.
 
-**We expect to learn along the way and appreciate all report-backs**.
+**[Meet the helpers →](/helpers)**
+
 ---
 
 **Want to learn more or chat?**
