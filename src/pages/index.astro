@@ -20,8 +20,10 @@ const companyServices = services.filter(service =>
 );
 ---
 
-{isPlaceholder ? <PlaceholderPage /> : (
-<Layout title="Open Source Wishlist - Connect projects with sustainability support">
+<Layout title="Open Source Wishlist - Connect projects with sustainability support" showHeader={!isPlaceholder}>
+  {isPlaceholder ? (
+    <PlaceholderPage />
+  ) : (
   <!-- Hero Section -->
   <section class="bg-gradient-to-br from-gray-50 to-gray-100 py-20" aria-labelledby="hero-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -37,7 +39,7 @@ const companyServices = services.filter(service =>
         <div class="grid md:grid-cols-3 gap-6 mb-8" role="list">
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
             <h2 class="text-xl font-semibold text-gray-950 mb-2">Open Source Maintainers</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Create a wishlist of services your project needs for long-term health and sustainability.</p>
+            <p class="text-gray-700 mb-4 flex-grow">Create a wishlist of available services to address current gaps and support your project's long-term sustainability.</p>
             <a 
               href={`${basePath}maintainers`} 
               class="bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 transition-colors block text-center min-h-[44px] flex items-center justify-center font-medium"
@@ -49,7 +51,7 @@ const companyServices = services.filter(service =>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
             <h2 class="text-xl font-semibold text-gray-950 mb-2">Wishlist Sponsors</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Fulfill specific, validated needs in projects you depend on. See exactly how your support creates impact.</p>
+            <p class="text-gray-700 mb-4 flex-grow">Strategically fund sustainabiltiy  in projects you depend on. See exactly how your support creates impact.</p>
             <a 
               href={`${basePath}wishlists`} 
               class="bg-slate-700 text-white px-6 py-3 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 transition-colors block text-center min-h-[44px] flex items-center justify-center font-medium"
@@ -60,14 +62,14 @@ const companyServices = services.filter(service =>
           </article>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-gray-950 mb-2">Open Source Practitioners</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Get paid to strengthen open source sustainability with work that values your expertise.</p>
+            <h2 class="text-xl font-semibold text-gray-950 mb-2">Helper Community</h2>
+            <p class="text-gray-700 mb-4 flex-grow">Get matched with wishes, share or contribute to campaigns, challenge and include others.</p>
             <a 
               href={`${basePath}practitioners`} 
               class="bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 transition-colors block text-center min-h-[44px] flex items-center justify-center font-medium"
               aria-label="Apply to become a practitioner"
             >
-              Become a Practitioner
+              Join the Community
             </a>
           </article>
         </div>
@@ -94,6 +96,6 @@ const companyServices = services.filter(service =>
       </div>
     </div>
   </section>
+  )}
 </Layout>
-)}
 ```

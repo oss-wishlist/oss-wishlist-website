@@ -155,10 +155,7 @@ export const GET: APIRoute = async ({ url }) => {
       const maintainerUsername = parsed.maintainer || issue.user.login;
       const maintainerAvatarUrl = `https://github.com/${maintainerUsername}.png`;
       
-      // Debug: Log when we're falling back to bot user
-      if (!parsed.maintainer) {
-        console.log(`Issue #${issue.number}: No maintainer in parsed form, falling back to ${issue.user.login}`);
-      }
+      // Use parsed maintainer if available; otherwise fallback to issue user
       
       // Return minimal public data only
       return {

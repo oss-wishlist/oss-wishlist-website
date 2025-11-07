@@ -113,7 +113,10 @@ const practitioners = defineCollection({
   availability: z.enum(['available', 'limited', 'unavailable']).default('available'),
   accepts_pro_bono: z.boolean().default(false),
   pro_bono_criteria: z.string().optional(),
-  pro_bono_capacity_per_month: z.number().optional(), // How many pro bono contracts per month
+  // Pro bono hours available per month (replaces previous contract count)
+  pro_bono_hours_per_month: z.number().optional(),
+  // Deprecated: kept for backward compatibility with older profiles
+  pro_bono_capacity_per_month: z.number().optional(),
     
     // Experience & Credentials
     years_experience: z.number().optional(),
@@ -203,6 +206,25 @@ const playbooksExternal = defineCollection({
   }),
 });
 
+// Community Campaigns (e.g., ecosystem-wide initiatives like "Python Foundation")
+const campaigns = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    organization: z.string().optional(),
+    website: z.string().url().optional(),
+    contact_email: z.string().email().optional(),
+    goals: z.array(z.string()).optional(),
+    status: z.enum(['active', 'paused', 'completed', 'archived']).default('active'),
+    start_date: z.date().optional(),
+    end_date: z.date().optional(),
+    banner_image_url: z.string().url().optional(),
+    tags: z.array(z.string()).optional(),
+    featured: z.boolean().default(false),
+  }),
+});
+
 export const collections = {
   services,
   wishlists,
@@ -210,5 +232,6 @@ export const collections = {
   guardians,
   faq,
   pages,
+  campaigns,
   'playbooks-external': playbooksExternal,
 };

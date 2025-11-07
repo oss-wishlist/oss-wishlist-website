@@ -29,12 +29,9 @@ function getPlaybookForService(serviceSlug: string) {
   <section class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h1 class="text-5xl font-bold text-gray-900 mb-6">Catalogue of Services & Resources</h1>
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Catalogue of Services & Resources</h1>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-          Each <b>service</b> addresses a critical risk to project sustainability and which require expertise and time.
-        </p>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-         Each <b>resource</b> is meant as a 'capture' for those things projects need, which require dollars (like infrastructure, tokens etc).
+          Each <b>service</b> addresses a critical risk to project sustainability and which require expertise and time. Each <b>resource</b> is meant as a 'capture' for those things projects need, which require dollars (like infrastructure, tokens etc).
         </p>
       </div>
 
@@ -53,10 +50,14 @@ function getPlaybookForService(serviceSlug: string) {
                   data-type="resource">
             Resources
           </button>
+          <button class="type-filter-btn px-6 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border hover:bg-gray-50" 
+                  data-type="funding-campaign">
+            Funding Campaigns
+          </button>
         </div>
       </div>
 
-      <!-- Services Grid -->
+  <!-- Services & Generic Funding Campaign Card Grid -->
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" id="services-grid">
         {services.map((service) => {
           const playbook = getPlaybookForService(service.slug);
@@ -118,6 +119,35 @@ function getPlaybookForService(serviceSlug: string) {
             </div>
           </div>
         )})}
+
+        <!-- Generic Funding Campaign card (directory of external efforts) -->
+        <div class="service-card bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow" 
+             data-type="funding-campaign">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900">Funding Campaigns</h3>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-200 text-gray-800">
+                  Funding Campaign
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-gray-600 mb-4">
+            We highlight time-bound, external funding efforts (e.g., Open Collective, foundations) to fill ecosystem gaps. Explore current campaigns and propose new ones to be featured.
+          </p>
+          <p class="text-gray-600 mb-4">
+            if you would like your campaign added, please reach out to info@oss-wishlist.com
+          </p>
+
+          <div class="pt-4 border-t flex gap-3 items-center">
+            <a href={`${basePath}campaigns`} 
+               class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
+              View campaigns
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Call to Action -->

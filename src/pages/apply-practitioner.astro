@@ -34,6 +34,8 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
       <h2 class="text-2xl font-bold text-gray-900 mb-6">Practitioner Application</h2>
       
       <form id="practitionerApplicationForm" class="space-y-6">
+        <!-- Error box -->
+        <div id="formError" class="hidden mb-4 p-4 border border-red-300 bg-red-50 text-red-800 rounded" role="alert" aria-live="polite"></div>
         <!-- Personal Information -->
         <div class="grid md:grid-cols-2 gap-6">
           <div>
@@ -99,13 +101,14 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
         <!-- Experience -->
         <div class="grid md:grid-cols-1 gap-6">
           <div>
-            <label for="experience" class="block text-sm font-medium text-gray-700 mb-2">Years of Experience</label>
+            <label for="experience" class="block text-sm font-medium text-gray-700 mb-2">Years of Experience *</label>
             <select 
               id="experience" 
               name="experience" 
+              required
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
             >
-              <option value="">Select experience level</option>
+              <option value="" disabled selected>Select experience level</option>
               <option value="0-2">0-2 years</option>
               <option value="2-5">2-5 years</option>
               <option value="5-8">5-8 years</option>
@@ -143,32 +146,33 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
 
         <!-- Bio -->
         <div>
-          <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">Professional Bio *</label>
+          <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">Professional Bio * <span class="text-xs text-gray-500 font-normal">(<span id="bioCharCount">0</span>/500)</span></label>
           <textarea 
             id="bio" 
             name="bio" 
             required 
+            maxlength="500"
             rows="4" 
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
-            placeholder="Tell us about your background, experience, and what makes you a great practitioner for our network (2-3 sentences)..."
+            placeholder="Tell us about your background, experience, and what makes you a great practitioner for our network (2-3 sentences, max 500 characters)..."
           ></textarea>
+          <p class="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
         </div>
 
         <!-- Social/Contact -->
         <div class="grid md:grid-cols-2 gap-6">
           <div>
-            <label for="github" class="block text-sm font-medium text-gray-700 mb-2">GitHub Username</label>
+            <label for="github" class="block text-sm font-medium text-gray-700 mb-2">GitHub Profile URL</label>
             <input 
-              type="text" 
+              type="url" 
               id="github" 
               name="github" 
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
-              placeholder="yourusername"
+              placeholder="https://github.com/yourusername"
             />
-            <p class="text-xs text-gray-500 mt-1">For GitHub Sponsors integration</p>
           </div>
           <div>
-            <label for="linkedin" class="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile</label>
+            <label for="linkedin" class="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile URL</label>
             <input 
               type="url" 
               id="linkedin" 
@@ -181,7 +185,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
 
         <div class="grid md:grid-cols-2 gap-6">
           <div>
-            <label for="mastodon" class="block text-sm font-medium text-gray-700 mb-2">Mastodon Profile</label>
+            <label for="mastodon" class="block text-sm font-medium text-gray-700 mb-2">Mastodon Profile URL</label>
             <input 
               type="url" 
               id="mastodon" 
@@ -191,7 +195,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
             />
           </div>
           <div>
-            <label for="website" class="block text-sm font-medium text-gray-700 mb-2">Website/Portfolio</label>
+            <label for="website" class="block text-sm font-medium text-gray-700 mb-2">Website/Portfolio URL</label>
             <input 
               type="url" 
               id="website" 
@@ -221,6 +225,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
             <select 
               id="availability" 
               name="availability" 
+              required
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
             >
               <option value="available">Available immediately</option>
@@ -237,19 +242,19 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
           <!-- Pro Bono Criteria - conditionally shown -->
           <div id="proBonoCriteria" class="mt-4 hidden space-y-4">
             <div>
-              <label for="proBonoCapacity" class="block text-sm font-medium text-gray-700 mb-2">
-                Pro Bono Capacity Per Month *
+              <label for="proBonoHours" class="block text-sm font-medium text-gray-700 mb-2">
+                Pro Bono Hours Per Month *
               </label>
               <input 
                 type="number" 
-                id="proBonoCapacity" 
-                name="proBonoCapacity" 
+                id="proBonoHours" 
+                name="proBonoHours" 
                 min="1" 
                 max="10"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
-                placeholder="e.g., 2"
+                placeholder="e.g., 5"
               />
-              <p class="text-xs text-gray-500 mt-1">How many pro bono contracts are you willing to take per month?</p>
+              <p class="text-xs text-gray-500 mt-1">How many hours per month can you dedicate to pro bono work?</p>
             </div>
             
             <div>
@@ -295,25 +300,84 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
   </div>
 
   <script>
+    // Base path for client-side routes - ensure it ends with /
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  const basePath = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
+    // Clear all field errors
+    function clearFieldErrors() {
+      const fields = document.querySelectorAll('.border-red-500');
+      fields.forEach(field => {
+        field.classList.remove('border-red-500', 'border-2');
+        field.classList.add('border-gray-300');
+      });
+      const errorMessages = document.querySelectorAll('.field-error-message');
+      errorMessages.forEach(msg => msg.remove());
+    }
+
+    // Highlight invalid fields
+    function highlightInvalidFields(fields) {
+      if (!fields || !Array.isArray(fields)) return;
+      
+      fields.forEach(fieldName => {
+        const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+          field.classList.remove('border-gray-300');
+          field.classList.add('border-red-500', 'border-2');
+          
+          // Add error message if not already present
+          const parent = field.parentElement;
+          if (parent && !parent.querySelector('.field-error-message')) {
+            const errorMsg = document.createElement('p');
+            errorMsg.className = 'field-error-message text-red-600 text-sm mt-1';
+            errorMsg.textContent = 'This field is required';
+            parent.appendChild(errorMsg);
+          }
+          
+          // Scroll to first invalid field
+          if (fields[0] === fieldName) {
+            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => field.focus(), 500);
+          }
+        }
+      });
+    }
+
     // Handle pro bono criteria visibility
     document.addEventListener('DOMContentLoaded', function() {
       const proBonoCheckbox = document.getElementById('proBono');
       const proBonoCriteriaDiv = document.getElementById('proBonoCriteria');
-      const proBonoCapacityInput = document.getElementById('proBonoCapacity');
+      const proBonoHoursInput = document.getElementById('proBonoHours');
+      
+      // Bio character counter
+      const bioTextarea = document.getElementById('bio');
+      const bioCharCount = document.getElementById('bioCharCount');
+      
+      if (bioTextarea && bioCharCount) {
+        bioTextarea.addEventListener('input', function() {
+          bioCharCount.textContent = this.value.length;
+        });
+      }
       
       proBonoCheckbox.addEventListener('change', function() {
         if (this.checked) {
           proBonoCriteriaDiv.classList.remove('hidden');
           // Make pro bono capacity required when checked
-          proBonoCapacityInput.setAttribute('required', 'required');
+          proBonoHoursInput.setAttribute('required', 'required');
         } else {
           proBonoCriteriaDiv.classList.add('hidden');
           document.getElementById('proBonoCriteriaText').value = '';
-          proBonoCapacityInput.value = '';
+          proBonoHoursInput.value = '';
           // Remove required attribute when unchecked
-          proBonoCapacityInput.removeAttribute('required');
+          proBonoHoursInput.removeAttribute('required');
         }
       });
+
+      // Clear errors on input change
+      const form = document.getElementById('practitionerApplicationForm');
+      if (form) {
+        form.addEventListener('input', clearFieldErrors);
+      }
     });
 
     // Handle form submission
@@ -329,47 +393,112 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
       data.specialties = specialties;
       
       try {
-        // Submit practitioner application via API (sends email to admin)
-  const response = await fetch(`${basePath}api/submit-practitioner`, {
+        // Clear previous errors
+        const errorBox = document.getElementById('formError');
+        if (errorBox) {
+          errorBox.classList.add('hidden');
+          errorBox.innerHTML = '';
+        }
+        clearFieldErrors();
+
+        const payload = {
+          fullName: data.fullName,
+          email: data.email,
+          title: data.title,
+          company: data.company,
+          location: data.location,
+          experience: data.experience,
+          specialties: specialties,
+          otherSpecialties: data.otherSpecialties,
+          bio: data.bio,
+          github: data.github,
+          linkedin: data.linkedin,
+          mastodon: data.mastodon,
+          website: data.website,
+          projects: data.projects,
+          availability: data.availability,
+          proBono: data.proBono,
+          proBonoHours: data.proBonoHours,
+          proBonoCriteriaText: data.proBonoCriteriaText,
+          additionalInfo: data.additionalInfo
+        };
+
+  // Submit practitioner application via API
+
+        const response = await fetch(`${basePath}api/submit-practitioner`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            fullName: data.fullName,
-            email: data.email,
-            title: data.title,
-            company: data.company,
-            location: data.location,
-            experience: data.experience,
-            specialties: specialties,
-            otherSpecialties: data.otherSpecialties,
-            bio: data.bio,
-            github: data.github,
-            linkedin: data.linkedin,
-            mastodon: data.mastodon,
-            website: data.website,
-            projects: data.projects,
-            availability: data.availability,
-            proBono: data.proBono,
-            proBonoCapacity: data.proBonoCapacity,
-            proBonoCriteriaText: data.proBonoCriteriaText,
-            additionalInfo: data.additionalInfo
-          })
+          body: JSON.stringify(payload)
         });
-
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          await response.text();
+          throw new Error('Server returned an invalid response. Please try again.');
+        }
+        
         const result = await response.json();
 
         if (response.ok && result.success) {
           // Redirect to success page
-          const basePath = import.meta.env.BASE_URL || '';
-          window.location.href = `${basePath}/practitioner-success`;
+          window.location.href = `${basePath}practitioner-success`;
         } else {
-          throw new Error(result.error || 'Failed to submit application');
+          const errorBox = document.getElementById('formError');
+          if (errorBox) {
+            errorBox.classList.remove('hidden');
+            errorBox.innerHTML = '';
+            const title = document.createElement('p');
+            title.className = 'font-semibold mb-1';
+            title.textContent = 'There was a problem submitting your application:';
+            errorBox.appendChild(title);
+
+            const msg = document.createElement('p');
+            msg.textContent = result.error || 'Unknown error';
+            errorBox.appendChild(msg);
+
+            if (result.fields && Array.isArray(result.fields) && result.fields.length) {
+              const list = document.createElement('ul');
+              list.className = 'list-disc pl-5 mt-2';
+              result.fields.forEach(f => {
+                const li = document.createElement('li');
+                li.textContent = `Missing: ${f}`;
+                list.appendChild(li);
+              });
+              errorBox.appendChild(list);
+              
+              // Highlight invalid fields
+              highlightInvalidFields(result.fields);
+            }
+
+            // Focus the error box for accessibility
+            errorBox.setAttribute('tabindex', '-1');
+            errorBox.focus();
+          }
+          return; // Don't throw; we've handled UI
         }
       } catch (error) {
-        console.error('Error submitting application:', error);
-        alert('There was an error submitting your application. Please try again or contact us directly.');
+        console.error('[Practitioner Form] Caught error:', error);
+        console.error('[Practitioner Form] Error type:', error.constructor.name);
+        console.error('[Practitioner Form] Error message:', error instanceof Error ? error.message : String(error));
+        
+        const errorBox = document.getElementById('formError');
+        if (errorBox) {
+          errorBox.classList.remove('hidden');
+          let errorMessage = 'Please try again or contact us directly.';
+          
+          if (error instanceof TypeError && error.message.includes('fetch')) {
+            errorMessage += ' (Network error - please check your connection)';
+          } else if (error instanceof Error) {
+            errorMessage += ` (${error.message})`;
+          }
+          
+          errorBox.innerHTML = '<p class="font-semibold mb-1">Unexpected error</p><p>' + errorMessage + '</p>';
+          errorBox.setAttribute('tabindex', '-1');
+          errorBox.focus();
+        }
       }
     });
   </script>

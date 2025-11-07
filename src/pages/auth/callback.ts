@@ -16,6 +16,30 @@ export const prerender = false;
 const usedCodes = new Set<string>();
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
+  // Helper to resolve desired return path from cookie or query, normalized to a site-relative path
+  const resolveNormalizedReturnPath = (): string => {
+    const basePath = import.meta.env.BASE_URL || '/';
+    const cookieReturnTo = cookies.get('oauth_return_to')?.value || '';
+    const queryReturnTo = url.searchParams.get('returnTo') || '';
+    let rawReturnTo = cookieReturnTo || queryReturnTo || '/';
+
+    // If full URL, extract path+search+hash
+    try {
+      if (rawReturnTo.startsWith('http://') || rawReturnTo.startsWith('https://')) {
+        const u = new URL(rawReturnTo);
+        rawReturnTo = u.pathname + u.search + u.hash;
+      }
+    } catch {}
+
+    // Remove basePath prefix if duplicated
+    const base = basePath.endsWith('/') ? basePath : basePath + '/';
+    if (rawReturnTo.startsWith(base)) {
+      rawReturnTo = rawReturnTo.slice(base.length - 1);
+    }
+    if (!rawReturnTo.startsWith('/')) rawReturnTo = '/' + rawReturnTo;
+    if (rawReturnTo === '/login') rawReturnTo = '/';
+    return rawReturnTo;
+  };
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
@@ -31,7 +55,8 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     if (sessionData && !sessionData.accessToken) {
       cookies.delete('github_session', { path: '/' });
     } else if (sessionData) {
-        return redirect(withBasePath('maintainers?auth=already_authenticated'));
+        const normalized = resolveNormalizedReturnPath();
+        return redirect(withBasePath(normalized));
     } else {
       // Clear the invalid cookie
       cookies.delete('github_session', { path: '/' });
@@ -41,12 +66,14 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   // Handle OAuth errors
   if (error) {
     console.error('GitHub OAuth error:', error);
-    return redirect(withBasePath('maintainers?error=auth_failed'));
+    const normalized = resolveNormalizedReturnPath();
+    return redirect(withBasePath(normalized));
   }
   
   if (!code || !state) {
     console.error('Missing OAuth parameters:', { code: !!code, state: !!state });
-    return redirect(withBasePath('maintainers?error=missing_parameters'));
+    const normalized = resolveNormalizedReturnPath();
+    return redirect(withBasePath(normalized));
   }
   
   // Check if this code was already used (prevents duplicate processing)
@@ -58,13 +85,15 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     if (existingSession) {
       const sessionData = verifySession(existingSession, sessionSecret);
       if (sessionData) {
-        // User is logged in, redirect to maintainers without error
-        return redirect(withBasePath('maintainers'));
+        // User is logged in, redirect to intended destination
+        const normalized = resolveNormalizedReturnPath();
+        return redirect(withBasePath(normalized));
       }
     }
     
-    // No valid session, redirect to login
-    return redirect(withBasePath('login?returnTo=' + encodeURIComponent(withBasePath('maintainers'))));
+    // No valid session, redirect to login with desired returnTo
+    const normalized = resolveNormalizedReturnPath();
+    return redirect(withBasePath('login?returnTo=' + encodeURIComponent(withBasePath(normalized))));
   }
   
   // Mark this code as used immediately
@@ -89,17 +118,19 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     if (existingSession) {
       const sessionData = verifySession(existingSession, sessionSecret);
       if (sessionData) {
-        // User is logged in, redirect to maintainers without error
-        return redirect(withBasePath('maintainers'));
+        const normalized = resolveNormalizedReturnPath();
+        return redirect(withBasePath(normalized));
       }
     }
     
-    // No valid session, redirect to login
-    return redirect(withBasePath('login?returnTo=' + encodeURIComponent(withBasePath('maintainers'))));
+    // No valid session, redirect to login with desired returnTo
+    const normalized = resolveNormalizedReturnPath();
+    return redirect(withBasePath('login?returnTo=' + encodeURIComponent(withBasePath(normalized))));
   }
   
   if (!verifyState(state, storedState)) {
-    return redirect(withBasePath('maintainers?error=invalid_state'));
+    const normalized = resolveNormalizedReturnPath();
+    return redirect(withBasePath(normalized));
   }
   
   // Clear the state cookie
@@ -155,24 +186,11 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
       secure: import.meta.env.PROD
     });
     
-    // Get the return URL from cookie (set during login initiation)
-    const returnTo = cookies.get('oauth_return_to')?.value;
-    
-    // Clear the return URL cookie
-    if (returnTo) {
-      cookies.delete('oauth_return_to', { path: '/' });
-    }
-    
-    // Default to maintainers if no returnTo
-    const finalReturnTo = returnTo || '/maintainers';
-    
-    // Redirect to the original page or maintainers
-    // If returnTo already has the base path, use it as-is, otherwise add base path
-    const redirectPath = finalReturnTo.startsWith(basePath) || finalReturnTo.startsWith('/oss-wishlist-website/')
-      ? finalReturnTo 
-      : withBasePath(finalReturnTo);
-    
-    console.log('[OAuth Callback] Redirecting:', { returnTo, finalReturnTo, redirectPath });
+    // Resolve desired return path and clear cookie if set
+    const normalized = resolveNormalizedReturnPath();
+    const cookieReturnTo = cookies.get('oauth_return_to')?.value;
+    if (cookieReturnTo) cookies.delete('oauth_return_to', { path: '/' });
+    const redirectPath = withBasePath(normalized);
     return redirect(redirectPath);
   } catch (error) {
     console.error('Error in GitHub OAuth callback:', error);
@@ -180,11 +198,13 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     // If we already have a session set, the error might be from a duplicate request
     const existingSession = cookies.get('github_session')?.value;
     if (existingSession) {
-      return redirect(withBasePath('maintainers?auth=success'));
+      const normalized = resolveNormalizedReturnPath();
+      return redirect(withBasePath(normalized));
     }
     
     // Include error message in redirect for debugging
     const errorMsg = error instanceof Error ? error.message : 'unknown_error';
-    return redirect(withBasePath(`maintainers?error=auth_processing_failed&details=${encodeURIComponent(errorMsg)}`));
+    const normalized = resolveNormalizedReturnPath();
+    return redirect(withBasePath(normalized));
   }
 };

@@ -86,6 +86,45 @@ interface GitHubRepository {
 const WishlistForm = ({ services = [], practitioners = [], user: initialUser = null, initialRepositories = [] }: WishlistFormProps) => {
   const MAX_WISHES = 3;
 
+  // Field validation error state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Clear field error when user starts typing
+  const clearFieldError = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
+  // Highlight invalid fields with error messages
+  const highlightInvalidFields = (fields: string[]) => {
+    const errors: Record<string, string> = {};
+    fields.forEach(field => {
+      errors[field] = 'This field is required';
+    });
+    setFieldErrors(errors);
+    
+    // Scroll to first invalid field
+    if (fields.length > 0) {
+      const firstField = document.querySelector(`[name="${fields[0]}"], #${fields[0]}`);
+      if (firstField) {
+        firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => (firstField as HTMLElement).focus(), 500);
+      }
+    }
+  };
+
+  // Get border class for field
+  const getFieldBorderClass = (fieldName: string) => {
+    return fieldErrors[fieldName] 
+      ? 'border-red-500 border-2' 
+      : 'border-gray-300';
+  };
+
   // Check cache only if we don't have server-provided data
   const initializeFromCache = () => {
     // If we have server-provided repos, use those
@@ -475,24 +514,34 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   const handleSubmitWishlist = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Clear previous field errors
+    setFieldErrors({});
+    const invalidFields: string[] = [];
+    
     if (!wishlistData.projectTitle.trim()) {
       setError('Please enter a project title');
-      return;
+      invalidFields.push('projectTitle');
     }
     
     if (wishlistData.selectedServices.length === 0) {
       setError('Please select at least one service');
-      return;
+      invalidFields.push('selectedServices');
     }
 
     if (wishlistData.selectedServices.length > MAX_WISHES) {
       setError(`You can select up to ${MAX_WISHES} services.`);
-      return;
+      invalidFields.push('selectedServices');
     }
 
     // Require a valid project size selection
     if (!['small', 'medium', 'large'].includes(wishlistData.projectSize)) {
       setError('Please select a project size');
+      invalidFields.push('projectSize');
+    }
+
+    // If there are validation errors, highlight fields and return
+    if (invalidFields.length > 0) {
+      highlightInvalidFields(invalidFields);
       return;
     }
 
@@ -1290,12 +1339,20 @@ ${wishlistData.additionalNotes || 'None provided'}
             </h3>
             <input
               type="text"
+              name="projectTitle"
+              id="projectTitle"
               value={wishlistData.projectTitle}
-              onChange={(e) => setWishlistData(prev => ({ ...prev, projectTitle: e.target.value }))}
+              onChange={(e) => {
+                setWishlistData(prev => ({ ...prev, projectTitle: e.target.value }));
+                clearFieldError('projectTitle');
+              }}
               placeholder="Enter your project title (e.g., 'My Awesome Library')"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+              className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent ${getFieldBorderClass('projectTitle')}`}
               required
             />
+            {fieldErrors.projectTitle && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.projectTitle}</p>
+            )}
             <p className="text-sm text-gray-500 mt-2">
               This will be the main title for your wishlist and how people will identify and triage your project or projects
             </p>

@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ cookies, redirect }) => {
     path: '/',
   });
 
-  console.log('[Dev] Session cleared');
+  // Session cleared
   
   // Redirect to home or maintainers page
   const basePath = import.meta.env.BASE_URL || '/';

@@ -23,7 +23,7 @@ services:
 availability: "available"
 accepts_pro_bono: true
 pro_bono_criteria: "Open source projects with community focus; Projects that promote inclusion and diversity; Solo maintainers who need community building support"
-pro_bono_capacity_per_month: 1
+pro_bono_hours_per_month: 4
 
 # Experience & Credentials
 years_experience: 8

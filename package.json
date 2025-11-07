@@ -31,8 +31,6 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
-    "@types/node": "^24.5.2",
-    "mcp-oss-metrics": "github:emmairwin/mcp-oss-metrics#main",
-    "moderation": "github:emmairwin/moderation#main"
+    "@types/node": "^24.5.2"
   }
 }
