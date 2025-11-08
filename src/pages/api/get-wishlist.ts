@@ -41,34 +41,69 @@ export const GET: APIRoute = async ({ url, request }) => {
         };
         if (token) headers['Authorization'] = `token ${token}`;
 
-        const resp = await fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`, { headers });
-        if (!resp.ok) {
+        // Fetch issue and its comments
+        const [issueResp, commentsResp] = await Promise.all([
+          fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`, { headers }),
+          fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}/comments`, { headers })
+        ]);
+
+        if (!issueResp.ok) {
           return null;
         }
-        const issue = await resp.json();
+
+        const issue = await issueResp.json();
+        const comments = commentsResp.ok ? await commentsResp.json() : [];
+        // Parse issue body
         const parsed = parseIssueForm(issue.body || '');
+        console.log('Parsed from issue body:', { technologies: parsed.technologies });
+        
+        // Find and parse the latest wishlist update comment
+        const latestUpdateComment = Array.isArray(comments) 
+          ? comments
+              .reverse()
+              .find(c => c.body && c.body.includes('## Wishlist Updated'))
+          : null;
+              
+        // If we have an update comment, parse it and merge with initial data
+        const updatedData = latestUpdateComment 
+          ? parseIssueForm(latestUpdateComment.body)
+          : null;
+        
+        console.log('Parsed from update comment:', { 
+          hasUpdate: !!latestUpdateComment,
+          technologies: updatedData?.technologies 
+        });
+
+        // Extract labels from the issue
+        const labels = Array.isArray(issue.labels) 
+          ? issue.labels.map((l: any) => typeof l === 'string' ? l : l.name).filter(Boolean)
+          : [];
 
         // Map to the structure expected by WishlistForms.loadExistingWishlistData
+        // Merge the data, preferring the update comment data if available
         const payload = {
           id: issue.number,
           number: issue.number,
-          projectTitle: parsed.project || issue.title || '',
-          wishes: parsed.services || [],
-          urgency: parsed.urgency || 'medium',
-          projectSize: parsed.projectSize || 'medium',
-          timeline: parsed.timeline || '',
-          organizationType: parsed.organizationType || 'single-maintainer',
-          organizationName: parsed.organizationName || '',
-          otherOrganizationType: parsed.otherOrganizationType || '',
-          additionalNotes: parsed.additionalNotes || parsed.additionalContext || '',
-          technologies: parsed.technologies || [],
-          openToSponsorship: !!parsed.openToSponsorship,
-          repositoryUrl: parsed.repository || '',
-          maintainer: parsed.maintainer || (issue.user?.login ?? ''),
-          preferredPractitioner: parsed.preferredPractitioner || '',
-          nomineeName: parsed.nomineeName || '',
-          nomineeEmail: parsed.nomineeEmail || '',
-          nomineeGithub: parsed.nomineeGithub || ''
+          projectTitle: updatedData?.project || parsed.project || issue.title || '',
+          wishes: updatedData?.services || parsed.services || [],
+          urgency: updatedData?.urgency || parsed.urgency || 'medium',
+          projectSize: updatedData?.projectSize || parsed.projectSize || 'medium',
+          timeline: updatedData?.timeline || parsed.timeline || '',
+          organizationType: updatedData?.organizationType || parsed.organizationType || 'single-maintainer',
+          organizationName: updatedData?.organizationName || parsed.organizationName || '',
+          otherOrganizationType: updatedData?.otherOrganizationType || parsed.otherOrganizationType || '',
+          additionalNotes: updatedData?.additionalNotes || parsed.additionalNotes || parsed.additionalContext || '',
+          technologies: updatedData?.technologies || parsed.technologies || [],
+          openToSponsorship: updatedData?.openToSponsorship || !!parsed.openToSponsorship,
+          repositoryUrl: updatedData?.repository || parsed.repository || '',
+          maintainer: updatedData?.maintainer || parsed.maintainer || (issue.user?.login ?? ''),
+          preferredPractitioner: updatedData?.preferredPractitioner || parsed.preferredPractitioner || '',
+          nomineeName: updatedData?.nomineeName || parsed.nomineeName || '',
+          nomineeEmail: updatedData?.nomineeEmail || parsed.nomineeEmail || '',
+          nomineeGithub: updatedData?.nomineeGithub || parsed.nomineeGithub || '',
+          labels: labels, // Include labels for checking funding-yml status
+          wantsFundingYml: labels.includes('funding-yml-requested'),
+          fundingYmlProcessed: labels.includes('funding-yml-processed')
         };
 
         return payload;
@@ -77,31 +112,50 @@ export const GET: APIRoute = async ({ url, request }) => {
       }
     };
 
-    // Try to read from master cache first
-    let wishlist = await loadFromMaster();
-    if (!wishlist) {
-      // Force-refresh the cache via main API, then retry
-      try {
-        const origin = new URL(request.url).origin;
-        const basePath = import.meta.env.PUBLIC_BASE_PATH || '/oss-wishlist-website';
-        await fetch(`${origin}${basePath}/api/wishlists?refresh=true`).catch(() => {});
-        wishlist = await loadFromMaster();
-      } catch {}
-    }
-
-    // If cache exists but doesn't contain detailed fields, fetch from GitHub
-    // Detailed fields include 'wishes' (services), 'projectTitle', etc.
-    let detailed: any | null = null;
-    if (!wishlist || !Array.isArray(wishlist.wishes)) {
-      detailed = await fetchFromGitHub();
-    }
-
-    if (detailed) {
-      return new Response(JSON.stringify(detailed), {
+    // Always fetch from GitHub for edit operations to ensure we have full data
+    const githubData = await fetchFromGitHub();
+    if (githubData) {
+      return new Response(JSON.stringify(githubData), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    // If GitHub fetch fails, try master cache as fallback
+    const wishlist = await loadFromMaster();
+    if (!wishlist) {
+      return new Response(JSON.stringify({ error: 'Wishlist not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Ensure minimum required fields are present in cache data
+    const payload = {
+      id: wishlist.id || wishlist.number,
+      number: wishlist.number || wishlist.id,
+      projectTitle: wishlist.projectTitle || wishlist.project || wishlist.title || '',
+      wishes: wishlist.wishes || [],
+      technologies: wishlist.technologies || [],
+      urgency: wishlist.urgency || 'medium',
+      projectSize: wishlist.projectSize || 'medium',
+      timeline: wishlist.timeline || '',
+      organizationType: wishlist.organizationType || 'single-maintainer',
+      organizationName: wishlist.organizationName || '',
+      otherOrganizationType: wishlist.otherOrganizationType || '',
+      additionalNotes: wishlist.additionalNotes || '',
+      openToSponsorship: wishlist.openToSponsorship || false,
+      repositoryUrl: wishlist.repositoryUrl || wishlist.repository || '',
+      maintainer: wishlist.maintainer || '',
+      labels: wishlist.labels || [],
+      wantsFundingYml: wishlist.labels?.includes('funding-yml-requested') || false,
+      fundingYmlProcessed: wishlist.labels?.includes('funding-yml-processed') || false
+    };
+
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (!wishlist) {
       return new Response(JSON.stringify({ error: 'Wishlist not found' }), {
@@ -109,6 +163,15 @@ export const GET: APIRoute = async ({ url, request }) => {
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    // Log the final data being sent
+    console.log('API sending wishlist data:', {
+      id: wishlist.id,
+      number: wishlist.number,
+      projectTitle: wishlist.projectTitle,
+      title: wishlist.title,
+      project: wishlist.project
+    });
 
     return new Response(JSON.stringify(wishlist), {
       status: 200,

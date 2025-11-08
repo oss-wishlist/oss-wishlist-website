@@ -9,6 +9,14 @@ import { getBasePath } from '../../lib/paths.js';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
+// Interface for ecosystem stats
+interface EcosystemStats {
+  [key: string]: {
+    count: number;
+    wishlists: number[];
+  }
+}
+
 export const prerender = false;
 
 const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
@@ -103,7 +111,29 @@ export const GET: APIRoute = async ({ url }) => {
         
         // Use file cache if less than 10 minutes old
         if (cacheAge < CACHE_DURATION) {
-          return new Response(JSON.stringify(cached.wishlists), {
+          // Calculate ecosystems from cached wishlists
+          const ecosystemStats: EcosystemStats = {};
+          for (const wishlist of cached.wishlists) {
+            const ecosystems = Array.isArray(wishlist.technologies) ? wishlist.technologies : [];
+            for (const ecosystem of ecosystems) {
+              if (!ecosystemStats[ecosystem]) {
+                ecosystemStats[ecosystem] = { count: 0, wishlists: [] };
+              }
+              ecosystemStats[ecosystem].count++;
+              ecosystemStats[ecosystem].wishlists.push(wishlist.id);
+            }
+          }
+          
+          const response = {
+            wishlists: cached.wishlists,
+            ecosystems: ecosystemStats,
+            metadata: {
+              total: cached.wishlists.length,
+              ecosystemCount: Object.keys(ecosystemStats).length
+            }
+          };
+          
+          return new Response(JSON.stringify(response), {
             status: 200,
             headers: { 
               'Content-Type': 'application/json',
@@ -140,8 +170,25 @@ export const GET: APIRoute = async ({ url }) => {
     ]);
     
     const issues = await issuesPromise;
+    
+    // Calculate ecosystem stats
+    const ecosystemStats: EcosystemStats = {};
+    
+    // Process each issue to extract and count ecosystems
+    for (const issue of issues) {
+      const parsed = parseIssueForm(issue.body || '');
+      const ecosystems = Array.isArray(parsed.technologies) ? parsed.technologies : [];
+      
+      for (const ecosystem of ecosystems) {
+        if (!ecosystemStats[ecosystem]) {
+          ecosystemStats[ecosystem] = { count: 0, wishlists: [] };
+        }
+        ecosystemStats[ecosystem].count++;
+        ecosystemStats[ecosystem].wishlists.push(issue.number);
+      }
+    }
 
-    const wishlists = issues.map(issue => {
+  const wishlists = issues.map((issue) => {
       // Use the new issue form parser
       const parsed = parseIssueForm(issue.body);
       const status = 'Open'; // Default status since we're not reading from project board
@@ -157,7 +204,7 @@ export const GET: APIRoute = async ({ url }) => {
       
       // Use parsed maintainer if available; otherwise fallback to issue user
       
-      // Return minimal public data only
+      // Return public data only
       return {
         id: issue.number,
         projectName: parsed.project || issue.title,
@@ -168,11 +215,26 @@ export const GET: APIRoute = async ({ url }) => {
         status,
         created_at: issue.created_at,
         updated_at: issue.updated_at,
+        wishes: parsed.services || [], // Services needed
+        urgency: parsed.urgency || 'medium',
+        projectSize: parsed.projectSize,
+        additionalNotes: parsed.additionalNotes || parsed.additionalContext || '',
+        technologies: parsed.technologies || [], // Package ecosystems
       };
     });
 
-    // Update in-memory cache
-    cachedWishlists = wishlists;
+    // Build response object with ecosystems
+    const response = {
+      wishlists,
+      ecosystems: ecosystemStats,
+      metadata: {
+        total: wishlists.length,
+        ecosystemCount: Object.keys(ecosystemStats).length
+      }
+    };
+
+    // Update in-memory cache with full response
+    cachedWishlists = response;
     cacheTimestamp = now;
 
     // Update file cache in background (don't wait for it)
@@ -184,7 +246,7 @@ export const GET: APIRoute = async ({ url }) => {
       body: JSON.stringify({ wishlists }),
     }).catch(() => {});
 
-    return new Response(JSON.stringify(wishlists), {
+    return new Response(JSON.stringify(response), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',

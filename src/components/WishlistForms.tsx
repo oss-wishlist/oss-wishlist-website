@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getApiPath } from '../config/app';
 import { getBasePath, withBasePath, withBaseUrl } from '../lib/paths';
+import { SUPPORTED_ECOSYSTEMS } from '../lib/ecosystems';
 
 // Heroicon SVG components
 const PencilIcon = () => (
@@ -205,6 +206,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   
   // Checkbox for FUNDING.yml PR
   const [createFundingPR, setCreateFundingPR] = useState(false);
+  const [fundingYmlProcessed, setFundingYmlProcessed] = useState(false);
 
   // Available services from content collections
   const availableServices = services.length > 0 ? services : [
@@ -379,6 +381,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       }
       
       const cachedData = await response.json();
+      console.log('Loaded wishlist data:', cachedData);
       
       // Enforce max wishes when loading existing data
       let incomingWishes: string[] = cachedData.wishes || [];
@@ -387,8 +390,20 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         setError(`This wishlist currently has more than ${MAX_WISHES} wishes. We trimmed the selection to the first ${MAX_WISHES}.`);
       }
 
+      console.log('Setting title from:', { projectTitle: cachedData.projectTitle, title: cachedData.title });
+      // Ensure we have a title from the API response
+      const title = cachedData.projectTitle || cachedData.project || cachedData.title || '';
+      console.log('Setting title:', { 
+        from: { 
+          projectTitle: cachedData.projectTitle, 
+          project: cachedData.project,
+          title: cachedData.title 
+        }, 
+        final: title 
+      });
+      
       const updatedData: any = {
-        projectTitle: cachedData.projectTitle || '',
+        projectTitle: title,
         selectedServices: incomingWishes,
         urgency: cachedData.urgency || 'medium',
         projectSize: cachedData.projectSize || 'medium',
@@ -410,6 +425,26 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       
       // Update all form data directly (not using prev callback)
       setWishlistData(updatedData);
+      console.log('Updated form data:', {
+        ...updatedData,
+        technologies_detail: {
+          fromCache: cachedData.technologies,
+          inUpdatedData: updatedData.technologies,
+          length: updatedData.technologies?.length
+        }
+      });
+      
+      // Handle FUNDING.yml checkbox state based on labels
+      // If funding-yml-requested label exists, check the box
+      // If funding-yml-processed label exists, disable the checkbox
+      if (cachedData.wantsFundingYml) {
+        setCreateFundingPR(true);
+      }
+      if (cachedData.fundingYmlProcessed) {
+        // We'll handle the disabled state in the JSX based on this flag
+        // Store it in a way the component can access
+        setFundingYmlProcessed(true);
+      }
       
       setIsEditingExisting(true);
       setExistingIssueNumber(issueNumber);
@@ -609,7 +644,7 @@ ${repositories.map(repo => `  - [${repo.name}](${repo.url}) - ${repo.description
 
 ## Project Information
 ${repositoriesSection}
-${wishlistData.technologies.length > 0 ? `- **Technologies:** ${wishlistData.technologies.join(', ')}` : ''}
+${wishlistData.technologies.length > 0 ? `- **Package Ecosystems:** ${wishlistData.technologies.join(', ')}` : ''}
 
 ## Services Requested
 ${wishlistData.selectedServices.map(serviceId => {
@@ -866,8 +901,13 @@ ${wishlistData.additionalNotes || 'None provided'}
       <div className="max-w-4xl mx-auto">
         {/* Success Message */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <p className="text-green-800 text-sm">{success.issueTitle}</p>
+          <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <p className="text-gray-800 text-sm">{success.issueTitle}</p>
+            </div>
           </div>
         )}
 
@@ -918,12 +958,18 @@ ${wishlistData.additionalNotes || 'None provided'}
                             {hasExistingWishlist ? (
                               <>
                                 {hasExistingWishlist.isApproved ? (
-                                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 border border-green-200 flex items-center gap-1 shrink-0">
-                                    ✓ Approved
+                                  <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-300 flex items-center gap-1 shrink-0">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Approved
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-1 shrink-0">
-                                    ⏳ Pending
+                                  <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600 border border-gray-300 flex items-center gap-1 shrink-0">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Pending
                                   </span>
                                 )}
                                 <button
@@ -1178,13 +1224,13 @@ ${wishlistData.additionalNotes || 'None provided'}
         <div className="max-w-4xl mx-auto">
           <div className="bg-white p-8 rounded-lg shadow-sm border">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
+                <svg className="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {success.isUpdate ? '🎉 Wishlist Updated Successfully!' : '🎉 Wishlist Created Successfully!'}
+                {success.isUpdate ? 'Wishlist Updated Successfully!' : 'Wishlist Created Successfully!'}
               </h3>
               <p className="text-gray-600 mb-6">
                 {success.isUpdate 
@@ -1202,8 +1248,8 @@ ${wishlistData.additionalNotes || 'None provided'}
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <a
-                  href={`${window.location.origin}${import.meta.env.BASE_URL || ''}fulfill?issue=${success.issueNumber}`}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 inline-flex items-center justify-center"
+                  href={withBasePath(`fulfill?issue=${success.issueNumber}`)}
+                  className="bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 inline-flex items-center justify-center"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -1358,88 +1404,100 @@ ${wishlistData.additionalNotes || 'None provided'}
             </p>
           </div>
 
-          {/* Technologies */}
+          {/* Package Ecosystems */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              🔧 Technologies
+              � Package Ecosystem
             </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select up to 2 package managers/ecosystems your project uses. This helps practitioners find projects in ecosystems they specialize in.
+            </p>
             
-            {/* Common technology buttons */}
+            {/* Package ecosystem buttons */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {['JavaScript', 'Python', 'TypeScript', 'Java', 'Go', 'Rust', 'C++', 'C#', 'Ruby', 'PHP', 
-                'React', 'Vue', 'Node.js', 'Django', 'Flask', 'Spring', 'Docker', 'Kubernetes', 'AWS', 'PostgreSQL', 'MongoDB'].map((tech) => {
-                const isSelected = wishlistData.technologies.includes(tech);
+              {SUPPORTED_ECOSYSTEMS.map((ecosystem) => {
+                const isSelected = wishlistData.technologies.includes(ecosystem);
+                const isDisabled = !isSelected && wishlistData.technologies.length >= 2;
                 return (
                   <button
-                    key={tech}
+                    key={ecosystem}
                     type="button"
+                    disabled={isDisabled}
                     onClick={() => {
                       setWishlistData(prev => ({
                         ...prev,
                         technologies: isSelected 
-                          ? prev.technologies.filter(t => t !== tech)
-                          : [...prev.technologies, tech]
+                          ? prev.technologies.filter(t => t !== ecosystem)
+                          : [...prev.technologies, ecosystem]
                       }));
                     }}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       isSelected
                         ? 'bg-gray-700 text-white'
+                        : isDisabled
+                        ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {tech}
+                    {ecosystem}
                   </button>
                 );
               })}
             </div>
 
-            {/* Custom technology input */}
+            {/* Custom ecosystem input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add custom technologies (comma-separated)
+                Add custom ecosystem (comma-separated)
               </label>
               <input
                 type="text"
-                placeholder="e.g., TensorFlow, FastAPI, Redis"
+                placeholder="e.g., Conda (Python), Homebrew (macOS), vcpkg (C++)"
+                disabled={wishlistData.technologies.length >= 2}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     const input = e.currentTarget;
                     const value = input.value.trim();
-                    if (value) {
-                      const newTechs = value.split(',').map(t => t.trim()).filter(t => t && !wishlistData.technologies.includes(t));
-                      if (newTechs.length > 0) {
+                    if (value && wishlistData.technologies.length < 2) {
+                      const newEcosystems = value.split(',').map(t => t.trim()).filter(t => t && !wishlistData.technologies.includes(t));
+                      // Only add up to the 2-item limit
+                      const availableSlots = 2 - wishlistData.technologies.length;
+                      const ecosystemsToAdd = newEcosystems.slice(0, availableSlots);
+                      if (ecosystemsToAdd.length > 0) {
                         setWishlistData(prev => ({
                           ...prev,
-                          technologies: [...prev.technologies, ...newTechs]
+                          technologies: [...prev.technologies, ...ecosystemsToAdd]
                         }));
                         input.value = '';
                       }
                     }
                   }
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
               />
-              <p className="text-xs text-gray-500 mt-1">Press Enter to add</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Press Enter to add. Use this for ecosystems not listed above. {wishlistData.technologies.length >= 2 && '(Maximum 2 ecosystems reached)'}
+              </p>
             </div>
 
-            {/* Selected technologies display */}
+            {/* Selected ecosystems display */}
             {wishlistData.technologies.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Selected technologies:</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">Selected ecosystems:</p>
                 <div className="flex flex-wrap gap-2">
-                  {wishlistData.technologies.map((tech) => (
+                  {wishlistData.technologies.map((ecosystem) => (
                     <span
-                      key={tech}
+                      key={ecosystem}
                       className="inline-flex items-center gap-1 px-3 py-1 bg-gray-700 text-white rounded-lg text-sm"
                     >
-                      {tech}
+                      {ecosystem}
                       <button
                         type="button"
                         onClick={() => {
                           setWishlistData(prev => ({
                             ...prev,
-                            technologies: prev.technologies.filter(t => t !== tech)
+                            technologies: prev.technologies.filter(t => t !== ecosystem)
                           }));
                         }}
                         className="hover:text-gray-300"
@@ -1495,7 +1553,10 @@ ${wishlistData.additionalNotes || 'None provided'}
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold text-gray-900">{service.title}</h4>
                           {wasOriginallySelected && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded border border-green-300">
+                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-300 flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                              </svg>
                               Currently selected
                             </span>
                           )}
@@ -1691,12 +1752,12 @@ ${wishlistData.additionalNotes || 'None provided'}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Nominee GitHub</label>
+                    <label className="block text-xs text-gray-600 mb-1">Nominee GitHub Profile URL</label>
                     <input
-                      type="text"
+                      type="url"
                       value={wishlistData.nomineeGithub}
                       onChange={(e) => setWishlistData(prev => ({ ...prev, nomineeGithub: e.target.value }))}
-                      placeholder="@username"
+                      placeholder="https://github.com/username"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent text-sm"
                     />
                   </div>
@@ -1776,21 +1837,23 @@ ${wishlistData.additionalNotes || 'None provided'}
           {/* Submit */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             {/* FUNDING.yml PR Checkbox */}
-            <div className={`mb-6 p-4 rounded-lg border ${manualRepoData ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200'}`}>
-              <label className={`flex items-start space-x-3 ${manualRepoData ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+            <div className={`mb-6 p-4 rounded-lg border ${manualRepoData || fundingYmlProcessed ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200'}`}>
+              <label className={`flex items-start space-x-3 ${manualRepoData || fundingYmlProcessed ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
-                  checked={createFundingPR && !manualRepoData}
+                  checked={createFundingPR && !manualRepoData && !fundingYmlProcessed}
                   onChange={(e) => setCreateFundingPR(e.target.checked)}
-                  disabled={!!manualRepoData}
+                  disabled={!!manualRepoData || fundingYmlProcessed}
                   className="mt-0.5 h-5 w-5 text-gray-900 border-gray-300 rounded focus:ring-gray-500 disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
                   <span className="text-gray-900 font-medium text-sm">Create a PR to add FUNDING.yml to this repository</span>
                   <p className="text-xs text-gray-600 mt-1">
-                    {manualRepoData 
-                      ? 'Only available for GitHub repositories selected from your account' 
-                      : 'Automatically submit a pull request to add GitHub Sponsors funding information to your repo'
+                    {fundingYmlProcessed 
+                      ? 'FUNDING.yml PR has already been created for this repository'
+                      : manualRepoData 
+                        ? 'Only available for GitHub repositories selected from your account' 
+                        : 'Automatically submit a pull request to add GitHub Sponsors funding information to your repo'
                     }
                   </p>
                 </div>
