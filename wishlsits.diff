@@ -1,0 +1,1308 @@
+diff --git a/src/pages/wishlists.astro b/src/pages/wishlists.astro
+index 5fcb961..18f47ed 100644
+--- a/src/pages/wishlists.astro
++++ b/src/pages/wishlists.astro
+@@ -1,222 +1,766 @@
+----
+-import { getBasePath } from '../lib/paths';
+-import Layout from '../components/Layout.astro';
+-
+-// Check authentication
+-const user = Astro.locals.user;
+-
+-// We'll fetch wishlists client-side from our API endpoint
+-const basePath = getBasePath();
+-
+-const statusColors = {
+-  'Open': 'bg-gray-100 text-gray-800',
+-  'In Progress': 'bg-gray-200 text-gray-900',
+-  'Review': 'bg-gray-300 text-gray-900',
+-  'Funded': 'bg-gray-400 text-white',
+-  'Completed': 'bg-gray-700 text-white',
+-  'On Hold': 'bg-gray-500 text-white',
+-};
+-
+-const urgencyColors = {
+-  low: 'bg-gray-100 text-gray-700',
+-  medium: 'bg-gray-200 text-gray-800', 
+-  high: 'bg-gray-600 text-white',
+-  critical: 'bg-gray-800 text-white'
+-};
+----
+-
+-<Layout title="Browse Project Wishlists - OSS Wishlist" description="Discover open source projects seeking support. Find opportunities to sponsor, contribute, or provide services to maintainers.">
+-  
+-  <!-- Compact Hero & Filters Section -->
+-  <section class="bg-gradient-to-br from-gray-100 to-gray-200 py-8 border-b">
+-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+-      <!-- Header -->
+-      <div class="mb-6">
+-        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+-          Project Wishlists
+-        </h1>
+-        <p class="text-xl text-gray-600 max-w-2xl">
+-          Browse open source maintainers seeking support. <a href={`${basePath}/maintainers`} class="text-gray-700 underline hover:text-gray-900">Create your wishlist</a>
+-        </p>
+-      </div>
+-      
+-      <!-- Search & Filter Inline -->
+-      <div class="grid md:grid-cols-12 gap-4 items-center">
+-        <!-- Search Bar -->
+-        <div class="md:col-span-9">
+-          <div class="relative">
+-            <input 
+-              type="text" 
+-              id="searchInput"
+-              placeholder="Search projects by name, maintainer, or repository..."
+-              class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 pl-10"
+-            />
+-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+-            </svg>
+-          </div>
+-        </div>
+-        
+-        <!-- Sort Dropdown -->
+-        <div class="md:col-span-3">
+-          <select id="sortSelect" class="w-full px-3 py-2 text-sm bg-white border rounded-lg">
+-            <option value="recent">Sort: Recent</option>
+-            <option value="oldest">Sort: Oldest</option>
+-          </select>
+-        </div>
+-      </div>
+-      
+-      <!-- Stats Bar -->
+-      <div class="mt-4 flex items-center justify-between text-sm text-gray-600">
+-        <div class="flex gap-6">
+-          <span><strong id="wishlist-count" class="text-gray-900">Loading...</strong> active wishlists</span>
+-        </div>
+-        <div id="searchResults" class="hidden">
+-          <span id="resultCount">0</span> project(s) found
+-        </div>
+-      </div>
+-    </div>
+-  </section>
+-
+-  <!-- Wishlists Grid -->
+-  <section class="py-8 bg-white">
+-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+-      <!-- No Results Message -->
+-      <div id="noResults" class="text-center py-12 hidden">
+-        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+-        </svg>
+-        <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+-        <p class="text-gray-600">Try adjusting your search terms</p>
+-      </div>
++------
++
++import Layout from '../components/Layout.astro';import Layout from '../components/Layout.astro';
++
++import { getBasePath } from '../lib/paths';import { getBasePath } from '../lib/paths';
++
++const basePath = getBasePath();const basePath = getBasePath();
++
++
++
++const statusColors = {const statusColors = {
++
++  'Open': 'bg-gray-100 text-gray-800',  'Open': 'bg-gray-100 text-gray-800',
++
++  'In Progress': 'bg-gray-200 text-gray-900',  'In Progress': 'bg-gray-200 text-gray-900',
++
++  'Review': 'bg-gray-300 text-gray-900',  'Review': 'bg-gray-300 text-gray-900',
++
++  'Funded': 'bg-gray-400 text-white',  'Funded': 'bg-gray-400 text-white',
++
++  'Completed': 'bg-gray-700 text-white',  'Completed': 'bg-gray-700 text-white',
++
++  'On Hold': 'bg-gray-500 text-white',  'On Hold': 'bg-gray-500 text-white',
++
++};};
++
++
++
++const urgencyColors = {const urgencyColors = {
++
++  low: 'bg-gray-100 text-gray-700',  low: 'bg-gray-100 text-gray-700',
++
++  medium: 'bg-gray-200 text-gray-800',   medium: 'bg-gray-200 text-gray-800', 
++
++  high: 'bg-gray-600 text-white',  high: 'bg-gray-600 text-white',
++
++  critical: 'bg-gray-800 text-white'  critical: 'bg-gray-800 text-white'
++
++};};
++
++------
++
++
++
++<Layout title="Browse Project Wishlists - OSS Wishlist" description="Discover open source projects seeking support. Find opportunities to sponsor, contribute, or provide services to maintainers."><Layout title="Browse Project Wishlists - OSS Wishlist" description="Discover open source projects seeking support. Find opportunities to sponsor, contribute, or provide services to maintainers.">
++
++    
++
++  <!-- Compact Hero & Filters Section -->  <!-- Compact Hero & Filters Section -->
++
++  <section class="bg-gradient-to-br from-gray-100 to-gray-200 py-8 border-b">  <section class="bg-gradient-to-br from-gray-100 to-gray-200 py-8 border-b">
++
++    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
++
++      <!-- Header -->      <!-- Header -->
++
++      <div class="mb-6">      <div class="mb-6">
++
++        <h1 class="text-4xl font-bold text-gray-900 mb-4">        <h1 class="text-4xl font-bold text-gray-900 mb-4">
++
++          Project Wishlists          Project Wishlists
++
++        </h1>        </h1>
++
++        <p class="text-xl text-gray-600 max-w-2xl">        <p class="text-xl text-gray-600 max-w-2xl">
++
++          Browse open source maintainers seeking support. <a href={`${basePath}/maintainers`} class="text-gray-700 underline hover:text-gray-900">Create your wishlist</a>          Browse open source maintainers seeking support. <a href={`${basePath}/maintainers`} class="text-gray-700 underline hover:text-gray-900">Create your wishlist</a>
++
++        </p>        </p>
++
++      </div>      </div>
++
++            
++
++      <!-- Search & Filter Inline -->      <!-- Search & Filter Inline -->
++
++      <div class="grid md:grid-cols-12 gap-4 items-center">      <div class="grid md:grid-cols-12 gap-4 items-center">
++
++        <!-- Search Bar -->        <!-- Search Bar -->
++
++        <div class="md:col-span-9">        <div class="md:col-span-9">
++
++          <div class="relative">          <div class="relative">
++
++            <input             <input 
++
++              type="text"               type="text" 
++
++              id="searchInput"              id="searchInput"
++
++              placeholder="Search projects by name, maintainer, or repository..."              placeholder="Search projects by name, maintainer, or repository..."
++
++              class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 pl-10"              class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 pl-10"
++
++            />            />
++
++            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++
++              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
++
++            </svg>            </svg>
++
++          </div>          </div>
++
++        </div>        </div>
++
++                
++
++        <!-- Ecosystem Filter -->        <!-- Ecosystem Filter -->
++
++        <div class="md:col-span-3">        <div class="md:col-span-3">
++
++          <div class="text-xs font-semibold text-gray-700 mb-1">Filter by Package Ecosystem</div>          <div class="text-xs font-semibold text-gray-700 mb-1">Filter by Package Ecosystem</div>
++
++          <select           <select 
++
++            id="ecosystem-filter"             id="ecosystem-filter" 
++
++            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
++
++          >          >
++
++            <option value="">All Ecosystems</option>            <option value="">All Ecosystems</option>
++
++            <!-- Options will be populated by JavaScript -->            <!-- Options will be populated by JavaScript -->
++
++          </select>          </select>
++
++        </div>        </div>
++
++      </div>      </div>
++
++            
++
++      <!-- Stats Bar -->      <!-- Stats Bar -->
++
++      <div class="mt-4 flex items-center justify-between text-sm text-gray-600">      <div class="mt-4 flex items-center justify-between text-sm text-gray-600">
++
++        <div class="flex gap-6">        <div class="flex gap-6">
++
++          <span><strong id="wishlist-count" class="text-gray-900">Loading...</strong> active wishlists</span>          <span><strong id="wishlist-count" class="text-gray-900">Loading...</strong> active wishlists</span>
++
++        </div>        </div>
++
++        <div id="searchResults" class="hidden">        <div id="searchResults" class="hidden">
++
++          <span id="resultCount">0</span> project(s) found          <span id="resultCount">0</span> project(s) found
++
++        </div>        </div>
++
++      </div>      </div>
++
++      <!-- Freshness Note -->      <!-- Freshness Note -->
++
++      <p class="mt-2 text-sm text-gray-600">      <p class="mt-2 text-sm text-gray-600">
++
++        Maintainers are asked to keep their wishlists current (reviewed within the last 3 months). Inactive wishlists are removed.        Maintainers are asked to keep their wishlists current (reviewed within the last 3 months). Inactive wishlists are removed.
++
++      </p>      </p>
++
++    </div>    </div>
++
++  </section>  </section>
++
++
++
++  <!-- Wishlists Grid -->  <!-- Wishlists Grid -->
++
++  <section class="py-8 bg-white">  <section class="py-8 bg-white">
++
++    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
++
++      <!-- No Results Message -->      <!-- No Results Message -->
++
++      <div id="noResults" class="text-center py-12 hidden">      <div id="noResults" class="text-center py-12 hidden">
++
++        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++
++          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
++
++        </svg>        </svg>
++
++        <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>        <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
++
++        <p class="text-gray-600">Try adjusting your search terms</p>        <p class="text-gray-600">Try adjusting your search terms</p>
++
++      </div>      </div>
++
++
++
++      <div id="wishlistsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-base-path={basePath}>      <div id="wishlistsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-base-path={basePath}>
++
++        <!-- Loading state -->        <!-- Loading state -->
++
++        <div id="loading" class="col-span-full text-center py-12">        <div id="loading" class="col-span-full text-center py-12">
++
++          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-600 mx-auto mb-3"></div>          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-600 mx-auto mb-3"></div>
++
++          <p class="text-sm text-gray-600">Loading wishlists...</p>          <p class="text-sm text-gray-600">Loading wishlists...</p>
++
++        </div>        </div>
++
++      </div>        
++
++    </div>        <!-- Wishlists will be populated by JavaScript -->
++
++  </section>      </div>
+ 
+-      <div id="wishlistsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-base-path={basePath}>
+-        <!-- Loading state -->
+-        <div id="loading" class="col-span-full text-center py-12">
+-          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-600 mx-auto mb-3"></div>
+-          <p class="text-sm text-gray-600">Loading wishlists...</p>
+-        </div>
+-        
+-        <!-- Wishlists will be populated by JavaScript -->
+-      </div>
+     </div>
+-  </section>
+ 
+-  <!-- CTA Section -->
++  <!-- CTA Section -->  </section>
++
+   <section class="py-16 bg-gray-600">
+-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+-      <h2 class="text-3xl font-bold text-white mb-4">Have a Project That Needs Support?</h2>
+-      <p class="text-xl text-gray-200 mb-8">Create your wishlist and connect with supporters who want to help</p>
+-      <div class="flex justify-center space-x-4">
+-        <a href={`${basePath}/maintainers`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+-          Create Your Wishlist
+-        </a>
+-        <a href={`${basePath}/maintainers`} class="border border-gray-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+-          Learn More
+-        </a>
+-      </div>
++
++    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">  <!-- CTA Section -->
++
++      <h2 class="text-3xl font-bold text-white mb-4">Have a Project That Needs Support?</h2>  <section class="py-16 bg-gray-600">
++
++      <p class="text-xl text-gray-200 mb-8">Create your wishlist and connect with supporters who want to help</p>    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
++
++      <div class="flex justify-center space-x-4">      <h2 class="text-3xl font-bold text-white mb-4">Have a Project That Needs Support?</h2>
++
++        <a href={`${basePath}/maintainers`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">      <p class="text-xl text-gray-200 mb-8">Create your wishlist and connect with supporters who want to help</p>
++
++          Create Your Wishlist      <div class="flex justify-center space-x-4">
++
++        </a>        <a href={`${basePath}/maintainers`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
++
++        <a href={`${basePath}/maintainers`} class="border border-gray-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">          Create Your Wishlist
++
++          Learn More        </a>
++
++        </a>        <a href={`${basePath}/maintainers`} class="border border-gray-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
++
++      </div>          Learn More
++
++    </div>        </a>
++
++  </section>      </div>
++
+     </div>
+-  </section>
+-  
+-
+-<script>
+-  // Wishlist data
+-  let allWishlists = [];
+-  let basePath = '';
+-  
+-  // Status colors mapping
+-  const statusColors = {
+-    'Open': 'bg-gray-100 text-gray-800',
+-    'In Progress': 'bg-gray-200 text-gray-900',
+-    'Review': 'bg-gray-300 text-gray-900',
+-    'Funded': 'bg-gray-400 text-white',
+-    'Completed': 'bg-gray-700 text-white',
+-    'On Hold': 'bg-gray-500 text-white',
+-  };
+-
+-  const urgencyColors = {
+-    low: 'bg-gray-100 text-gray-700',
+-    medium: 'bg-gray-200 text-gray-800', 
+-    high: 'bg-gray-600 text-white',
+-    critical: 'bg-gray-800 text-white'
+-  };
+-
+-  // UI state for search and sorting
+-  let searchQuery = '';
+-  let sortBy = 'recent'; // 'recent' | 'oldest'
+-
+-  // Fetch wishlists from GitHub
+-  async function fetchWishlists() {
+-    try {
+-      const grid = document.getElementById('wishlistsGrid');
+-      basePath = grid?.dataset.basePath || '';
+-      // Remove trailing slash if present to avoid double slashes
+-      const cleanBasePath = basePath.replace(/\/$/, '');
+-      const apiUrl = `${cleanBasePath}/api/wishlists`;
+-      
+-      const response = await fetch(apiUrl);
+-      
+-      if (!response.ok) {
+-        const errorData = await response.json().catch(() => ({}));
+-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch wishlists`);
+-      }
+-      
+-      const data = await response.json();
+-      allWishlists = data;
+-      
+-      // Update stats
+-      const wishlistCountEl = document.getElementById('wishlist-count');
+-      if (wishlistCountEl) wishlistCountEl.textContent = allWishlists.length;
++
++<script>  </section>
++
++  let allWishlists = [];  
++
++
++
++  // Fetch wishlists from API<script>
++
++  async function fetchWishlists() {  // Global variables
++
++    try {  let allWishlists = [];
++
++      const basePath = document.getElementById('wishlistsGrid')?.getAttribute('data-base-path') || '';  let searchQuery = '';
++
++      const response = await fetch(`${basePath}/api/wishlists`);
++
++      if (!response.ok) throw new Error('Failed to fetch wishlists');  // UI Constants
++
++        const statusColors = {
++
++      const data = await response.json();    'Open': 'bg-gray-100 text-gray-800',
++
++      allWishlists = Array.isArray(data.wishlists) ? data.wishlists : [];    'In Progress': 'bg-gray-200 text-gray-900',
++
++          'Review': 'bg-gray-300 text-gray-900',
++
++      // Sort by ecosystem    'Funded': 'bg-gray-400 text-white',
++
++      allWishlists.sort((a, b) => {    'Completed': 'bg-gray-700 text-white',
++
++        const ecosystemA = (a.technologies && a.technologies[0]) || '';    'On Hold': 'bg-gray-500 text-white',
++
++        const ecosystemB = (b.technologies && b.technologies[0]) || '';  };
++
++        if (ecosystemA === ecosystemB) {
++
++          return (a.projectName || '').localeCompare(b.projectName || '');  const urgencyColors = {
++
++        }    low: 'bg-gray-100 text-gray-700',
++
++        return ecosystemA.localeCompare(ecosystemB);    medium: 'bg-gray-200 text-gray-800', 
++
++      });    high: 'bg-gray-600 text-white',
++
++          critical: 'bg-gray-800 text-white'
++
++      // Update count  };
++
++      document.getElementById('wishlist-count').textContent = allWishlists.length.toString();    'Open': 'bg-gray-100 text-gray-800',
++
++          'In Progress': 'bg-gray-200 text-gray-900',
++
++      // Display wishlists    'Review': 'bg-gray-300 text-gray-900',
++
++      displayWishlists(allWishlists);    'Funded': 'bg-gray-400 text-white',
++
++          'Completed': 'bg-gray-700 text-white',
++
++      // Update ecosystem filter    'On Hold': 'bg-gray-500 text-white',
++
++      populateEcosystemFilter(allWishlists);  };
++
+       
+-      // Render initial list
+-      applyFilters();
++
++      return allWishlists;  var urgencyColors = {
++
++    } catch (error) {    low: 'bg-gray-100 text-gray-700',
++
++      console.error('Error fetching wishlists:', error);    medium: 'bg-gray-200 text-gray-800', 
++
++      return [];    high: 'bg-gray-600 text-white',
++
++    }    critical: 'bg-gray-800 text-white'
++
++  }  };
++
++
++
++  function displayWishlists(wishlists) {  // Fetch wishlists from API
++
++    const grid = document.getElementById('wishlistsGrid');  async function fetchWishlists() {
++
++    const loading = document.getElementById('loading');    try {
++
++    const noResults = document.getElementById('noResults');      var basePath = document.getElementById('wishlistsGrid')?.getAttribute('data-base-path') || '';
++
++          var response = await fetch(`${basePath}/api/wishlists`);
++
++    if (loading) {      
++
++      loading.remove();      if (!response.ok) {
++
++    }        throw new Error('Failed to fetch wishlists');
++
++          }
++
++    if (!grid) return;      
++
++          var data = await response.json();
++
++    if (!wishlists.length) {      allWishlists = Array.isArray(data.wishlists) ? data.wishlists : [];
++
++      noResults?.classList.remove('hidden');      
++
++      grid.innerHTML = '';      // Update count and display
++
++      return;      document.getElementById('wishlist-count').textContent = allWishlists.length.toString();
++
++    }      displayWishlists(allWishlists);
++
+       
+-    } catch (error) {
+-      console.error('[fetchWishlists] Error:', error);
+-      document.getElementById('loading').innerHTML = `
+-        <div class="text-center py-12">
+-          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+-          </svg>
+-          <h3 class="text-lg font-medium text-gray-900 mb-2">Error loading wishlists</h3>
+-          <p class="text-gray-600">Unable to fetch data from GitHub. Please try again later.</p>
+-          <p class="text-sm text-gray-500 mt-2">${error instanceof Error ? error.message : String(error)}</p>
+-        </div>
+-      `;
++
++    noResults?.classList.add('hidden');      // Update ecosystem filter
++
++    grid.innerHTML = wishlists.map(wishlist => {      populateEcosystemFilter(allWishlists);
++
++      const statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';      
++
++      const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';      return allWishlists;
++
++      const maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`;    } catch (error) {
++
++            console.error('Error fetching wishlists:', error);
++
++      // Format services list      return [];
++
++      const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0     }
++
++        ? wishlist.wishes.slice(0, 3).map(service => `  }
++
++            <span class="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">${service}</span>
++
++          `).join('')  // Populate ecosystem filter dropdown
++
++        : '<span class="text-sm text-gray-500 italic">No services specified</span>';  function populateEcosystemFilter(wishlists) {
++
++          const select = document.getElementById('ecosystem-filter');
++
++      const moreServices = wishlist.wishes && wishlist.wishes.length > 3     if (!select) return;
++
++        ? `<span class="text-xs text-gray-600">+${wishlist.wishes.length - 3} more</span>` 
++
++        : '';    // Count wishlists per ecosystem
++
++    const ecosystemCounts = {};
++
++      return `    wishlists.forEach(wishlist => {
++
++        <div class="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow p-6">      if (wishlist.technologies) {
++
++          <!-- Project Header -->        wishlist.technologies.forEach(tech => {
++
++          <div class="flex items-start justify-between mb-4">          ecosystemCounts[tech] = (ecosystemCounts[tech] || 0) + 1;
++
++            <div class="flex items-start gap-3 flex-1">        });
++
++              <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">      }
++
++                <img src="${maintainerAvatar}" alt="${wishlist.maintainerUsername}" class="w-10 h-10 rounded-full border-2 border-gray-200" />    });
++
++              </a>
++
++              <div class="flex-1">    // Sort ecosystems by count
++
++                <h3 class="text-lg font-semibold text-gray-900">${wishlist.projectName}</h3>    const sortedEcosystems = Object.entries(ecosystemCounts)
++
++                <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-gray-900">@${wishlist.maintainerUsername}</a>      .sort(([,a], [,b]) => b - a);
++
++              </div>
++
++            </div>    // Clear existing options (except "All")
++
++            <div class="flex flex-col items-end space-y-1">    while (select.options.length > 1) {
++
++              ${wishlist.status && wishlist.status !== 'Open' ? `      select.remove(1);
++
++                <span class="px-2 py-1 text-xs rounded-full ${statusColorClass}">    }
++
++                  ${wishlist.status}
++
++                </span>    // Add options for each ecosystem with count
++
++              ` : ''}    sortedEcosystems.forEach(([ecosystem, count]) => {
++
++              ${wishlist.urgency && wishlist.urgency !== 'medium' ? `      const option = document.createElement('option');
++
++                <span class="px-2 py-1 text-xs rounded-full ${urgencyColorClass}">      option.value = ecosystem;
++
++                  ${wishlist.urgency}      option.textContent = `${ecosystem} (${count})`;
++
++                </span>      select.appendChild(option);
++
++              ` : ''}    });
++
++            </div>  }
++
++          </div>
++
++  // Filter wishlists by selected ecosystem
++
++          <!-- Services Needed -->  function filterByEcosystem(wishlists) {
++
++          <div class="mb-4">    const select = document.getElementById('ecosystem-filter');
++
++            <h4 class="text-xs font-semibold text-gray-700 mb-2">Services Needed:</h4>    const selectedEcosystem = select?.value;
++
++            <div class="flex flex-wrap gap-2 items-center">    
++
++              ${servicesHtml}    if (!selectedEcosystem) return wishlists;
++
++              ${moreServices}    
++
++            </div>    return wishlists.filter(wishlist => 
++
++          </div>      wishlist.technologies && 
++
++      wishlist.technologies.includes(selectedEcosystem)
++
++          <!-- Package Ecosystems -->    );
++
++          ${wishlist.technologies && wishlist.technologies.length > 0 ? `  }
++
++            <div class="mb-4">
++
++              <h4 class="text-xs font-semibold text-gray-700 mb-2">Package Ecosystems:</h4>  // Display wishlists in grid
++
++              <div class="flex flex-wrap gap-2">  function displayWishlists(wishlists) {
++
++                ${wishlist.technologies.slice(0, 2).map(ecosystem => `    const grid = document.getElementById('wishlistsGrid');
++
++                  <span class="inline-flex items-center px-2 py-1 text-xs bg-purple-50 text-purple-700 rounded border border-purple-200">    const loading = document.getElementById('loading');
++
++                    📦 ${ecosystem}    
++
++                  </span>    if (loading) {
++
++                `).join('')}      loading.remove();
++
++              </div>    }
++
++            </div>    
++
++          ` : ''}    if (!grid) return;
++
++    
++
++          <!-- Project Links -->    if (!wishlists.length) {
++
++          <div class="flex items-center justify-between mt-4">      grid.innerHTML = '<div class="col-span-full text-center py-12">' +
++
++            <div class="flex space-x-2">        '<svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
++
++              <a href="${wishlist.wishlistUrl}" class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-900 text-white rounded hover:bg-gray-800">        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>' +
++
++                View Details        '</svg>' +
++
++              </a>        '<h3 class="text-lg font-medium text-gray-900 mb-2">No wishlists found</h3>' +
++
++              <a href="${basePath}/fulfill?issue=${wishlist.id}" class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-900 rounded hover:bg-gray-200">        '<p class="text-gray-600">No wishlist issues found on GitHub.</p>' +
++
++                Fulfill Wish        '</div>';
++
++              </a>      return;
++
++            </div>    }
++
++          </div>    
++
++        </div>    try {
++
++      `;      grid.innerHTML = wishlists.map(wishlist => createWishlistCard(wishlist)).join('');
++
++    }).join('');    } catch (error) {
++
++  }      console.error('[displayWishlists] Error creating cards:', error);
++
++      grid.innerHTML = '<div class="col-span-full text-center py-12">' +
++
++  function populateEcosystemFilter(wishlists) {        '<h3 class="text-lg font-medium text-gray-900 mb-2">Error displaying wishlists</h3>' +
++
++    const select = document.getElementById('ecosystem-filter');        '<p class="text-gray-600 text-sm">' + error.message + '</p>' +
++
++    if (!select) return;        '</div>';
++
+     }
++
++    // Count wishlists per ecosystem  }
++
++    const ecosystemCounts = {};
++
++    wishlists.forEach(wishlist => {  // Populate ecosystem filter
++
++      if (wishlist.technologies) {  function populateEcosystemFilter(ecosystems) {
++
++        wishlist.technologies.forEach(tech => {    const select = document.getElementById('ecosystem-filter');
++
++          ecosystemCounts[tech] = (ecosystemCounts[tech] || 0) + 1;    if (!select) return;
++
++        });
++
++      }    // Sort ecosystems by count
++
++    });    const sortedEcosystems = Object.entries(ecosystems)
++
++      .sort(([,a], [,b]) => b.count - a.count);
++
++    // Sort ecosystems by count
++
++    const sortedEcosystems = Object.entries(ecosystemCounts)    // Clear existing options (except "All")
++
++      .sort(([,a], [,b]) => b - a);    while (select.options.length > 1) {
++
++      select.remove(1);
++
++    // Clear existing options (except "All")    }
++
++    while (select.options.length > 1) {
++
++      select.remove(1);    // Add options for each ecosystem
++
++    }    sortedEcosystems.forEach(function(pair) {
++
++      var ecosystem = pair[0];
++
++    // Add options for each ecosystem      var stats = pair[1];
++
++    sortedEcosystems.forEach(([ecosystem, count]) => {      var option = document.createElement('option');
++
++      const option = document.createElement('option');      option.value = ecosystem;
++
++      option.value = ecosystem;      option.textContent = ecosystem + ' (' + stats.count + ')';
++
++      option.textContent = `${ecosystem} (${count})`;      select.appendChild(option);
++
++      select.appendChild(option);    });
++
++    });  }
++
+   }
+ 
+-  // Display wishlists
+-  function displayWishlists(wishlists) {
+-    const grid = document.getElementById('wishlistsGrid');
+-    const loading = document.getElementById('loading');
++  // Filter wishlists
++
++  function filterWishlists() {  function sortByEcosystem(wishlists) {
++
++    const searchInput = document.getElementById('searchInput');    return wishlists.sort((a, b) => {
++
++    const ecosystemSelect = document.getElementById('ecosystem-filter');      // Get primary ecosystem (first in the list) or empty string if none
++
++          var ecosystemA = (a.technologies && a.technologies[0]) || '';
++
++    let filtered = [...allWishlists];      var ecosystemB = (b.technologies && b.technologies[0]) || '';
++
++          
++
++    // Apply ecosystem filter      if (ecosystemA === ecosystemB) {
++
++    const selectedEcosystem = ecosystemSelect?.value;        // If ecosystems are the same, sort by project name
++
++    if (selectedEcosystem) {        return (a.projectName || '').localeCompare(b.projectName || '');
++
++      filtered = filtered.filter(wishlist =>       }
++
++        wishlist.technologies?.includes(selectedEcosystem)      return ecosystemA.localeCompare(ecosystemB);
++
++      );    });
++
++    }  }
++
+     
+-    if (loading) {
+-      loading.remove();
+-    }
++
++    // Apply search filter  function filterWishlists() {
++
++    const searchQuery = searchInput?.value.toLowerCase() || '';    var searchInput = document.getElementById('searchInput');
++
++    if (searchQuery) {    var ecosystemSelect = document.getElementById('ecosystem-filter');
++
++      filtered = filtered.filter(wishlist => {    
++
++        return (    var filtered = [...allWishlists];
++
++          wishlist.projectName?.toLowerCase().includes(searchQuery) ||    
++
++          wishlist.maintainerUsername?.toLowerCase().includes(searchQuery) ||    // Apply ecosystem filter
++
++          wishlist.repositoryUrl?.toLowerCase().includes(searchQuery) ||    var selectedEcosystem = ecosystemSelect?.value;
++
++          wishlist.technologies?.some(tech => tech.toLowerCase().includes(searchQuery)) ||    if (selectedEcosystem) {
++
++          wishlist.wishes?.some(wish => wish.toLowerCase().includes(searchQuery))      filtered = filtered.filter(wishlist => 
++
++        );        wishlist.technologies?.includes(selectedEcosystem)
++
++      });      );
++
++    }    }
++
++        
++
++    displayWishlists(filtered);    // Sort by ecosystem
++
++  }    filtered = sortByEcosystem(filtered);
++
+     
+-    if (wishlists.length === 0) {
+-      grid.innerHTML = `
+-        <div class="col-span-full text-center py-12">
+-          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+-          </svg>
+-          <h3 class="text-lg font-medium text-gray-900 mb-2">No wishlists found</h3>
+-          <p class="text-gray-600">No wishlist issues found on GitHub.</p>
+-        </div>
++
++  // Initialize    // Apply search filter
++
++  document.addEventListener('DOMContentLoaded', () => {    var searchQuery = searchInput?.value.toLowerCase() || '';
++
++    // Set up search input    if (searchQuery) {
++
++    const searchInput = document.getElementById('searchInput');      filtered = filtered.filter(wishlist => (
++
++    const ecosystemFilter = document.getElementById('ecosystem-filter');        wishlist.projectName?.toLowerCase().includes(searchQuery) ||
++
++    let searchTimeout;        wishlist.maintainerUsername?.toLowerCase().includes(searchQuery) ||
++
++            wishlist.repositoryUrl?.toLowerCase().includes(searchQuery) ||
++
++    if (searchInput) {        wishlist.technologies?.some(tech => 
++
++      searchInput.addEventListener('input', () => {          tech.toLowerCase().includes(searchQuery)
++
++        clearTimeout(searchTimeout);        ) ||
++
++        searchTimeout = setTimeout(filterWishlists, 300);        wishlist.wishes?.some(wish => 
++
++      });          wish.toLowerCase().includes(searchQuery)
++
++    }        )
++
++      ));
++
++    if (ecosystemFilter) {    }
++
++      ecosystemFilter.addEventListener('change', filterWishlists);    
++
++    }    displayWishlists(filtered);
++
++  }
++
++    // Initial load
++
++    fetchWishlists();  // Initialize
++
++  });  document.addEventListener('DOMContentLoaded', () => {
++
++</script>    // Set up search input
++
++</Layout>    const searchInput = document.getElementById('searchInput');
++    if (searchInput) {
++      let debounceTimer;
++      searchInput.addEventListener('input', () => {
++        clearTimeout(debounceTimer);
++        debounceTimer = setTimeout(filterWishlists, 300);
++      });
++    }
++
++    // Set up ecosystem filter
++    const ecosystemFilter = document.getElementById('ecosystem-filter');
++    if (ecosystemFilter) {
++      ecosystemFilter.addEventListener('change', filterWishlists);
++    }
++
++    // Initial load
++    fetchWishlists();
++  });
++</script>
+       `;
+-      return;
+     }
++  }
++
++  // Search and filter functionality
++  function performSearch() {
++    const input = document.getElementById('searchInput');
++    const searchValue = input?.value.toLowerCase() || '';
++    
++    let filtered = [...allWishlists];
++
++    // Apply ecosystem filter
++    filtered = filterByEcosystem(filtered);
++
++    // Apply search filter
++    if (searchValue) {
++      filtered = filtered.filter(wishlist => {
++        return (
++          wishlist.projectName?.toLowerCase().includes(searchValue) ||
++          wishlist.maintainerUsername?.toLowerCase().includes(searchValue) ||
++          wishlist.repositoryUrl?.toLowerCase().includes(searchValue) ||
++          wishlist.technologies?.some(tech => tech.toLowerCase().includes(searchValue)) ||
++          wishlist.wishes?.some(wish => wish.toLowerCase().includes(searchValue))
++        );
++      });
++    }
++
++    displayWishlists(filtered);
++  }
++
++  // Initialize on page load
++  document.addEventListener('DOMContentLoaded', function() {
++    // Fetch wishlists
++    fetchWishlists().then(wishlists => {
++      if (wishlists) {
++        populateEcosystemFilter(wishlists);
++      }
++    });
+     
+-    try {
+-      grid.innerHTML = wishlists.map(wishlist => createWishlistCard(wishlist)).join('');
+-    } catch (error) {
+-      console.error('[displayWishlists] Error creating cards:', error);
+-      grid.innerHTML = `
+-        <div class="col-span-full text-center py-12">
+-          <h3 class="text-lg font-medium text-gray-900 mb-2">Error displaying wishlists</h3>
+-          <p class="text-gray-600 text-sm">${error.message}</p>
+-        </div>
++    // Set up search
++    const searchInput = document.getElementById('searchInput');
++    const ecosystemFilter = document.getElementById('ecosystem-filter');
++    let searchTimeout;
++    
++    if (searchInput) {
++      searchInput.addEventListener('input', function() {
++        clearTimeout(searchTimeout);
++        searchTimeout = setTimeout(performSearch, 300);
++      });
++    }
++
++    if (ecosystemFilter) {
++      ecosystemFilter.addEventListener('change', performSearch);
++    }
+       `;
+     }
+   }
+@@ -224,17 +768,67 @@ const urgencyColors = {
+   // Populate technologies dropdown dynamically
+   function sortWishlists(list) {
+     const arr = [...list];
+-    if (sortBy === 'recent') {
+-      arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+-    } else if (sortBy === 'oldest') {
+-      arr.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
++    // Derive wishlists ordering by primary ecosystem frequency (desc), fallback to alphabetical for ties
++    if (sortBy === 'ecosystem-count-desc') {
++      const getEco = (w) => (Array.isArray(w.technologies) && w.technologies.length > 0 ? w.technologies[0].trim() : '');
++      // Pre-compute counts
++      const counts = new Map();
++      for (const w of arr) {
++        const eco = getEco(w);
++        if (!eco) continue;
++        counts.set(eco, (counts.get(eco) || 0) + 1);
++      }
++      arr.sort((a, b) => {
++        const ea = getEco(a);
++        const eb = getEco(b);
++        const ca = ea ? counts.get(ea) || 0 : 0;
++        const cb = eb ? counts.get(eb) || 0 : 0;
++        if (ca !== cb) return cb - ca; // higher count first
++        // If counts equal, alphabetically by ecosystem, then project name
++        if (ea && eb && ea.toLowerCase() !== eb.toLowerCase()) return ea.toLowerCase().localeCompare(eb.toLowerCase());
++        return (a.projectName || '').localeCompare(b.projectName || '');
++      });
+     }
+     return arr;
+   }
+ 
++  // Compute and render ecosystem counts for all wishlists
++  function computeEcosystemCounts(source) {
++    const counts = new Map();
++    const names = new Map(); // lower -> canonical
++    for (const w of source || []) {
++      const techs = Array.isArray(w.technologies) ? w.technologies : [];
++      for (const t of techs) {
++        const trimmed = String(t || '').trim();
++        if (!trimmed) continue;
++        const key = trimmed.toLowerCase();
++        if (!names.has(key)) names.set(key, trimmed);
++        counts.set(key, (counts.get(key) || 0) + 1);
++      }
++    }
++    const result = Array.from(counts.entries()).map(([key, count]) => ({ name: names.get(key) || key, count }));
++    result.sort((a, b) => a.name.localeCompare(b.name));
++    return result;
++  }
++
++  function renderEcosystemCounts() {
++    const headerEl = document.getElementById('ecosystemListHeader');
++    if (!headerEl) return;
++    const counts = computeEcosystemCounts(allWishlists);
++    // Sort by count descending
++    counts.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
++    headerEl.innerHTML = counts.length === 0
++      ? '<span class="text-[11px] text-gray-500">No ecosystems yet</span>'
++      : counts.map(c => `
++        <span class="inline-flex items-center justify-between px-2 py-1 text-[11px] bg-purple-50 text-purple-700 rounded border border-purple-200">
++          <span class="flex items-center gap-1"><span>📦</span>${c.name}</span>
++          <span class="font-semibold">${c.count}</span>
++        </span>
++      `).join('');
++  }
++
+   function applyFilters() {
+     let filtered = allWishlists;
+-
+     // Search filter - only search project name, maintainer username, and repo URL
+     const q = (searchQuery || '').toLowerCase().trim();
+     if (q) {
+@@ -243,7 +837,6 @@ const urgencyColors = {
+         (w.maintainerUsername || '').toLowerCase().includes(q) ||
+         (w.repositoryUrl || '').toLowerCase().includes(q)
+       );
+-      
+     }
+ 
+     // Sort and display
+@@ -271,11 +864,35 @@ const urgencyColors = {
+ 
+   // Create wishlist card HTML
+   function createWishlistCard(wishlist) {
+-    const statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';
+-    const maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`;
++    // Debug: log the wishlistUrl for the first few cards
++    if (wishlist.id === 33) {
++      console.log('[DEBUG] Wishlist 33 URL:', wishlist.wishlistUrl);
++    }
+     
+-    // API already filters for approved wishlists only
++    var statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';
++    var urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';
++    var maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`;
++    
++    // Format services list
++    const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0 
++      ? wishlist.wishes.slice(0, 3).map(service => `
++          <span class="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">${service}</span>
++        `).join('')
++      : '<span class="text-sm text-gray-500 italic">No services specified</span>';
+     
++    const moreServices = wishlist.wishes && wishlist.wishes.length > 3 
++      ? `<span class="text-xs text-gray-600">+${wishlist.wishes.length - 3} more</span>` 
++      : '';
++    
++    // Truncate project notes
++    const projectNotes = wishlist.additionalNotes 
++      ? (wishlist.additionalNotes.length > 100 
++          ? wishlist.additionalNotes.substring(0, 100) + '...' 
++          : wishlist.additionalNotes)
++      : '';
++    
++    // API already filters for approved wishlists only
++
+     return `
+       <div class="wishlist-card bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow p-6" data-project="${(wishlist.projectName || '').toLowerCase()}" data-maintainer="${(wishlist.maintainerUsername || '').toLowerCase()}">
+         <!-- Project Header -->
+@@ -284,34 +901,92 @@ const urgencyColors = {
+             <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+               <img src="${maintainerAvatar}" alt="${wishlist.maintainerUsername}" class="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors" />
+             </a>
+-            <div>
++            <div class="flex-1">
+               <h3 class="text-lg font-semibold text-gray-900">${wishlist.projectName}</h3>
+               <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-gray-900">@${wishlist.maintainerUsername}</a>
+             </div>
+           </div>
+-          <div class="flex flex-col space-y-1">
++          <div class="flex flex-col items-end space-y-1">
+             ${wishlist.status && wishlist.status !== 'Open' ? `
+               <span class="px-2 py-1 text-xs rounded-full ${statusColorClass}">
+                 ${wishlist.status}
+               </span>
+             ` : ''}
++            ${wishlist.urgency && wishlist.urgency !== 'medium' ? `
++              <span class="px-2 py-1 text-xs rounded-full ${urgencyColorClass}">
++                ${wishlist.urgency}
++              </span>
++            ` : ''}
++          </div>
++        </div>
++
++        <!-- Project Details -->
++        ${projectNotes ? `
++          <div class="mb-4">
++            <p class="text-sm text-gray-600">${projectNotes}</p>
++          </div>
++        ` : ''}
++
++        <!-- Services Needed -->
++        <div class="mb-4">
++          <h4 class="text-xs font-semibold text-gray-700 mb-2">Services Needed:</h4>
++          <div class="flex flex-wrap gap-2 items-center">
++            ${servicesHtml}
++            ${moreServices}
+           </div>
+         </div>
+ 
++        <!-- Package Ecosystems -->
++        ${wishlist.technologies && wishlist.technologies.length > 0 ? `
++          <div class="mb-4">
++            <h4 class="text-xs font-semibold text-gray-700 mb-2">Package Ecosystems:</h4>
++            <div class="flex flex-wrap gap-2">
++              ${wishlist.technologies.slice(0, 2).map(ecosystem => `
++                <span class="inline-flex items-center px-2 py-1 text-xs bg-purple-50 text-purple-700 rounded border border-purple-200">
++                  📦 ${ecosystem}
++                </span>
++              `).join('')}
++            </div>
++          </div>
++        ` : ''}
++
++        <!-- Project Metadata -->
++        <div class="flex items-center gap-4 text-xs text-gray-500 mb-4 pb-4 border-b">
++          ${wishlist.projectSize ? `
++            <span class="capitalize">${wishlist.projectSize} project</span>
++          ` : ''}
++          ${wishlist.repositoryUrl ? `
++            <a href="${wishlist.repositoryUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 underline">
++              View repository
++            </a>
++          ` : ''}
++
++        </div>
++
+         <!-- Actions -->
+-        <div class="flex items-center justify-between pt-4 border-t">
++        <div class="flex items-center justify-between">
+           <div class="flex space-x-2">
+             <a 
+               href="${wishlist.wishlistUrl}"
+               class="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
++              data-wishlist-id="${wishlist.id}"
++              data-wishlist-url="${wishlist.wishlistUrl}"
+             >
+-              View full wish details
++              View details
+             </a>
+             <a 
+               href="${basePath}fulfill?issue=${wishlist.id}"
+-              class="bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors"
++              class="relative overflow-hidden group bg-gradient-to-r from-gray-700 to-gray-900 text-white px-4 py-2 rounded text-sm transition-all duration-300 flex items-center gap-1.5 shadow-md hover:shadow-xl hover:from-purple-600 hover:to-violet-500"
+             >
+-              Fulfill this wish
++              <svg class="w-4 h-4 relative z-10 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
++              </svg>
++              <span class="relative z-10">Fulfill wish</span>
++              <span class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
++                <span class="absolute top-1/2 left-1/4 w-1 h-1 bg-purple-300 rounded-full animate-ping"></span>
++                <span class="absolute top-1/4 right-1/3 w-1 h-1 bg-violet-400 rounded-full animate-ping" style="animation-delay: 0.1s;"></span>
++                <span class="absolute bottom-1/3 right-1/4 w-1 h-1 bg-purple-200 rounded-full animate-ping" style="animation-delay: 0.2s;"></span>
++              </span>
+             </a>
+           </div>
+         </div>
+@@ -319,20 +994,89 @@ const urgencyColors = {
+     `;
+   }
+ 
+-  // Search functionality integrated with filters
++  // Search and filter functionality
+   function performSearch() {
+     const input = document.getElementById('searchInput');
+-    searchQuery = (input?.value || '');
+-    applyFilters();
++    const searchValue = input?.value.toLowerCase() || '';
++    
++    let filtered = [...allWishlists];
++
++    // Apply ecosystem filter
++    filtered = filterByEcosystem(filtered);
++
++    // Apply search filter
++    if (searchValue) {
++      filtered = filtered.filter(wishlist => {
++        return (
++          wishlist.projectName?.toLowerCase().includes(searchValue) ||
++          wishlist.maintainerUsername?.toLowerCase().includes(searchValue) ||
++          wishlist.repositoryUrl?.toLowerCase().includes(searchValue) ||
++          wishlist.technologies?.some(tech => tech.toLowerCase().includes(searchValue)) ||
++          wishlist.wishes?.some(wish => wish.toLowerCase().includes(searchValue))
++        );
++      });
++    }
++
++    displayWishlists(filtered);
++  }
++
++  // Populate ecosystem filter
++  function populateEcosystemFilter(wishlists) {
++    const select = document.getElementById('ecosystem-filter');
++    if (!select) return;
++
++    // Count wishlists per ecosystem
++    const ecosystemCounts = {};
++    wishlists.forEach(wishlist => {
++      if (wishlist.technologies) {
++        wishlist.technologies.forEach(tech => {
++          ecosystemCounts[tech] = (ecosystemCounts[tech] || 0) + 1;
++        });
++      }
++    });
++
++    // Sort ecosystems by count
++    const sortedEcosystems = Object.entries(ecosystemCounts)
++      .sort(([,a], [,b]) => b - a);
++
++    // Clear existing options (except "All")
++    while (select.options.length > 1) {
++      select.remove(1);
++    }
++
++    // Add options for each ecosystem with count
++    sortedEcosystems.forEach(([ecosystem, count]) => {
++      const option = document.createElement('option');
++      option.value = ecosystem;
++      option.textContent = `${ecosystem} (${count})`;
++      select.appendChild(option);
++    });
++  }
++
++  function filterByEcosystem(wishlists) {
++    const select = document.getElementById('ecosystem-filter');
++    const selectedEcosystem = select?.value;
++    
++    if (!selectedEcosystem) return wishlists;
++    
++    return wishlists.filter(wishlist => 
++      wishlist.technologies && 
++      wishlist.technologies.includes(selectedEcosystem)
++    );
+   }
+ 
+   // Initialize on page load
+   document.addEventListener('DOMContentLoaded', function() {
+     // Fetch wishlists
+-    fetchWishlists();
++    fetchWishlists().then(wishlists => {
++      if (wishlists) {
++        populateEcosystemFilter(wishlists);
++      }
++    });
+     
+     // Set up search
+     const searchInput = document.getElementById('searchInput');
++    const ecosystemFilter = document.getElementById('ecosystem-filter');
+     let searchTimeout;
+     
+     if (searchInput) {
+@@ -342,13 +1086,11 @@ const urgencyColors = {
+       });
+     }
+ 
+-    // Filters
+-    const sortSelect = document.getElementById('sortSelect');
++    if (ecosystemFilter) {
++      ecosystemFilter.addEventListener('change', performSearch);
++    }
++    }
+ 
+-    sortSelect?.addEventListener('change', function(e) {
+-      sortBy = (e.target?.value || 'recent');
+-      applyFilters();
+-    });
+-  });
++      });
+ </script>
+ </Layout>
+\ No newline at end of file

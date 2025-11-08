@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
     const issues: GitHubIssue[] = await response.json();
     
     // Create a map of repository URLs to issue URLs
-    const existingWishlists: Record<string, { issueUrl: string; issueNumber: number; isApproved: boolean }> = {};
+    const existingWishlists: Record<string, { issueUrl: string; issueNumber: number; isApproved: boolean; projectTitle: string }> = {};
     
     for (const issue of issues) {
       // Parse the issue body to extract repository URLs
@@ -64,6 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
           issueUrl: issue.html_url,
           issueNumber: issue.number,
           isApproved: isApproved,
+          projectTitle: issue.title,
         };
       }
       
@@ -78,13 +79,14 @@ export const POST: APIRoute = async ({ request }) => {
             issueUrl: issue.html_url,
             issueNumber: issue.number,
             isApproved: isApproved,
+            projectTitle: issue.title,
           };
         }
       }
     }
     
     // Check which of the requested repositories have existing wishlists
-    const results: Record<string, { exists: boolean; issueUrl?: string; issueNumber?: number; isApproved?: boolean }> = {};
+    const results: Record<string, { exists: boolean; issueUrl?: string; issueNumber?: number; isApproved?: boolean; projectTitle?: string }> = {};
     
     for (const url of repositoryUrls) {
       const normalizedUrl = url.replace(/\.git$/, '').replace(/\/$/, '');
@@ -95,6 +97,7 @@ export const POST: APIRoute = async ({ request }) => {
           issueUrl: existingWishlists[normalizedUrl].issueUrl,
           issueNumber: existingWishlists[normalizedUrl].issueNumber,
           isApproved: existingWishlists[normalizedUrl].isApproved,
+          projectTitle: existingWishlists[normalizedUrl].projectTitle,
         };
       } else {
         results[url] = { exists: false };

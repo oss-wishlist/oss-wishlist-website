@@ -63,9 +63,9 @@ if (user?.login) {
             aria-labelledby="wishlists-dropdown-button"
           >
             <div class="py-1" role="none">
-              <a href={`${basePath}catalog`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Wishlist Catalogue</a>
-              <a href={`${basePath}wishlists`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">All Wishlists</a>
-              <a href={`${basePath}maintainers`} class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none min-h-[44px] flex items-center" role="menuitem" tabindex="-1">Your Wishlists</a>
+              <a href={`${basePath}catalog`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">Wishlist Catalogue</a>
+              <a href={`${basePath}wishlists`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">All Wishlists</a>
+              <a href={`${basePath}maintainers`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">Your Wishlists</a>
             </div>
           </div>
         </div>
@@ -155,9 +155,9 @@ if (user?.login) {
     <!-- Mobile Navigation Menu -->
     <div id="mobile-menu" class="hidden md:hidden pb-4" role="navigation" aria-label="Mobile navigation">
       <div class="space-y-1">
-        <a href={`${basePath}catalog`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Wishlist Catalogue</a>
-        <a href={`${basePath}wishlists`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">All Wishlists</a>
-        <a href={`${basePath}maintainers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Your Wishlists</a>
+        <a href={`${basePath}catalog`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Wishlist Catalogue</a>
+        <a href={`${basePath}wishlists`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">All Wishlists</a>
+        <a href={`${basePath}maintainers`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Your Wishlists</a>
         <a href={`${basePath}helpers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Helper Community Efforts</a>
   <a href={`${basePath}practitioners`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Practitioners</a>
         <a href="https://discord.gg/9BY9P5FD" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Join the Community</a>

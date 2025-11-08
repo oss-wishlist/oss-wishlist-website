@@ -35,7 +35,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
       
       <form id="practitionerApplicationForm" class="space-y-6">
         <!-- Error box -->
-        <div id="formError" class="hidden mb-4 p-4 border border-red-300 bg-red-50 text-red-800 rounded" role="alert" aria-live="polite"></div>
+        <div id="formError" class="alert-error hidden" role="alert" aria-live="polite"></div>
         <!-- Personal Information -->
         <div class="grid md:grid-cols-2 gap-6">
           <div>

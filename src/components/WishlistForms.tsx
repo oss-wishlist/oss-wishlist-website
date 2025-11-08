@@ -161,7 +161,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   const [loadingRepos, setLoadingRepos] = useState(cachedData.loading);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepository | null>(null);
   const [selectedAction, setSelectedAction] = useState<'create' | 'edit' | 'close' | null>(null);
-  const [existingWishlists, setExistingWishlists] = useState<Record<string, { issueUrl: string; issueNumber: number; isApproved?: boolean }>>({});
+  const [existingWishlists, setExistingWishlists] = useState<Record<string, { issueUrl: string; issueNumber: number; isApproved?: boolean; wishTitle?: string }>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<{
@@ -342,18 +342,20 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       
       if (response.ok) {
         const data = await response.json();
-        const existingMap: Record<string, { issueUrl: string; issueNumber: number; isApproved?: boolean }> = {};
+        const existingMap: Record<string, { issueUrl: string; issueNumber: number; isApproved?: boolean; wishTitle?: string }> = {};
         const approvalMap: Record<number, boolean> = {};
         
         for (const [url, info] of Object.entries(data.results)) {
           if ((info as any).exists) {
             const issueNumber = (info as any).issueNumber;
             const isApproved = (info as any).isApproved || false;
+            const wishTitle = (info as any).projectTitle || (info as any).title || '';
             
             existingMap[url] = {
               issueUrl: (info as any).issueUrl,
               issueNumber: issueNumber,
               isApproved: isApproved,
+              wishTitle: wishTitle,
             };
             approvalMap[issueNumber] = isApproved;
           }
@@ -950,10 +952,16 @@ ${wishlistData.additionalNotes || 'None provided'}
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <input type="radio" checked={isSelected} readOnly className="mt-1" />
                       <div className="flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-semibold text-gray-900">{repo.name}</h4>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{repo.name}</h4>
+                            {hasExistingWishlist && hasExistingWishlist.wishTitle && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                <span className="font-bold">Wishlist Title:</span> {hasExistingWishlist.wishTitle}
+                              </p>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2 flex-wrap justify-end">
                             {hasExistingWishlist ? (
                               <>

@@ -113,9 +113,6 @@ const urgencyColors = {
         <a href={`${basePath}/maintainers`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
           Create Your Wishlist
         </a>
-        <a href={`${basePath}/maintainers`} class="border border-gray-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
-          Learn More
-        </a>
       </div>
     </div>
   </section>
@@ -424,16 +421,16 @@ const urgencyColors = {
             </a>
             <a 
               href="${basePath}fulfill?issue=${wishlist.id}"
-              class="relative overflow-hidden group bg-gradient-to-r from-gray-700 to-gray-900 text-white px-4 py-2 rounded text-sm transition-all duration-300 flex items-center gap-1.5 shadow-md hover:shadow-xl hover:from-purple-600 hover:to-violet-500"
+              class="btn-sparkle"
             >
-              <svg class="w-4 h-4 relative z-10 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
-              <span class="relative z-10">Fulfill wish</span>
-              <span class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span class="absolute top-1/2 left-1/4 w-1 h-1 bg-purple-300 rounded-full animate-ping"></span>
-                <span class="absolute top-1/4 right-1/3 w-1 h-1 bg-violet-400 rounded-full animate-ping" style="animation-delay: 0.1s;"></span>
-                <span class="absolute bottom-1/3 right-1/4 w-1 h-1 bg-purple-200 rounded-full animate-ping" style="animation-delay: 0.2s;"></span>
+              <span class="btn-sparkle-text">Fulfill wish</span>
+              <span class="btn-sparkle-particles">
+                <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
+                <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
+                <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
               </span>
             </a>
           </div>

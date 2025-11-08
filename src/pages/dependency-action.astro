@@ -1,0 +1,125 @@
+---
+import Layout from '../components/Layout.astro';
+import { getBasePath } from '../lib/paths';
+
+const basePath = getBasePath();
+---
+
+<Layout 
+  title="Dependency Wishlist Action - OSS Wishlist" 
+  description="Discover wishlists from your project dependencies with our GitHub Action"
+>
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Coming December 2025
+        </div>
+        
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+          GitHub Action - Dependency Wishlist Reporting
+        </h1>
+        
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          Automatically discover and track wishlists from your project dependencies
+        </p>
+      </div>
+
+      <!-- Value Proposition -->
+      <div class="bg-white rounded-lg border border-gray-200 p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Action Report Features</h2>
+        
+        <p class="text-gray-600 mb-6">
+          A private report of all dependencies with active wishlists, giving you visibility into the sustainability needs 
+          of the open source projects you depend on.
+        </p>
+
+        <div class="space-y-4 mb-6">
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+            </div>
+            <div>
+              <p class="text-gray-700">
+                <span class="font-medium">Private dependency report:</span> Lists all dependencies with active wishlists
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+            </div>
+            <div>
+              <p class="text-gray-700">
+                <span class="font-medium">OpenSSF Scorecard & Criticality filters:</span> Optional filtering by Scorecard (0–10) and Criticality (0–1) scores
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+            </div>
+            <div>
+              <p class="text-gray-700">
+                <span class="font-medium">Multi-ecosystem support:</span> Works with npm, PyPI, Cargo, Maven, RubyGems, Go, NuGet, Hex, Pub, Composer, and more
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+            </div>
+            <div>
+              <p class="text-gray-700">
+                <span class="font-medium">SBOM analysis:</span> Works with SPDX and CycloneDX formats
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+            </div>
+            <div>
+              <p class="text-gray-700">
+                <span class="font-medium">Maintainer affiliation flags:</span> Identifies dependencies whose maintainers use Big Tech email domains
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+          <p class="text-sm text-gray-600">
+            <span class="font-medium text-gray-900">Example:</span> Your project depends on 150 open source packages. The action discovers that 12 of them have active wishlists 
+            requesting governance support, security audits, or documentation help. Now you can direct your sponsorship 
+            budget toward solving real sustainability challenges in your supply chain.
+          </p>
+        </div>
+      </div>
+
+      <!-- Interested? -->
+      <div class="text-center">
+        <p class="text-gray-600 mb-4">
+          Want to be notified when this launches?
+        </p>
+        <a 
+          href="https://github.com/oss-wishlist/wishlist-action/issues/new"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+        >
+          Open an issue to share your use case
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

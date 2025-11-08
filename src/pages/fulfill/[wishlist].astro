@@ -58,9 +58,9 @@ if (wishlist) {
                 required
               />
             ) : (
-              <div class="bg-red-50 border border-red-200 rounded-md p-4">
-                <p class="text-red-800">Please access this page via a "Fulfill This List" button from a wishlist.</p>
-                <p class="mt-2"><a href={`${basePath}wishlists`} class="text-red-600 underline">Go to Wishlists</a></p>
+              <div class="alert-error">
+                <p class="mb-2">Please access this page via a "Fulfill This List" button from a wishlist.</p>
+                <p><a href={`${basePath}wishlists`} class="font-medium underline hover:opacity-80">Go to Wishlists</a></p>
               </div>
             )}
           </div>

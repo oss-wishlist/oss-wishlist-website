@@ -107,7 +107,7 @@ if (issueNumber && GITHUB_TOKEN) {
                   id="wishlist" 
                   name="wishlist-display" 
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-50"
-                  value={`${wishlistData.projectName} (Issue #${wishlistData.issueNumber})`}
+                  value={wishlistData.projectName}
                   readonly
                 />
                 <input type="hidden" name="issue-number" value={wishlistData.issueNumber} />
@@ -117,25 +117,21 @@ if (issueNumber && GITHUB_TOKEN) {
                 <input type="hidden" name="project-size" value={(projectSize || 'medium')} />
               </>
             ) : (
-              <div class="bg-red-50 border border-red-200 rounded-md p-4">
-                <div class="flex">
-                  <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                  <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">
+              <div class="alert-error">
+                <div class="flex items-start gap-3">
+                  <svg class="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 class="font-semibold mb-2">
                       Invalid Access
                     </h3>
-                    <div class="mt-2 text-sm text-red-700">
-                      <p>This page can only be accessed by clicking "Fulfill This Wish" from a specific wishlist.</p>
-                      <p class="mt-2">
-                        <a href={`${basePath}wishlists`} class="font-medium underline hover:text-red-600">
-                          Go to Wishlists page to select a wishlist to fulfill
-                        </a>
-                      </p>
-                    </div>
+                    <p class="mb-2">This page can only be accessed by clicking "Fulfill This Wish" from a specific wishlist.</p>
+                    <p>
+                      <a href={`${basePath}wishlists`} class="font-medium underline hover:opacity-80">
+                        Go to Wishlists page to select a wishlist to fulfill
+                      </a>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -144,24 +140,24 @@ if (issueNumber && GITHUB_TOKEN) {
 
           <!-- Maintainer's Practitioner Preferences (if any) -->
           {wishlistData && (wishlistData.preferredPractitioner || wishlistData.nomineeName) && (
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 class="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+            <div class="alert-info">
+              <h3 class="font-semibold mb-2 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Maintainer's Practitioner Preferences
               </h3>
-              <p class="text-sm text-blue-800 mb-3">
+              <p class="mb-3">
                 The maintainer has expressed the following preferences. These will be considered alongside your selection when finalizing the match.{' '}
-                <a href={`${basePath}faq#practitioner-matching-preferences`} target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-900">
+                <a href={`${basePath}faq#practitioner-matching-preferences`} target="_blank" rel="noopener noreferrer" class="underline hover:opacity-80">
                   Learn more
                 </a>
               </p>
               
               {wishlistData.preferredPractitioner && (
                 <div class="mb-3">
-                  <p class="text-xs font-medium text-blue-900 mb-1">Preferred Practitioner:</p>
-                  <p class="text-sm text-blue-800">
+                  <p class="text-xs font-medium mb-1">Preferred Practitioner:</p>
+                  <p class="text-sm">
                     {(() => {
                       // Try to find the practitioner in our collection
                       const practitioner = practitioners.find(p => p.slug === wishlistData.preferredPractitioner);
@@ -181,18 +177,18 @@ if (issueNumber && GITHUB_TOKEN) {
               
               {wishlistData.nomineeName && (
                 <div>
-                  <p class="text-xs font-medium text-blue-900 mb-1">Nominated Practitioner:</p>
-                  <p class="text-sm text-blue-800">
+                  <p class="text-xs font-medium mb-1">Nominated Practitioner:</p>
+                  <p class="text-sm">
                     <strong>{wishlistData.nomineeName}</strong>
                   </p>
                   {(wishlistData.nomineeEmail || wishlistData.nomineeGithub) && (
-                    <p class="text-xs text-blue-800 mt-1">
+                    <p class="text-xs mt-1">
                       {wishlistData.nomineeEmail && `Email: ${wishlistData.nomineeEmail}`}
                       {wishlistData.nomineeEmail && wishlistData.nomineeGithub && ' • '}
                       {wishlistData.nomineeGithub && `GitHub: ${wishlistData.nomineeGithub}`}
                     </p>
                   )}
-                  <p class="text-xs text-blue-700 mt-1 italic">
+                  <p class="text-xs mt-1 italic opacity-75">
                     Note: Nominees must be vetted and approved before they can fulfill wishes.
                   </p>
                 </div>
@@ -204,7 +200,7 @@ if (issueNumber && GITHUB_TOKEN) {
           {wishlistData && wishlistData.wishes && wishlistData.wishes.length > 0 && (
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">
-                Which services would you like to fund? <span class="text-red-600">*</span>
+                Which services would you like to fund? <span class="field-required">*</span>
               </label>
               <p class="text-xs text-gray-500 mb-4">Select the services you want to sponsor and choose a practitioner for each (or let us select the best match).</p>
               <div class="space-y-4">
@@ -379,14 +375,14 @@ if (issueNumber && GITHUB_TOKEN) {
 
           <!-- Optional Honorarium (only show if maintainer opted in) -->
           {wishlistData && wishlistData.openToSponsorship && (
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div class="alert-info">
               <div class="flex items-start">
                 <input 
                   type="checkbox" 
                   id="include-sponsorship" 
                   name="include-sponsorship"
                   value="yes"
-                  class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  class="mt-1 h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
                 />
                 <div class="ml-3">
                   <label for="include-sponsorship" class="block text-sm font-medium text-gray-900">
@@ -404,7 +400,7 @@ if (issueNumber && GITHUB_TOKEN) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label for="contact-person" class="block text-sm font-medium text-gray-700 mb-2">
-                Contact Person <span class="text-red-600">*</span>
+                Contact Person <span class="field-required">*</span>
               </label>
               <input 
                 type="text" 
@@ -417,7 +413,7 @@ if (issueNumber && GITHUB_TOKEN) {
             
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                Email Address <span class="text-red-600">*</span>
+                Email Address <span class="field-required">*</span>
               </label>
               <input 
                 type="email" 
@@ -432,7 +428,7 @@ if (issueNumber && GITHUB_TOKEN) {
           <!-- Company -->
           <div>
             <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
-              Company/Organization <span class="text-red-600">*</span>
+              Company/Organization <span class="field-required">*</span>
             </label>
             <input 
               type="text" 
@@ -446,7 +442,7 @@ if (issueNumber && GITHUB_TOKEN) {
           <!-- Reason for Fulfillment -->
           <div>
             <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-              Reason for Fulfillment <span class="text-red-600">*</span>
+              Reason for Fulfillment <span class="field-required">*</span>
             </label>
             <textarea 
               id="reason" 
@@ -463,9 +459,17 @@ if (issueNumber && GITHUB_TOKEN) {
             <div class="pt-6">
               <button 
                 type="submit" 
-                class="w-full bg-gray-600 text-white px-6 py-3 rounded-md font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                class="btn-sparkle w-full"
               >
-                Submit Fulfillment Request
+                <svg class="btn-sparkle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m0 0l-2-1m2 1v2.5M14 4l-2 1m0 0l-2-1m2 1v2.5" />
+                </svg>
+                <span class="btn-sparkle-text">Submit Fulfillment Request</span>
+                <div class="btn-sparkle-particles">
+                  <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
+                  <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
+                  <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
+                </div>
               </button>
             </div>
           )}
