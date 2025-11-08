@@ -207,6 +207,9 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   // Checkbox for FUNDING.yml PR
   const [createFundingPR, setCreateFundingPR] = useState(false);
   const [fundingYmlProcessed, setFundingYmlProcessed] = useState(false);
+  
+  // Checkbox for wishlist maintenance reminder acknowledgment
+  const [acknowledgeReminders, setAcknowledgeReminders] = useState(false);
 
   // Available services from content collections
   const availableServices = services.length > 0 ? services : [
@@ -1868,6 +1871,24 @@ ${wishlistData.additionalNotes || 'None provided'}
               </label>
             </div>
             
+            {/* Wishlist maintenance reminder acknowledgment */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+              <label className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={acknowledgeReminders}
+                  onChange={(e) => setAcknowledgeReminders(e.target.checked)}
+                  className="mt-1 h-5 w-5 text-gray-900 border-gray-300 rounded focus:ring-gray-500"
+                />
+                <div className="flex-1">
+                  <span className="text-gray-900 font-medium text-sm">I understand wishlist maintenance requirements</span>
+                  <p className="text-xs text-gray-600 mt-1">
+                    I understand that I will receive periodic reminders (every 3 months) to validate that my wishlist is still current. Failure to respond to these reminders may result in my wishlist being deactivated.
+                  </p>
+                </div>
+              </label>
+            </div>
+            
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
               <button
                 type="button"
@@ -1882,7 +1903,8 @@ ${wishlistData.additionalNotes || 'None provided'}
                   loading ||
                   wishlistData.selectedServices.length === 0 ||
                   wishlistData.selectedServices.length > MAX_WISHES ||
-                  !wishlistData.projectTitle.trim()
+                  !wishlistData.projectTitle.trim() ||
+                  !acknowledgeReminders
                 }
                 className="flex-1 px-8 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2 order-1 sm:order-2"
               >

@@ -59,11 +59,6 @@ function getPlaybookForService(serviceSlug: string) {
           </div>
         </div>
 
-        <!-- Ecosystem Filter -->
-        <div class="text-center">
-                  <select id="ecosystem-filter" class="px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500">
-          <option value="">All Ecosystems</option>
-        </div>
       </div>
 
   <!-- Services & Generic Funding Campaign Card Grid -->
@@ -129,45 +124,7 @@ function getPlaybookForService(serviceSlug: string) {
           </div>
         )})}
 
-        <script>
-          // Fetch ecosystem stats and populate filter
-          async function initializeEcosystemFilter() {
-            try {
-              const basePath = import.meta.env.PUBLIC_BASE_PATH || '';
-              const response = await fetch(`${basePath}/api/wishlists`);
-              const data = await response.json();
-              
-              if (data.ecosystems) {
-                const select = document.getElementById('ecosystem-filter');
-                if (!select) return;
 
-                // Sort ecosystems by count (highest first)
-                const sortedEcosystems = Object.entries(data.ecosystems)
-                  .sort(([,a], [,b]) => b.count - a.count);
-
-                // Add options for each ecosystem with count
-                sortedEcosystems.forEach(([ecosystem, stats]) => {
-                  const option = document.createElement('option');
-                  option.value = ecosystem;
-                  option.textContent = `${ecosystem} (${stats.count})`;
-                  select.appendChild(option);
-                });
-
-                // Add filter handling
-                select.addEventListener('change', (e) => {
-                  const selectedEcosystem = e.target.value;
-                  // Filter service cards based on selected ecosystem
-                  // TODO: Implement filtering when service cards include ecosystem data
-                });
-              }
-            } catch (error) {
-              console.error('Error loading ecosystem stats:', error);
-            }
-          }
-
-          // Initialize when the page loads
-          document.addEventListener('DOMContentLoaded', initializeEcosystemFilter);
-        </script>
 
         <!-- Generic Funding Campaign card (directory of external efforts) -->
         <div class="service-card bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow" 
