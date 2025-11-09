@@ -16,7 +16,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
 
 <Layout title="Apply to be an Practitioner - OSS Wishlist" description="Join our community of verified open source practitioners. Help projects succeed while building your professional network.">
   <AuthenticatedForm client:load user={user} formType="practitioner application">
-  <section class="py-16 bg-gray-50">
+    <section class="py-16 bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
       <div class="text-center mb-12">
@@ -514,8 +514,10 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
         // Reset button on error
         submitBtn.disabled = false;
         btnText.textContent = originalText;
+      }
+    });
   </script>
     </div>
-  </section>
+    </section>
   </AuthenticatedForm>
 </Layout>
