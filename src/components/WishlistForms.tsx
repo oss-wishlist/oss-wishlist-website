@@ -817,14 +817,14 @@ ${wishlistData.additionalNotes || 'None provided'}
     }
   };
 
-  const handleCloseWishlist = async () => {
-    if (!existingIssueNumber) {
+  const handleCloseWishlist = async (issueNumber: number) => {
+    if (!issueNumber) {
       setError('No wishlist to close');
       return;
     }
 
     const confirmClose = window.confirm(
-      `Are you sure you want to close this wishlist (Issue #${existingIssueNumber})? This will mark it as no longer needing help.`
+      `Are you sure you want to close this wishlist (Issue #${issueNumber})? This will mark it as no longer needing help.`
     );
 
     if (!confirmClose) {
@@ -841,7 +841,7 @@ ${wishlistData.additionalNotes || 'None provided'}
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          issueNumber: existingIssueNumber
+          issueNumber: issueNumber
         })
       });
 
@@ -856,7 +856,7 @@ ${wishlistData.additionalNotes || 'None provided'}
         const updated = { ...prev };
         // Find and remove the wishlist by issue number
         Object.keys(updated).forEach(repoUrl => {
-          if (updated[repoUrl].issueNumber === existingIssueNumber) {
+          if (updated[repoUrl].issueNumber === issueNumber) {
             delete updated[repoUrl];
           }
         });
@@ -1106,8 +1106,7 @@ ${wishlistData.additionalNotes || 'None provided'}
 
                   if (selectedAction === 'close') {
                     if (hasExisting) {
-                      setExistingIssueNumber(hasExisting.issueNumber);
-                      await handleCloseWishlist();
+                      await handleCloseWishlist(hasExisting.issueNumber);
                     }
                   } else if (selectedAction === 'edit') {
                     if (hasExisting) {
