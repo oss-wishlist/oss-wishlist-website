@@ -44,6 +44,7 @@ const sortedGuardians = guardians.sort((a, b) => a.data.name.localeCompare(b.dat
                   src={guardian.data.logo_url} 
                   alt={guardian.data.name}
                   class="w-12 h-12 object-contain grayscale"
+                  loading="lazy"
                 />
               )}
               <div class="flex-1">

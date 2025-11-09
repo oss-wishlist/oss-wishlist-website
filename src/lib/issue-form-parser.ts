@@ -38,37 +38,33 @@ export function parseIssueForm(body: string): ParsedIssueForm {
     openToSponsorship: false
   };
 
-    // Parse technologies/package ecosystems from anywhere in the body
-    // Look for various formats:
-    // 1. "### Package Ecosystems" section with ecosystem name(s)
-    const packageEcosystemsSection = body.split('### Package Ecosystems')[1]?.split('###')[0]?.trim();
-    console.log('Package Ecosystems Section:', packageEcosystemsSection);
-    
-    if (packageEcosystemsSection) {
-      // The section content is the ecosystem name directly, possibly comma-separated
-      // or on separate lines with dashes, or just the name
-      const techs = packageEcosystemsSection
-        .split('\n')
-        .map(line => line.replace(/^-\s*/, '').trim()) // Remove leading dash if present
-        .filter(line => line && line !== '_No response_') // Filter out empty lines and "No response"
-        .map(line => line.split(',').map(t => t.trim())).flat() // Handle comma-separated
-        .filter(Boolean);
-      console.log('Found technologies from section:', techs);
-      if (techs.length) {
-        result.technologies = techs;
-      }
-    } else {
-      // Try other formats
-      const techMatch = body.match(/(?:[-*]\s*|^)\*\*(Package Ecosystems|Technologies):\*\*\s*(.+?)(?:\n|$)/m);
-      if (techMatch) {
-        const techs = techMatch[2].split(',').map(t => t.trim()).filter(t => t);
-        console.log('Found technologies from inline format:', techs);
-        result.technologies = techs;
-      }
+  // Parse technologies/package ecosystems from anywhere in the body
+  // Look for various formats:
+  // 1. "### Package Ecosystems" section with ecosystem name(s)
+  const packageEcosystemsSection = body.split('### Package Ecosystems')[1]?.split('###')[0]?.trim();
+  
+  if (packageEcosystemsSection) {
+    // The section content is the ecosystem name directly, possibly comma-separated
+    // or on separate lines with dashes, or just the name
+    const techs = packageEcosystemsSection
+      .split('\n')
+      .map(line => line.replace(/^-\s*/, '').trim()) // Remove leading dash if present
+      .filter(line => line && line !== '_No response_') // Filter out empty lines and "No response"
+      .map(line => line.split(',').map(t => t.trim())).flat() // Handle comma-separated
+      .filter(Boolean);
+    if (techs.length) {
+      result.technologies = techs;
     }
+  } else {
+    // Try other formats
+    const techMatch = body.match(/(?:[-*]\s*|^)\*\*(Package Ecosystems|Technologies):\*\*\s*(.+?)(?:\n|$)/m);
+    if (techMatch) {
+      const techs = techMatch[2].split(',').map(t => t.trim()).filter(t => t);
+      result.technologies = techs;
+    }
+  }
     
-    console.log('Final technologies:', result.technologies);
-    // Issue forms create sections with ### headers
+  // Issue forms create sections with ### headers
   const sections = body.split('###').map(s => s.trim()).filter(Boolean);
 
   for (const section of sections) {

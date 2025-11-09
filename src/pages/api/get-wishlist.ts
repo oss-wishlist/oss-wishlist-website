@@ -55,7 +55,6 @@ export const GET: APIRoute = async ({ url, request }) => {
         const comments = commentsResp.ok ? await commentsResp.json() : [];
         // Parse issue body
         const parsed = parseIssueForm(issue.body || '');
-        console.log('Parsed from issue body:', { technologies: parsed.technologies });
         
         // Find and parse the latest wishlist update comment
         const latestUpdateComment = Array.isArray(comments) 
@@ -68,11 +67,6 @@ export const GET: APIRoute = async ({ url, request }) => {
         const updatedData = latestUpdateComment 
           ? parseIssueForm(latestUpdateComment.body)
           : null;
-        
-        console.log('Parsed from update comment:', { 
-          hasUpdate: !!latestUpdateComment,
-          technologies: updatedData?.technologies 
-        });
 
         // Extract labels from the issue
         const labels = Array.isArray(issue.labels) 
@@ -163,15 +157,6 @@ export const GET: APIRoute = async ({ url, request }) => {
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    // Log the final data being sent
-    console.log('API sending wishlist data:', {
-      id: wishlist.id,
-      number: wishlist.number,
-      projectTitle: wishlist.projectTitle,
-      title: wishlist.title,
-      project: wishlist.project
-    });
 
     return new Response(JSON.stringify(wishlist), {
       status: 200,

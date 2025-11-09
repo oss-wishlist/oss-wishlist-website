@@ -101,61 +101,18 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    // If this is an update, update the issue body AND add a comment
+    // If this is an update, add a comment with the complete updated data
+    // (Comments act as version history; we never modify the original issue body)
     if (isUpdate && issueNumber) {
       const updateTimestamp = new Date().toISOString();
       
-      // First, update the issue body itself
-      const updateIssueResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${githubToken}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'OSS-Wishlist-Bot'
-        },
-        body: JSON.stringify({
-          body: finalIssueBody
-        })
-      });
-
-      if (!updateIssueResponse.ok) {
-        const errorData = await updateIssueResponse.text();
-        console.error('GitHub API error updating issue:', updateIssueResponse.status, errorData);
-        return jsonError(
-          'Failed to update wishlist',
-          updateIssueResponse.status === 401 ? 'Authentication failed' : 'GitHub API error',
-          updateIssueResponse.status
-        );
-      }
-      
-      // Then, add a comment to notify about the update with full updated data
+      // Add a comment with the complete formatted issue data (same format as original)
+      // This ensures subsequent edits read the full data from the comment
       const commentBody = `## Wishlist Updated
 
-Last Updated: ${updateTimestamp}
+**Last Updated:** ${updateTimestamp}
 
-### Current Details
-- **Project Title:** ${formData.projectTitle}
-- **Services Needed:** ${formData.services.join(', ')}
-- **Package Ecosystems:** ${formData.technologies?.join(', ') || 'None specified'}
-- **Urgency:** ${formData.urgency}
-- **Project Size:** ${formData.projectSize}
-- **Timeline:** ${formData.timeline || 'Not specified'}
-- **Organization Type:** ${formData.organizationType}
-- **Organization Name:** ${formData.organizationName || 'Not specified'}
-- **Open to Honorarium:** ${formData.openToSponsorship ? 'Yes' : 'No'}
-${formData.createFundingPR ? '- **FUNDING.yml Update:** Requested' : ''}
-${formData.preferredPractitioner ? `- **Preferred Practitioner:** ${formData.preferredPractitioner}` : ''}
-${formData.nomineeName ? `
-### Nominee Information
-- **Name:** ${formData.nomineeName}
-- **GitHub:** ${formData.nomineeGithub}
-- **Email:** ${formData.nomineeEmail}` : ''}
-${formData.additionalNotes ? `
-### Additional Notes
-${formData.additionalNotes}` : ''}
-
-Updated via [OSS Wishlist Platform](${import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com'})`;
+${finalIssueBody}`;
 
       const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}/comments`, {
         method: 'POST',

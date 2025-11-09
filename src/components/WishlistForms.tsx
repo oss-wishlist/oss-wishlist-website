@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react';
 import { getApiPath } from '../config/app';
 import { getBasePath, withBasePath, withBaseUrl } from '../lib/paths';
 import { SUPPORTED_ECOSYSTEMS } from '../lib/ecosystems';
+import { 
+  validateEmail, 
+  validateUrl, 
+  validateGitHubUrl, 
+  validateLength, 
+  checkProfanity,
+  type ValidationResult
+} from '../lib/realtime-validation';
+import { ValidatedInput, ValidatedTextarea, ValidationFeedback } from './ValidatedFormField';
 
 // Heroicon SVG components
 const PencilIcon = () => (
@@ -211,6 +220,9 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   // Checkbox for wishlist maintenance reminder acknowledgment
   const [acknowledgeReminders, setAcknowledgeReminders] = useState(false);
 
+  // Real-time validation results for form fields
+  const [validationResults, setValidationResults] = useState<Record<string, ValidationResult>>({});
+
   // Available services from content collections
   const availableServices = services.length > 0 ? services : [
     { id: 'community-strategy', title: 'Community Strategy', description: 'Help building and growing your community', category: 'Community' },
@@ -347,6 +359,11 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         const data = await response.json();
         const existingMap: Record<string, { issueUrl: string; issueNumber: number; isApproved?: boolean; wishTitle?: string }> = {};
         const approvalMap: Record<number, boolean> = {};
+        
+        // Safely handle empty or missing results
+        if (!data.results) {
+          return;
+        }
         
         for (const [url, info] of Object.entries(data.results)) {
           if ((info as any).exists) {
@@ -531,6 +548,48 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   const proceedToWishlist = () => {
     if ((user && selectedRepo) || manualRepoData) {
       setCurrentStep('wishlist');
+    }
+  };
+
+  /**
+   * Real-time validation handler for form fields
+   * Validates field and updates validation state with feedback
+   */
+  const validateField = (fieldName: string, value: string, fieldType: 'email' | 'url' | 'text' | 'notes') => {
+    let result: ValidationResult | null = null;
+
+    switch (fieldType) {
+      case 'email':
+        result = validateEmail(value);
+        break;
+      case 'url':
+        if (value.includes('github.com')) {
+          result = validateGitHubUrl(value);
+        } else {
+          result = validateUrl(value, fieldName);
+        }
+        break;
+      case 'text':
+        result = validateLength(value, 1, 200, fieldName);
+        if (result.isValid) {
+          const profanityCheck = checkProfanity(value);
+          result = profanityCheck;
+        }
+        break;
+      case 'notes':
+        result = validateLength(value, 0, 1000, fieldName);
+        if (result.isValid && value.length > 0) {
+          const profanityCheck = checkProfanity(value);
+          result = profanityCheck;
+        }
+        break;
+    }
+
+    if (result) {
+      setValidationResults(prev => ({
+        ...prev,
+        [fieldName]: result as ValidationResult
+      }));
     }
   };
 
@@ -1400,13 +1459,26 @@ ${wishlistData.additionalNotes || 'None provided'}
               id="projectTitle"
               value={wishlistData.projectTitle}
               onChange={(e) => {
-                setWishlistData(prev => ({ ...prev, projectTitle: e.target.value }));
+                const newValue = e.target.value;
+                setWishlistData(prev => ({ ...prev, projectTitle: newValue }));
                 clearFieldError('projectTitle');
+                validateField('projectTitle', newValue, 'text');
+              }}
+              onBlur={(e) => {
+                validateField('projectTitle', e.target.value, 'text');
               }}
               placeholder="Enter your project title (e.g., 'My Awesome Library')"
               className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent ${getFieldBorderClass('projectTitle')}`}
               required
             />
+            {validationResults.projectTitle && (
+              <ValidationFeedback
+                label="Project Title"
+                value={wishlistData.projectTitle}
+                isValid={validationResults.projectTitle.isValid}
+                validationResult={validationResults.projectTitle}
+              />
+            )}
             {fieldErrors.projectTitle && (
               <p className="text-red-600 text-sm mt-1">{fieldErrors.projectTitle}</p>
             )}
@@ -1838,11 +1910,27 @@ ${wishlistData.additionalNotes || 'None provided'}
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h3>
             <textarea
               value={wishlistData.additionalNotes}
-              onChange={(e) => setWishlistData(prev => ({ ...prev, additionalNotes: e.target.value }))}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setWishlistData(prev => ({ ...prev, additionalNotes: newValue }));
+                validateField('additionalNotes', newValue, 'notes');
+              }}
+              onBlur={(e) => {
+                validateField('additionalNotes', e.target.value, 'notes');
+              }}
               rows={4}
               placeholder="Any additional information about your project, specific requirements, or context that would help supporters understand your needs..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             />
+            {validationResults.additionalNotes && (
+              <ValidationFeedback
+                label="Additional Notes"
+                value={wishlistData.additionalNotes}
+                isValid={validationResults.additionalNotes.isValid}
+                validationResult={validationResults.additionalNotes}
+                helpText={`${wishlistData.additionalNotes.length}/1000`}
+              />
+            )}
           </div>
 
           {/* Submit */}

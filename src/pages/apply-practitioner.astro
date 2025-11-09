@@ -285,10 +285,11 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
         <!-- Submit Button -->
         <div class="text-center pt-6">
           <button 
+            id="practitioner-submit-btn"
             type="submit"
-            class="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+            class="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
           >
-            Submit Practitioner Application
+            <span id="btn-text">Submit Practitioner Application</span>
           </button>
         </div>
 
@@ -384,6 +385,14 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
     document.getElementById('practitionerApplicationForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      // Add loading state to button
+      const submitBtn = document.getElementById('practitioner-submit-btn');
+      const btnText = document.getElementById('btn-text');
+      const originalText = btnText.textContent;
+      
+      submitBtn.disabled = true;
+      btnText.innerHTML = '<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Submitting...</span>';
+      
       const formData = new FormData(this);
       const data = Object.fromEntries(formData);
       
@@ -477,6 +486,9 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
             errorBox.setAttribute('tabindex', '-1');
             errorBox.focus();
           }
+          // Reset button on error
+          submitBtn.disabled = false;
+          btnText.textContent = originalText;
           return; // Don't throw; we've handled UI
         }
       } catch (error) {
@@ -499,8 +511,9 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
           errorBox.setAttribute('tabindex', '-1');
           errorBox.focus();
         }
-      }
-    });
+        // Reset button on error
+        submitBtn.disabled = false;
+        btnText.textContent = originalText;
   </script>
     </div>
   </section>
