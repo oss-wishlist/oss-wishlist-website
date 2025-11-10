@@ -250,7 +250,20 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     const authStatus = urlParams.get('auth');
     const error = urlParams.get('error');
     
-    if (authStatus === 'success' || authStatus === 'already_authenticated') {
+    // Check for edit mode via sessionStorage (set by edit button in grid)
+    // Only enter edit mode if the flag is explicitly set AND a reload indicator exists
+    const editIssueNumber = sessionStorage.getItem('wishlist_edit_issue_number');
+    const wasNavigatedToEdit = sessionStorage.getItem('wishlist_navigated_to_edit');
+    
+    if (editIssueNumber && wasNavigatedToEdit) {
+      const issueNumber = parseInt(editIssueNumber, 10);
+      setExistingIssueNumber(issueNumber);
+      setSelectedAction('edit');
+      setIsEditingExisting(true);
+      // Don't remove the issue number - grid needs to see it
+      // But clear the navigation flag since we're now handling the edit
+      sessionStorage.removeItem('wishlist_navigated_to_edit');
+    } else if (authStatus === 'success' || authStatus === 'already_authenticated') {
       // Clear the URL params
       {
         const basePath = getBasePath();
@@ -270,11 +283,39 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
 
   // Update page title when editing mode changes
   useEffect(() => {
-    const titleElement = document.getElementById('title-action');
-    if (titleElement) {
-      titleElement.textContent = isEditingExisting ? 'Edit Your' : 'Create Your';
+    const verbElement = document.getElementById('title-action-verb');
+    const nounElement = document.getElementById('title-action-noun');
+    if (verbElement) {
+      verbElement.textContent = isEditingExisting ? 'Edit your' : 'Create';
+    }
+    if (nounElement) {
+      nounElement.textContent = isEditingExisting ? ' Wishlist' : ' a New Wishlist';
     }
   }, [isEditingExisting]);
+
+  // Load existing wishlist data when entering edit mode
+  useEffect(() => {
+    if (isEditingExisting && existingIssueNumber) {
+      loadExistingWishlistData(existingIssueNumber).then(success => {
+        if (success) {
+          setCurrentStep('wishlist');
+        } else {
+          setError('Failed to load wishlist data. Please try again.');
+        }
+      });
+    }
+  }, [isEditingExisting, existingIssueNumber]);
+
+  // Manage create mode flag for hiding cards during repo selection
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (currentStep === 'repo') {
+        sessionStorage.setItem('wishlist_in_create_mode', 'true');
+      } else {
+        sessionStorage.removeItem('wishlist_in_create_mode');
+      }
+    }
+  }, [currentStep]);
 
   const checkUserSession = async () => {
     try {
@@ -403,7 +444,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       }
       
       const cachedData = await response.json();
-      console.log('Loaded wishlist data:', cachedData);
       
       // Enforce max wishes when loading existing data
       let incomingWishes: string[] = cachedData.wishes || [];
@@ -412,17 +452,8 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         setError(`This wishlist currently has more than ${MAX_WISHES} wishes. We trimmed the selection to the first ${MAX_WISHES}.`);
       }
 
-      console.log('Setting title from:', { projectTitle: cachedData.projectTitle, title: cachedData.title });
       // Ensure we have a title from the API response
       const title = cachedData.projectTitle || cachedData.project || cachedData.title || '';
-      console.log('Setting title:', { 
-        from: { 
-          projectTitle: cachedData.projectTitle, 
-          project: cachedData.project,
-          title: cachedData.title 
-        }, 
-        final: title 
-      });
       
       const updatedData: any = {
         projectTitle: title,
@@ -447,14 +478,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       
       // Update all form data directly (not using prev callback)
       setWishlistData(updatedData);
-      console.log('Updated form data:', {
-        ...updatedData,
-        technologies_detail: {
-          fromCache: cachedData.technologies,
-          inUpdatedData: updatedData.technologies,
-          length: updatedData.technologies?.length
-        }
-      });
       
       // Handle FUNDING.yml checkbox state based on labels
       // If funding-yml-requested label exists, check the box
@@ -470,6 +493,17 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       
       setIsEditingExisting(true);
       setExistingIssueNumber(issueNumber);
+      
+      // Set repository data from the cached wishlist so form knows which repo we're editing
+      // This is important for the submission to know which repository to submit to
+      if (cachedData.repository || cachedData.repositoryUrl) {
+        setManualRepoData({
+          name: cachedData.project || cachedData.projectTitle || 'Project',
+          description: cachedData.description || '',
+          url: cachedData.repositoryUrl || cachedData.repository || '',
+          username: cachedData.maintainer || ''
+        });
+      }
       
       return true;
       
@@ -638,6 +672,12 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       invalidFields.push('projectSize');
     }
 
+    // Require project description
+    if (!wishlistData.additionalNotes.trim()) {
+      setError('Please enter a project description');
+      invalidFields.push('additionalNotes');
+    }
+
     // If there are validation errors, highlight fields and return
     if (invalidFields.length > 0) {
       highlightInvalidFields(invalidFields);
@@ -783,7 +823,7 @@ ${wishlistData.additionalNotes || 'None provided'}
             'formData.projectTitle': 'Project Title',
             'formData.timeline': 'Timeline',
             'formData.organizationName': 'Organization Name',
-            'formData.additionalNotes': 'Additional Notes',
+            'formData.additionalNotes': 'Project Description',
             'formData.description': 'Project Description',
             'title': 'Title',
             'body': 'Content'
@@ -987,7 +1027,9 @@ ${wishlistData.additionalNotes || 'None provided'}
             )}
 
             <div className="space-y-2 max-h-96 overflow-y-auto mb-6">
-              {repositories.map((repo) => {
+              {repositories
+                .filter((repo) => !existingWishlists[repo.html_url]) // Filter out repos with existing wishlists
+                .map((repo) => {
                 const isSelected = selectedRepo?.id === repo.id;
                 const hasExistingWishlist = existingWishlists[repo.html_url];
 
@@ -1097,6 +1139,13 @@ ${wishlistData.additionalNotes || 'None provided'}
                   </div>
                 );
               })}
+              
+              {repositories.filter((repo) => !existingWishlists[repo.html_url]).length === 0 && repositories.length > 0 && (
+                <div className="col-span-full text-center py-8 text-gray-600">
+                  <p className="text-sm">All your repositories already have wishlists!</p>
+                  <p className="text-xs text-gray-500 mt-1">You can edit or close them using your wishlist cards above.</p>
+                </div>
+              )}
             </div>
 
             {selectedRepo && selectedAction && (
@@ -1904,9 +1953,16 @@ ${wishlistData.additionalNotes || 'None provided'}
             </div>
           </div>
 
-          {/* Additional Notes */}
+          {/* Project Description */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h3>
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Project Description <span className="text-red-500">*</span>
+              </h3>
+              <p className="text-sm text-gray-600">
+                This is your chance to motivate sponsors and helpers to get involved. Tell them why your project matters and what impact their help could have.
+              </p>
+            </div>
             <textarea
               value={wishlistData.additionalNotes}
               onChange={(e) => {
@@ -1918,12 +1974,12 @@ ${wishlistData.additionalNotes || 'None provided'}
                 validateField('additionalNotes', e.target.value, 'notes');
               }}
               rows={4}
-              placeholder="Any additional information about your project, specific requirements, or context that would help supporters understand your needs..."
+              placeholder="Describe your project, its impact, and why this help would matter..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             />
             {validationResults.additionalNotes && (
               <ValidationFeedback
-                label="Additional Notes"
+                label="Project Description"
                 value={wishlistData.additionalNotes}
                 isValid={validationResults.additionalNotes.isValid}
                 validationResult={validationResults.additionalNotes}

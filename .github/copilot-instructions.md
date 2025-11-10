@@ -1,5 +1,19 @@
 # GitHub Copilot Instructions for OSS Wishlist
 
+## Working Style with Emma (Developer)
+
+**Git Workflow**:
+- ✅ You make code fixes and verify they work
+- ✅ You run tests automatically when it makes sense (to catch issues early)
+- ✅ You alert when changes are ready for commit
+- ❌ You do NOT commit or push - Emma handles all git operations
+- **Result**: Emma has full control over commit messages and git history
+
+**Testing**:
+- Run tests automatically after making changes
+- Report test results clearly
+- Alert Emma when tests pass and changes are ready
+
 ## Project Overview
 
 OSS Wishlist is a platform connecting open source maintainers with professional practitioners who can help with non-code needs (governance, funding, security audits, etc.). The platform uses GitHub OAuth for authentication and GitHub Issues as the backend data store.

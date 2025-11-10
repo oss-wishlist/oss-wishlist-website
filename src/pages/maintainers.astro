@@ -2,6 +2,7 @@
 import Layout from '../components/Layout.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import WishlistForm from '../components/WishlistForms.tsx';
+import YourWishlistsGrid from '../components/YourWishlistsGrid.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
 import { fetchUserRepositories } from '../lib/github-oauth';
@@ -88,23 +89,40 @@ try {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-4xl mx-auto text-center">
         <h1 class="text-5xl font-bold text-gray-900 mb-4" id="page-title">
-          Create and Manage <span class="text-gray-600">Wishlists</span>
+          Your <span class="text-gray-600">Wishlists</span>
         </h1>
         <p class="text-gray-600 text-base" id="page-description">
-          Choose from the provided list of GitHub repositories associated with your account or provide a different project URL. You may only create one wishlist per project.
-          This will create a public issue in the <a href="https://github.com/oss-wishlist/wishlists/issues" target="_new">GitHub wishlists repository</a>. Private wishes are not yet available.
-          <br />
-          <strong>Note:</strong> New wishes remain in a <em>pending</em> state until verified (to prevent spam). Once verified, they’ll appear publicly and be eligible for fulfillment.
+          Manage your open source project wishlists. View, edit, or create new wishes below.
         </p>
       </div>
     </div>
   </section>
 
-  <!-- Wishlist Form Section -->
-  <section id="wishlist-form-section" class="py-4 bg-white">
+  <!-- Your Wishlists Grid Section -->
+  <section id="your-wishlists-section" class="py-12 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Wishlist Form Component (user already authenticated, repos fetched server-side) -->
-  <WishlistForm client:load services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <YourWishlistsGrid client:load user={user} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Create New Wishlist Section -->
+  <section id="create-wishlist-section" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">
+          <span id="title-action-verb">Create</span><span id="title-action-noun"> a New Wishlist</span>
+        </h2>
+        <p class="text-gray-600 text-base mb-8">
+          Choose from the provided list of GitHub repositories associated with your account or provide a different project URL. You may only create one wishlist per project.
+          This will create a public issue in the <a href="https://github.com/oss-wishlist/wishlists/issues" target="_new" class="underline hover:text-gray-900">GitHub wishlists repository</a>. Private wishes are not yet available.
+          <br />
+          <strong>Note:</strong> New wishes remain in a <em>pending</em> state until verified (to prevent spam). Once verified, they'll appear publicly and be eligible for fulfillment.
+        </p>
+        <!-- Wishlist Form Component (user already authenticated, repos fetched server-side) -->
+        <WishlistForm client:load services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
+      </div>
     </div>
   </section>
 

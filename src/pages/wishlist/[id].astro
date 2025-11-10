@@ -43,9 +43,9 @@ try {
 
   const issue = await response.json();
   
-  // Check if it's an approved wishlist
-  const isApproved = issue.labels?.some((label: any) => label.name === 'approved-wishlist');
-  if (!isApproved) {
+  // Check if it has the 'wishlist' label (approved or pending)
+  const isWishlist = issue.labels?.some((label: any) => label.name === 'wishlist');
+  if (!isWishlist) {
     return Astro.redirect('/404');
   }
 

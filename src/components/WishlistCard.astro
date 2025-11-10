@@ -1,0 +1,165 @@
+---
+import { getBasePath } from '../lib/paths';
+
+interface Props {
+  wishlist: any;
+  showEditDelete?: boolean;
+  onEditClick?: (issueNumber: number) => void;
+  onDeleteClick?: (issueNumber: number) => void;
+}
+
+const { wishlist, showEditDelete = false, onEditClick, onDeleteClick } = Astro.props;
+const basePath = getBasePath();
+
+const statusColors = {
+  'Open': 'bg-gray-100 text-gray-800',
+  'In Progress': 'bg-gray-200 text-gray-900',
+  'Review': 'bg-gray-300 text-gray-900',
+  'Funded': 'bg-gray-400 text-white',
+  'Completed': 'bg-gray-700 text-white',
+  'On Hold': 'bg-gray-500 text-white',
+};
+
+const urgencyColors = {
+  low: 'bg-gray-100 text-gray-700',
+  medium: 'bg-gray-200 text-gray-800', 
+  high: 'bg-gray-600 text-white',
+  critical: 'bg-gray-800 text-white'
+};
+
+const statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';
+const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';
+const maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`;
+
+// Format services list
+const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0 
+  ? wishlist.wishes.slice(0, 3).map(service => `
+      <span class="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">${service}</span>
+    `).join('')
+  : '<span class="text-sm text-gray-500 italic">No services specified</span>';
+
+const moreServices = wishlist.wishes && wishlist.wishes.length > 3 
+  ? `<span class="text-xs text-gray-600">+${wishlist.wishes.length - 3} more</span>` 
+  : '';
+
+// Truncate project notes
+const projectNotes = wishlist.additionalNotes 
+  ? (wishlist.additionalNotes.length > 100 
+      ? wishlist.additionalNotes.substring(0, 100) + '...' 
+      : wishlist.additionalNotes)
+  : '';
+---
+
+<div class="wishlist-card bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow p-6" data-project={wishlist.projectName?.toLowerCase()} data-maintainer={wishlist.maintainerUsername?.toLowerCase()}>
+  <!-- Project Header -->
+  <div class="flex items-start justify-between mb-4">
+    <div class="flex items-start gap-3 flex-1">
+      <a href={`https://github.com/${wishlist.maintainerUsername}`} target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+        <img src={maintainerAvatar} alt={wishlist.maintainerUsername} class="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors" loading="lazy" />
+      </a>
+      <div class="flex-1">
+        <h3 class="text-lg font-semibold text-gray-900">{wishlist.projectName}</h3>
+        <a href={`https://github.com/${wishlist.maintainerUsername}`} target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-gray-900">@{wishlist.maintainerUsername}</a>
+      </div>
+    </div>
+    <div class="flex flex-col items-end space-y-1">
+      {wishlist.status && wishlist.status !== 'Open' && (
+        <span class={`px-2 py-1 text-xs rounded-full ${statusColorClass}`}>
+          {wishlist.status}
+        </span>
+      )}
+      {wishlist.urgency && wishlist.urgency !== 'medium' && (
+        <span class={`px-2 py-1 text-xs rounded-full ${urgencyColorClass}`}>
+          {wishlist.urgency}
+        </span>
+      )}
+    </div>
+  </div>
+
+  <!-- Project Details -->
+  {projectNotes && (
+    <div class="mb-4">
+      <p class="text-sm text-gray-600">{projectNotes}</p>
+    </div>
+  )}
+
+  <!-- Services Needed -->
+  <div class="mb-4">
+    <h4 class="text-xs font-semibold text-gray-700 mb-2">Services Needed:</h4>
+    <div class="flex flex-wrap gap-2 items-center">
+      <Fragment set:html={servicesHtml} />
+      {moreServices && <Fragment set:html={moreServices} />}
+    </div>
+  </div>
+
+  <!-- Project Metadata -->
+  <div class="flex items-center gap-4 text-xs text-gray-500 mb-4 pb-4 border-b">
+    {wishlist.projectSize && (
+      <span class="capitalize">{wishlist.projectSize} project</span>
+    )}
+    {wishlist.repositoryUrl && (
+      <a href={wishlist.repositoryUrl} target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 underline">
+        View repository
+      </a>
+    )}
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center justify-between gap-2">
+    <div class="flex space-x-2">
+      {showEditDelete ? (
+        <>
+          <a 
+            href={`${basePath}wishlist/${wishlist.id}`}
+            class="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors inline-flex items-center"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            View
+          </a>
+          <button 
+            data-action="edit"
+            data-issue={wishlist.id}
+            class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition-colors inline-flex items-center"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit
+          </button>
+          <button 
+            data-action="delete"
+            data-issue={wishlist.id}
+            class="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 transition-colors inline-flex items-center"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Delete
+          </button>
+        </>
+      ) : (
+        <>
+          <a 
+            href={`${basePath}wishlist/${wishlist.id}`}
+            class="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
+          >
+            View details
+          </a>
+          <a 
+            href={`${basePath}fulfill?issue=${wishlist.id}`}
+            class="btn-sparkle"
+          >
+            <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            <span class="btn-sparkle-text">Fulfill wish</span>
+            <span class="btn-sparkle-particles"></span>
+          </a>
+        </>
+      )}
+    </div>
+  </div>
+</div>

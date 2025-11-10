@@ -82,9 +82,12 @@ async function fetchGitHubIssues(): Promise<GitHubIssue[]> {
   const data = await response.json();
   
   // Filter to only approved wishlists
-  const approvedWishlists = data.filter((issue: GitHubIssue) => 
-    issue.labels.some(label => label.name === 'approved-wishlist')
-  );
+  // Check for both 'approved-wishlist' (old label) and must have 'wishlist' label (required)
+  const approvedWishlists = data.filter((issue: GitHubIssue) => {
+    const hasWishlistLabel = issue.labels.some(label => label.name === 'wishlist');
+    const isApproved = issue.labels.some(label => label.name === 'approved-wishlist');
+    return hasWishlistLabel && isApproved;
+  });
   
   return approvedWishlists;
 }
