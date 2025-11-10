@@ -1,7 +1,7 @@
 ---
 title: "Are the service prices firm?"
 description: "Understanding our pricing structure and how it may evolve"
-category: "For Sponsors"
+category: "For Wishlist Sponsors"
 order: 9
 ---
 

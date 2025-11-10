@@ -31,10 +31,10 @@ if (user?.login) {
 
 <header class="bg-white shadow-sm border-b">
   <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
-    <div class="flex justify-between items-center h-16">
-      <div class="flex items-center space-x-4">
-        <img src={logoUrl} alt="Open Source Wishlist logo" class="h-8 w-8" />
-        <a href={basePath} class="text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded">Open Source Wishlist</a>
+    <div class="flex justify-between items-center h-16 gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <img src={logoUrl} alt="Open Source Wishlist logo" class="h-8 w-8 flex-shrink-0" />
+        <a href={basePath} class="text-sm sm:text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded truncate">Open Source Wishlist</a>
       </div>
       
       <!-- Desktop Navigation -->
@@ -157,14 +157,15 @@ if (user?.login) {
         <a href={`${basePath}catalog`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Wishlist Catalogue</a>
         <a href={`${basePath}wishlists`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">All Wishlists</a>
         <a href={`${basePath}maintainers`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Your Wishlists</a>
+        <div class="border-t border-gray-200 my-2"></div>
         <a href={`${basePath}helpers`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Helper Community Efforts</a>
-  <a href={`${basePath}practitioners`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Practitioners</a>
+        <a href={`${basePath}practitioners`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Practitioners</a>
         <a href="https://discord.gg/9BY9P5FD" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Join the Community</a>
-        <a href={`${basePath}about-us`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">About Us</a>
-        <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Information Sessions</a>
+        <div class="border-t border-gray-200 my-2"></div>
         <a href={`${basePath}about-us`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">About Us</a>
         <a href="https://calendly.com/emma-irwin-z6wm" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Information Sessions</a>
         <a href={`${basePath}faq`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">FAQ</a>
+        <div class="border-t border-gray-200 my-2"></div>
         {user ? (
           <a href={`${basePath}api/auth/logout`} class="block px-4 py-2 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none rounded min-h-[44px] flex items-center">Logout</a>
         ) : (
