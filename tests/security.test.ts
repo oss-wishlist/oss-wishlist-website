@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   wishlistFormDataSchema,
   wishlistSubmissionSchema,
-} from './validation';
+} from '../src/lib/validation';
 
 describe('Security & Hacker Input Testing', () => {
   describe('XSS Attack Prevention', () => {

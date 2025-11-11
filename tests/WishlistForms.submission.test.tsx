@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import WishlistForm from './WishlistForms';
+import WishlistForm from '../src/components/WishlistForms';
 import '@testing-library/jest-dom/vitest';
 
 // Mock modules
-vi.mock('../../lib/paths', () => ({
+vi.mock('../src/lib/paths', () => ({
   getBasePath: () => '/',
   withBasePath: (path: string) => `/${path}`,
   withBaseUrl: (path: string) => `http://localhost:3000/${path}`,
 }));
 
-vi.mock('../../config/app', () => ({
+vi.mock('../src/config/app', () => ({
   API_BASE: 'http://localhost:3000',
   getApiPath: (endpoint: string) => `http://localhost:3000/api${endpoint}`,
 }));

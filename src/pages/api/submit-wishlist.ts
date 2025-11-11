@@ -8,6 +8,8 @@ import { wishlistSubmissionSchema, formatZodError } from '../../lib/validation.j
 import { jsonSuccess, jsonError, ApiErrors } from '../../lib/api-response.js';
 import { formatIssueFormBody } from '../../lib/issue-form-parser.js';
 import { withBaseUrl } from '../../lib/paths.js';
+import { writeWishlistMarkdown } from '../../lib/wishlist-markdown.js';
+import { generateWishlistSlug } from '../../lib/slugify.js';
 
 export const prerender = false;
 
@@ -58,63 +60,48 @@ export const POST: APIRoute = async ({ request }) => {
       return ApiErrors.serverError('Server configuration error');
     }
 
-    // If we have form data, create issue body using the structured issue form format
+    // Create MINIMAL issue body - the markdown file is the source of truth
+    // GitHub issue is just a pointer for triage/approval workflow
     let finalIssueBody = issueBody;
     if (formData) {
-      // Separate services and resources
-      const services: string[] = [];
-      const resources: string[] = [];
+      const slug = generateWishlistSlug(formData.projectUrl, issueNumber || 0);
+      const wishlistUrl = `${origin}${basePath}/wishlists/${slug}`;
       
-      for (const item of formData.services) {
-        // Check if it's a resource (hosting, infrastructure, etc.)
-        if (item.toLowerCase().includes('hosting') || 
-            item.toLowerCase().includes('infrastructure') ||
-            item.toLowerCase().includes('github copilot')) {
-          resources.push(item);
-        } else {
-          services.push(item);
-        }
-      }
-      
-      // Format using issue form structure
-      finalIssueBody = formatIssueFormBody({
-        project: formData.projectTitle,
-        maintainer: formData.maintainer,
-        repository: formData.projectUrl,
-        urgency: formData.urgency.toLowerCase(),
-        projectSize: formData.projectSize,
-        services: services,
-        resources: resources,
-        additionalContext: formData.description + 
-          (formData.additionalNotes ? '\n\n' + formData.additionalNotes : ''),
-        wantsFundingYml: formData.createFundingPR === true,
-        timeline: formData.timeline,
-        organizationType: formData.organizationType,
-        organizationName: formData.organizationName,
-        additionalNotes: formData.additionalNotes,
-        technologies: formData.technologies,
-        openToSponsorship: formData.openToSponsorship,
-        preferredPractitioner: formData.preferredPractitioner,
-        nomineeName: formData.nomineeName,
-        nomineeEmail: formData.nomineeEmail,
-        nomineeGithub: formData.nomineeGithub
-      });
+      finalIssueBody = `### Project Name
+${formData.projectTitle}
+
+### Repository
+${formData.projectUrl}
+
+### Wishlist Details
+View complete wishlist: ${isUpdate && issueNumber ? wishlistUrl.replace('/0', `/${issueNumber}`) : '(will be available after approval)'}
+
+---
+**Note**: This issue is a pointer for triage/approval only. The complete wishlist data is stored in the website's content collections.
+
+<!-- Metadata for JSON ingestors -->
+\`\`\`json
+{
+  "project_name_id": "${slug}",
+  "issue_number": ${issueNumber || 'TBD'},
+  "created_at": "${new Date().toISOString()}"
+}
+\`\`\``;
     }
 
-    // If this is an update, add a comment with the complete updated data
-    // (Comments act as version history; we never modify the original issue body)
+    // If this is an update, add a minimal comment
+    // The markdown file is the source of truth, not the issue comments
     if (isUpdate && issueNumber) {
-      const updateTimestamp = new Date().toISOString();
+      const slug = generateWishlistSlug(formData.projectUrl, issueNumber);
+      const wishlistUrl = `${origin}${basePath}/wishlists/${slug}`;
       
-      // Add a comment with the complete formatted issue data (same format as original)
-      // This ensures subsequent edits read the full data from the comment
-      const commentBody = `## Wishlist Updated
+      const updateComment = `## Wishlist Updated
 
-**Last Updated:** ${updateTimestamp}
+**Updated:** ${new Date().toISOString()}
 
-${finalIssueBody}`;
+View complete updated wishlist: ${wishlistUrl}`;
 
-      const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}/comments`, {
+      const commentResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}/comments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${githubToken}`,
@@ -123,23 +110,21 @@ ${finalIssueBody}`;
           'User-Agent': 'OSS-Wishlist-Bot'
         },
         body: JSON.stringify({
-          body: commentBody
+          body: updateComment
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('GitHub API error:', response.status, errorData);
+      if (!commentResponse.ok) {
+        const errorData = await commentResponse.text();
+        console.error('GitHub API error:', commentResponse.status, errorData);
         return jsonError(
           'Failed to update wishlist',
-          response.status === 401 ? 'Authentication failed' : 'GitHub API error',
-          response.status
+          commentResponse.status === 401 ? 'Authentication failed' : 'GitHub API error',
+          commentResponse.status
         );
       }
 
-      const comment = await response.json();
-      
-      // Fetch the original issue to return its details
+      // Fetch the issue to get full details
       const issueResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}`, {
         headers: {
           'Authorization': `Bearer ${githubToken}`,
@@ -150,28 +135,81 @@ ${finalIssueBody}`;
 
       const issue = await issueResponse.json();
       
-      // Cache the updated wishlist and refresh the main cache
-      // Cache this specific wishlist
-      fetch(`${origin}${basePath}/api/cache-wishlist?issueNumber=${issueNumber}`).catch(() => {});
+      // For edits, we need to preserve the original maintainer username
+      // Don't use formData.maintainer as it might be wrong - read from existing markdown
+      let maintainerUsername = formData.maintainer;
+      try {
+        const { getCollection } = await import('astro:content');
+        const wishlists = await getCollection('wishlists');
+        const existing = wishlists.find(w => w.data.id === issueNumber);
+        if (existing) {
+          maintainerUsername = existing.data.maintainerUsername;
+          console.log('[submit-wishlist] Preserving original maintainer:', maintainerUsername);
+        }
+      } catch (err) {
+        console.warn('[submit-wishlist] Could not read existing wishlist, using formData maintainer');
+      }
       
-      // Refresh the main cache
-      fetch(`${origin}${basePath}/api/wishlists?refresh=true`).catch(() => {});
+      // Update markdown file for edited wishlist with complete data
+      try {
+        await writeWishlistMarkdown({
+          slug,
+          id: issueNumber,
+          projectName: formData.projectTitle,
+          repositoryUrl: formData.projectUrl,
+          maintainerUsername, // Use preserved maintainer
+          maintainerAvatarUrl: undefined, // Will be populated by GitHub Action if needed
+          issueUrl: issue.html_url,
+          approved: issue.labels.some((l: any) => l.name === 'approved'),
+          wishes: formData.services,
+          technologies: formData.technologies || [],
+          resources: [],
+          urgency: formData.urgency,
+          projectSize: formData.projectSize,
+          additionalNotes: formData.additionalNotes,
+          createdAt: issue.created_at,
+          updatedAt: new Date().toISOString(),
+        });
+        console.log('[submit-wishlist] ✓ Updated markdown file for wishlist #' + issueNumber + ' (slug: ' + slug + ')');
+      } catch (mdError) {
+        console.error('[submit-wishlist] ✗ Failed to update markdown file:', mdError);
+        // Don't fail the request if markdown update fails
+      }
+      
+      // Invalidate in-memory cache (legacy endpoints still use this)
+      try {
+        await fetch(`${origin}${basePath}/api/cache-invalidate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cacheKey: 'wishlists_full_cache' })
+        });
+        await fetch(`${origin}${basePath}/api/cache-invalidate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cacheKey: 'user_wishlists_full_cache' })
+        });
+        console.log('[submit-wishlist] In-memory cache invalidated for update');
+      } catch (err) {
+        console.warn('[submit-wishlist] Failed to invalidate cache:', err);
+      }
       
       return jsonSuccess({
-        updated: true,
+        updated: true, // Flag to indicate this was an update
+        wishlist: {
+          id: issueNumber,
+          projectName: formData.projectTitle,
+          slug,
+          issueUrl: issue.html_url,
+        },
         issue: {
           number: issue.number,
           url: issue.html_url,
           title: issue.title
-        },
-        comment: {
-          id: comment.id,
-          url: comment.html_url
         }
       });
     }
 
-    // Create GitHub issue via API
+    // Create new GitHub issue via API
     // First, get the latest issue number to predict the next one
     let nextIssueNumber: number | null = null;
     try {
@@ -226,14 +264,59 @@ ${finalIssueBody}`;
 
     const issue = await response.json();
     
-    // Cache the individual wishlist and refresh the all-wishlists cache
-    // Cache this specific wishlist
-    fetch(`${origin}${basePath}/api/cache-wishlist?issueNumber=${issue.number}`).catch(() => {});
+    // Generate slug for markdown filename (based on immutable repo URL, not editable title)
+    const slug = generateWishlistSlug(formData.projectUrl, issue.number);
     
-    // Invalidate and refresh the main cache
-    fetch(`${origin}${basePath}/api/wishlists?refresh=true`).catch(() => {});
+    // Write markdown file for new wishlist with complete data
+    try {
+      await writeWishlistMarkdown({
+        slug,
+        id: issue.number,
+        projectName: formData.projectTitle,
+        repositoryUrl: formData.projectUrl,
+        maintainerUsername: formData.maintainer,
+        maintainerAvatarUrl: undefined, // Will be populated by GitHub Action if needed
+        issueUrl: issue.html_url,
+        approved: false, // New wishlists start as unapproved
+        wishes: formData.services, // Array of service slugs
+        technologies: formData.technologies || [],
+        resources: [], // Not collected in form currently
+        urgency: formData.urgency,
+        projectSize: formData.projectSize,
+        additionalNotes: formData.additionalNotes,
+        createdAt: issue.created_at,
+        updatedAt: issue.updated_at,
+      });
+      console.log('[submit-wishlist] ✓ Created markdown file for wishlist #' + issue.number + ' (slug: ' + slug + ')');
+    } catch (mdError) {
+      console.error('[submit-wishlist] ✗ Failed to create markdown file:', mdError);
+      // Don't fail the request if markdown creation fails
+    }
     
+    // Invalidate in-memory cache (legacy endpoints still use this)
+    try {
+      await fetch(`${origin}${basePath}/api/cache-invalidate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cacheKey: 'wishlists_full_cache' })
+      });
+      await fetch(`${origin}${basePath}/api/cache-invalidate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cacheKey: 'user_wishlists_full_cache' })
+      });
+      console.log('[submit-wishlist] In-memory cache invalidated for new wishlist creation');
+    } catch (err) {
+      console.warn('[submit-wishlist] Failed to invalidate cache after creation:', err);
+    }
+
     return jsonSuccess({
+      wishlist: {
+        id: issue.number,
+        projectName: formData.projectTitle,
+        slug,
+        issueUrl: issue.html_url,
+      },
       issue: {
         number: issue.number,
         url: issue.html_url,

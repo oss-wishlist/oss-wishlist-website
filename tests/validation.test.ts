@@ -5,7 +5,7 @@ import {
   formatZodError,
   type WishlistFormData,
   type WishlistSubmission,
-} from './validation';
+} from '../src/lib/validation';
 import { z } from 'zod';
 
 describe('Validation Schemas', () => {

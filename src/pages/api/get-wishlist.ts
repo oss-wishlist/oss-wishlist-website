@@ -41,64 +41,98 @@ export const GET: APIRoute = async ({ url, request }) => {
         };
         if (token) headers['Authorization'] = `token ${token}`;
 
-        // Fetch issue and its comments
-        const [issueResp, commentsResp] = await Promise.all([
-          fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`, { headers }),
-          fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}/comments`, { headers })
-        ]);
+        // Fetch issue to get labels and metadata
+        const issueResp = await fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`, { headers });
 
         if (!issueResp.ok) {
+          console.log(`[get-wishlist] GitHub issue fetch failed with status ${issueResp.status}`);
           return null;
         }
 
         const issue = await issueResp.json();
-        const comments = commentsResp.ok ? await commentsResp.json() : [];
-        // Parse issue body
-        const parsed = parseIssueForm(issue.body || '');
         
-        // Find and parse the latest wishlist update comment
-        const latestUpdateComment = Array.isArray(comments) 
-          ? comments
-              .reverse()
-              .find(c => c.body && c.body.includes('## Wishlist Updated'))
-          : null;
-              
-        // If we have an update comment, parse it and merge with initial data
-        const updatedData = latestUpdateComment 
-          ? parseIssueForm(latestUpdateComment.body)
-          : null;
-
+        console.log(`[get-wishlist] Issue #${issueNumber} fetched from GitHub`);
+        
         // Extract labels from the issue
         const labels = Array.isArray(issue.labels) 
           ? issue.labels.map((l: any) => typeof l === 'string' ? l : l.name).filter(Boolean)
           : [];
 
-        // Map to the structure expected by WishlistForms.loadExistingWishlistData
-        // Merge the data, preferring the update comment data if available
+        // Try to read from content collections first (source of truth)
+        let wishlistData = null;
+        try {
+          const { getCollection } = await import('astro:content');
+          const wishlists = await getCollection('wishlists');
+          const wishlist = wishlists.find(w => w.data.id === parseInt(issueNumber, 10));
+          
+          if (wishlist) {
+            console.log(`[get-wishlist] Found wishlist in content collections`);
+            wishlistData = {
+              id: wishlist.data.id,
+              number: wishlist.data.id,
+              projectTitle: wishlist.data.projectName,
+              wishes: wishlist.data.wishes || [],
+              urgency: wishlist.data.urgency || 'medium',
+              projectSize: wishlist.data.projectSize || 'medium',
+              additionalNotes: wishlist.data.additionalNotes || '',
+              technologies: wishlist.data.technologies || [],
+              repositoryUrl: wishlist.data.repositoryUrl,
+              maintainer: wishlist.data.maintainerUsername,
+              labels: labels,
+              wantsFundingYml: labels.includes('funding-yml-requested'),
+              fundingYmlProcessed: labels.includes('funding-yml-processed'),
+              // Fields we don't have in markdown but need for form
+              timeline: '',
+              organizationType: 'single-maintainer',
+              organizationName: '',
+              otherOrganizationType: '',
+              openToSponsorship: false,
+              preferredPractitioner: '',
+              nomineeName: '',
+              nomineeEmail: '',
+              nomineeGithub: '',
+            };
+          }
+        } catch (err) {
+          console.warn('[get-wishlist] Could not read from content collections:', err);
+        }
+
+        // If we have markdown data, use it
+        if (wishlistData) {
+          console.log(`[get-wishlist] Returning data from content collections - wishes: ${JSON.stringify(wishlistData.wishes)}`);
+          return wishlistData;
+        }
+
+        // Fallback: parse issue body (for old format or if markdown doesn't exist)
+        const parsed = parseIssueForm(issue.body || '');
+        console.log(`[get-wishlist] Fallback: parsed body - project: "${parsed.project}", services: ${JSON.stringify(parsed.services)}`);
+
         const payload = {
           id: issue.number,
           number: issue.number,
-          projectTitle: updatedData?.project || parsed.project || issue.title || '',
-          wishes: updatedData?.services || parsed.services || [],
-          urgency: updatedData?.urgency || parsed.urgency || 'medium',
-          projectSize: updatedData?.projectSize || parsed.projectSize || 'medium',
-          timeline: updatedData?.timeline || parsed.timeline || '',
-          organizationType: updatedData?.organizationType || parsed.organizationType || 'single-maintainer',
-          organizationName: updatedData?.organizationName || parsed.organizationName || '',
-          otherOrganizationType: updatedData?.otherOrganizationType || parsed.otherOrganizationType || '',
-          additionalNotes: updatedData?.additionalNotes || parsed.additionalNotes || parsed.additionalContext || '',
-          technologies: updatedData?.technologies || parsed.technologies || [],
-          openToSponsorship: updatedData?.openToSponsorship || !!parsed.openToSponsorship,
-          repositoryUrl: updatedData?.repository || parsed.repository || '',
-          maintainer: updatedData?.maintainer || parsed.maintainer || (issue.user?.login ?? ''),
-          preferredPractitioner: updatedData?.preferredPractitioner || parsed.preferredPractitioner || '',
-          nomineeName: updatedData?.nomineeName || parsed.nomineeName || '',
-          nomineeEmail: updatedData?.nomineeEmail || parsed.nomineeEmail || '',
-          nomineeGithub: updatedData?.nomineeGithub || parsed.nomineeGithub || '',
-          labels: labels, // Include labels for checking funding-yml status
+          projectTitle: parsed.project || issue.title || '',
+          wishes: parsed.services || [],
+          urgency: parsed.urgency || 'medium',
+          projectSize: parsed.projectSize || 'medium',
+          timeline: parsed.timeline || '',
+          organizationType: parsed.organizationType || 'single-maintainer',
+          organizationName: parsed.organizationName || '',
+          otherOrganizationType: parsed.otherOrganizationType || '',
+          additionalNotes: parsed.additionalNotes || parsed.additionalContext || '',
+          technologies: parsed.technologies || [],
+          openToSponsorship: !!parsed.openToSponsorship,
+          repositoryUrl: parsed.repository || '',
+          maintainer: parsed.maintainer || (issue.user?.login ?? ''),
+          preferredPractitioner: parsed.preferredPractitioner || '',
+          nomineeName: parsed.nomineeName || '',
+          nomineeEmail: parsed.nomineeEmail || '',
+          nomineeGithub: parsed.nomineeGithub || '',
+          labels: labels,
           wantsFundingYml: labels.includes('funding-yml-requested'),
           fundingYmlProcessed: labels.includes('funding-yml-processed')
         };
+        
+        console.log(`[get-wishlist] Final payload - wishes: ${JSON.stringify(payload.wishes)}`);
 
         return payload;
       } catch {
@@ -109,6 +143,7 @@ export const GET: APIRoute = async ({ url, request }) => {
     // Always fetch from GitHub for edit operations to ensure we have full data
     const githubData = await fetchFromGitHub();
     if (githubData) {
+      console.log(`[get-wishlist] Returning GitHub data for issue #${issueNumber}`);
       return new Response(JSON.stringify(githubData), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -116,6 +151,7 @@ export const GET: APIRoute = async ({ url, request }) => {
     }
 
     // If GitHub fetch fails, try master cache as fallback
+    console.log(`[get-wishlist] GitHub fetch failed, trying cache fallback for issue #${issueNumber}`);
     const wishlist = await loadFromMaster();
     if (!wishlist) {
       return new Response(JSON.stringify({ error: 'Wishlist not found' }), {

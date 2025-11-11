@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import WishlistForm from '../components/WishlistForms';
+import WishlistForm from '../src/components/WishlistForms';
 
 // Mock the Astro utilities that the component depends on
 vi.mock('../lib/paths', () => ({

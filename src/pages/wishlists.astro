@@ -83,13 +83,13 @@ const urgencyColors = {
   <!-- Wishlists Grid -->
   <section class="py-8 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- No Results Message -->
+      <!-- No Results Message (for filtered results) -->
       <div id="noResults" class="text-center py-12 hidden">
         <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-        <p class="text-gray-600">Try adjusting your search terms</p>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No matching wishlists</h3>
+        <p class="text-gray-600">Try adjusting your filters or search terms</p>
       </div>
 
       <div id="wishlistsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-base-path={basePath}>
@@ -119,6 +119,7 @@ const urgencyColors = {
   
 
 <script>
+  console.log('[wishlists page] Script tag is executing!');
   // Wishlist data
   let allWishlists = [];
   let basePath = '';
@@ -146,14 +147,17 @@ const urgencyColors = {
 
   // Fetch wishlists from GitHub
   async function fetchWishlists() {
+    console.log('[wishlists page] fetchWishlists() called');
     try {
       const grid = document.getElementById('wishlistsGrid');
       basePath = grid?.dataset.basePath || '';
       // Remove trailing slash if present to avoid double slashes
       const cleanBasePath = basePath.replace(/\/$/, '');
       const apiUrl = `${cleanBasePath}/api/wishlists`;
+      console.log('[wishlists page] Fetching from:', apiUrl);
       
       const response = await fetch(apiUrl);
+      console.log('[wishlists page] Response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -206,10 +210,13 @@ const urgencyColors = {
       grid.innerHTML = `
         <div class="col-span-full text-center py-12">
           <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
           </svg>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No wishlists found</h3>
-          <p class="text-gray-600">No wishlist issues found on GitHub.</p>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No wishlists yet</h3>
+          <p class="text-gray-600 mb-4">Be the first to create a wishlist for your open source project!</p>
+          <a href="${cleanBasePath}/maintainers" class="btn-primary inline-block">
+            Create Your Wishlist
+          </a>
         </div>
       `;
       return;
@@ -457,10 +464,12 @@ const urgencyColors = {
 
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('[wishlists page] DOMContentLoaded event fired');
     // Initialize ecosystem filter dropdown
     initializeEcosystemFilter();
     
     // Fetch wishlists
+    console.log('[wishlists page] About to call fetchWishlists()');
     fetchWishlists();
     
     // Set up search

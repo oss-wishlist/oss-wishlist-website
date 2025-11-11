@@ -32,7 +32,47 @@ let projectSize: 'small' | 'medium' | 'large' | null = null;
 // Check for issue parameter (GitHub issue number)
 issueNumber = url.searchParams.get('issue');
 
-if (issueNumber && GITHUB_TOKEN) {
+if (issueNumber) {
+  // First, try to get from content collections (most up-to-date)
+  try {
+    const wishlists = await getCollection('wishlists');
+    const wishlist = wishlists.find(w => w.data.id === parseInt(issueNumber));
+    
+    if (wishlist) {
+      // Found in content collections - use this data
+      const projectName = wishlist.data.projectName;
+      projectSize = wishlist.data.projectSize as 'small' | 'medium' | 'large';
+      
+      wishlistData = {
+        projectName,
+        repositoryUrl: wishlist.data.repositoryUrl,
+        maintainer: wishlist.data.maintainerUsername,
+        wishes: wishlist.data.wishes || [],
+        services: wishlist.data.wishes || [],
+        urgency: wishlist.data.urgency,
+        technologies: wishlist.data.technologies || [],
+        projectSize: wishlist.data.projectSize,
+        additionalNotes: wishlist.data.additionalNotes,
+      };
+      
+      // Also set githubIssue for compatibility
+      githubIssue = {
+        number: wishlist.data.id,
+        title: `Wishlist: ${projectName}`,
+        html_url: wishlist.data.issueUrl,
+        user: {
+          login: wishlist.data.maintainerUsername,
+          avatar_url: `https://github.com/${wishlist.data.maintainerUsername}.png`,
+        },
+      };
+    }
+  } catch (error) {
+    console.log('Could not find in content collections, falling back to GitHub API:', error);
+  }
+}
+
+// If not found in content collections, fetch from GitHub API (fallback)
+if (issueNumber && !wishlistData && GITHUB_TOKEN) {
   try {
     // Fetch the GitHub issue data
     const response = await fetch(

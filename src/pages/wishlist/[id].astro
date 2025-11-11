@@ -1,15 +1,13 @@
 ---
 import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
-import { GITHUB_CONFIG } from '../../config/github.js';
-import { parseIssueForm } from '../../lib/issue-form-parser.js';
 import { getCollection } from 'astro:content';
+import fs from 'fs';
+import path from 'path';
 
 const basePath = getBasePath();
 
 export const prerender = false;
-
-const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
 
 // Fetch all services from content collection
 const allServices = await getCollection('services');
@@ -18,74 +16,88 @@ const serviceMap = new Map(allServices.map(service => [service.slug, service]));
 // Get the wishlist ID from URL params
 const { id } = Astro.params;
 
-if (!id || !GITHUB_TOKEN) {
+if (!id) {
   return Astro.redirect('/404');
 }
 
-// Fetch the wishlist from GitHub Issues API
+// First, try to find in content collections (most up-to-date after edits)
 let wishlistData = null;
 
 try {
-  const response = await fetch(
-    `${GITHUB_CONFIG.API_ISSUES_URL}/${id}`,
-    {
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    console.error(`Failed to fetch wishlist ${id}:`, response.status);
-    return Astro.redirect('/404');
+  const wishlists = await getCollection('wishlists');
+  const wishlist = wishlists.find(w => w.data.id === parseInt(id));
+  
+  if (wishlist) {
+    // Found in content collections - use this (freshest data)
+    wishlistData = {
+      id: wishlist.data.id,
+      title: wishlist.data.projectName,
+      projectName: wishlist.data.projectName,
+      repositoryUrl: wishlist.data.repositoryUrl,
+      maintainer: wishlist.data.maintainerUsername,
+      maintainerAvatar: `https://github.com/${wishlist.data.maintainerUsername}.png`,
+      services: wishlist.data.wishes || [],
+      resources: wishlist.data.resources || [],
+      technologies: wishlist.data.technologies || [],
+      urgency: wishlist.data.urgency?.toLowerCase() || 'medium',
+      projectSize: wishlist.data.projectSize,
+      additionalNotes: wishlist.data.additionalNotes,
+      additionalContext: wishlist.data.additionalContext,
+      status: wishlist.data.status,
+      approved: wishlist.data.approved,
+      created_at: wishlist.data.createdAt,
+      updated_at: wishlist.data.updatedAt,
+    };
   }
-
-  const issue = await response.json();
-  
-  // Check if it has the 'wishlist' label (approved or pending)
-  const isWishlist = issue.labels?.some((label: any) => label.name === 'wishlist');
-  if (!isWishlist) {
-    return Astro.redirect('/404');
-  }
-
-  // Parse the issue body
-  const parsed = parseIssueForm(issue.body);
-  
-  // Use the maintainer from the parsed form (authenticated user who created the wishlist)
-  // not issue.user which is the bot account
-  const maintainerUsername = parsed.maintainer || issue.user.login;
-  const maintainerAvatarUrl = maintainerUsername 
-    ? `https://github.com/${maintainerUsername}.png`
-    : `https://github.com/${issue.user.login}.png`;
-  
-  wishlistData = {
-    id: issue.number,
-    title: issue.title,
-    projectName: parsed.project || issue.title,
-    repositoryUrl: parsed.repository,
-    maintainer: maintainerUsername,
-    maintainerAvatar: maintainerAvatarUrl,
-    services: parsed.services || [],
-    resources: parsed.resources || [],
-    technologies: parsed.technologies || [],
-    urgency: parsed.urgency || 'medium',
-    projectSize: parsed.projectSize,
-    timeline: parsed.timeline,
-    organizationType: parsed.organizationType,
-    organizationName: parsed.organizationName,
-    additionalNotes: parsed.additionalNotes,
-    openToSponsorship: parsed.openToSponsorship,
-    preferredPractitioner: parsed.preferredPractitioner,
-    nomineeName: parsed.nomineeName,
-    nomineeEmail: parsed.nomineeEmail,
-    nomineeGithub: parsed.nomineeGithub,
-    created_at: issue.created_at,
-    updated_at: issue.updated_at,
-  };
 } catch (error) {
-  console.error('Error fetching wishlist:', error);
-  return Astro.redirect('/404');
+  console.log('Could not find in content collections, falling back to cache:', error);
+}
+
+// If not found in content collections, fetch from GitHub cache (fallback)
+if (!wishlistData) {
+  try {
+    const cacheUrl = 'https://raw.githubusercontent.com/oss-wishlist/wishlists/main/all-wishlists.json';
+    const response = await fetch(cacheUrl);
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch cache: ${response.status}`);
+      return Astro.redirect('/404');
+    }
+    
+    const cacheData = await response.json();
+    
+    // Find the wishlist by ID
+    const wishlist = cacheData.wishlists?.find((w: any) => w.id === parseInt(id));
+    
+    if (!wishlist) {
+      console.error(`Wishlist ${id} not found in cache`);
+      return Astro.redirect('/404');
+    }
+    
+    // Map cache structure to page data structure
+    wishlistData = {
+      id: wishlist.id,
+      title: wishlist.projectName,
+      projectName: wishlist.projectName,
+      repositoryUrl: wishlist.repositoryUrl,
+      maintainer: wishlist.maintainerUsername,
+      maintainerAvatar: wishlist.maintainerAvatarUrl,
+      services: wishlist.wishes || [],
+      resources: wishlist.resources || [],
+      technologies: wishlist.technologies || [],
+      urgency: wishlist.urgency?.toLowerCase() || 'medium',
+      projectSize: wishlist.projectSize,
+      additionalNotes: wishlist.additionalNotes,
+      additionalContext: wishlist.additionalContext,
+      status: wishlist.status,
+      approved: wishlist.approved,
+      created_at: wishlist.createdAt,
+      updated_at: wishlist.updatedAt,
+    };
+  } catch (error) {
+    console.error('Error reading wishlist from GitHub cache:', error);
+    return Astro.redirect('/404');
+  }
 }
 
 if (!wishlistData) {
@@ -118,12 +130,11 @@ const urgencyColors = {
       <div class="grid md:grid-cols-3 gap-8">
         <div class="md:col-span-2">
           <div class="flex items-start space-x-4 mb-6">
-            <img 
-              src={wishlistData.maintainerAvatar} 
-              alt={wishlistData.maintainer} 
-              class="w-16 h-16 rounded-full border-2 border-gray-200"
-              onerror="this.src='https://github.com/github.png'"
-            />
+            <div class="w-16 h-16 rounded-full border-2 border-gray-200 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+              </svg>
+            </div>
             <div class="flex-1">
               <h1 class="text-4xl font-bold text-gray-900 mb-2">{wishlistData.projectName}</h1>
               

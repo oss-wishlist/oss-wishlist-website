@@ -1,150 +1,62 @@
 // API endpoint to fetch all wishlists (approved and pending) for a specific user
 // This allows authenticated users to see both their approved and pending wishlists
 //
+// NOTE: This endpoint reads from markdown content collections (src/content/wishlists/)
+// which are the source of truth for the website. The GitHub JSON is only for external consumers.
+//
 import type { APIRoute } from 'astro';
-import { GITHUB_CONFIG } from '../../config/github.js';
-import { parseIssueForm } from '../../lib/issue-form-parser.js';
-
-interface GitHubIssue {
-  id: number;
-  number: number;
-  title: string;
-  body: string;
-  html_url: string;
-  state: string;
-  labels: Array<{
-    name: string;
-    color: string;
-  }>;
-  user: {
-    login: string;
-    avatar_url: string;
-  };
-  created_at: string;
-  updated_at: string;
-}
+import { getCollection } from 'astro:content';
 
 export const prerender = false;
 
-const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
-
 async function fetchUserWishlists(username: string): Promise<any[]> {
   try {
-    // Fetch ALL open issues (not filtered by approved-wishlist)
-    const response = await fetch(
-      `${GITHUB_CONFIG.API_ISSUES_URL}?state=open&per_page=100`,
-      {
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      },
-    );
+    // Load wishlists from content collections
+    const allWishlists = await getCollection('wishlists');
+    
+    // Filter to wishlists for this user
+    const userWishlists = allWishlists
+      .filter((entry) => entry.data.maintainerUsername === username)
+      .map((entry) => ({
+        project: entry.data.projectName,
+        services: entry.data.wishes || [],
+        urgency: entry.data.urgency || 'medium',
+        projectSize: entry.data.projectSize || 'medium',
+        timeline: '',
+        organizationType: 'single-maintainer',
+        organizationName: '',
+        otherOrganizationType: '',
+        additionalNotes: entry.data.additionalNotes || '',
+        technologies: entry.data.technologies || [],
+        resources: entry.data.resources || [],
+        openToSponsorship: false,
+        repository: entry.data.repositoryUrl || '',
+        maintainer: entry.data.maintainerUsername,
+        id: entry.data.id,
+        approvalStatus: entry.data.approved ? 'approved' : 'pending',
+        issueUrl: entry.data.issueUrl,
+        createdAt: entry.data.createdAt,
+        updatedAt: entry.data.updatedAt,
+      }));
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch issues: ${response.status}`);
-    }
-
-    const issues: GitHubIssue[] = await response.json();
-
-    // Parse each issue and add approval status
-    const wishlists = await Promise.all(
-      issues
-        .filter((issue: GitHubIssue) => {
-          // Only include issues with the 'wishlist' label
-          return issue.labels.some(label => label.name === 'wishlist');
-        })
-        .map(async (issue: GitHubIssue) => {
-          try {
-            // Parse the original issue body
-            const parsed = parseIssueForm(issue.body || '');
-            
-            // Fetch comments to check for latest update
-            let updatedData = null;
-            try {
-              const commentsResp = await fetch(
-                `${GITHUB_CONFIG.API_ISSUES_URL}/${issue.number}/comments`,
-                {
-                  headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                  },
-                }
-              );
-              
-              if (commentsResp.ok) {
-                const comments = await commentsResp.json();
-                // Find and parse the latest wishlist update comment
-                const latestUpdateComment = Array.isArray(comments)
-                  ? comments
-                      .reverse()
-                      .find((c: any) => c.body && c.body.includes('## Wishlist Updated'))
-                  : null;
-                
-                if (latestUpdateComment) {
-                  updatedData = parseIssueForm(latestUpdateComment.body);
-                }
-              }
-            } catch {
-              // If comment fetch fails, just use original data
-            }
-
-            const isApproved = issue.labels.some(label => label.name === 'approved-wishlist');
-            
-            // Merge data, preferring updated data if available
-            return {
-              project: updatedData?.project || parsed.project || issue.title || '',
-              services: updatedData?.services || parsed.services || [],
-              urgency: updatedData?.urgency || parsed.urgency || 'medium',
-              projectSize: updatedData?.projectSize || parsed.projectSize || 'medium',
-              timeline: updatedData?.timeline || parsed.timeline || '',
-              organizationType: updatedData?.organizationType || parsed.organizationType || 'single-maintainer',
-              organizationName: updatedData?.organizationName || parsed.organizationName || '',
-              otherOrganizationType: updatedData?.otherOrganizationType || parsed.otherOrganizationType || '',
-              additionalNotes: updatedData?.additionalNotes || parsed.additionalNotes || parsed.additionalContext || '',
-              technologies: updatedData?.technologies || parsed.technologies || [],
-              openToSponsorship: updatedData?.openToSponsorship || !!parsed.openToSponsorship,
-              repository: updatedData?.repository || parsed.repository || '',
-              maintainer: updatedData?.maintainer || parsed.maintainer || '',
-              id: issue.number,
-              approvalStatus: isApproved ? 'approved' : 'pending',
-              issueUrl: issue.html_url,
-              createdAt: issue.created_at,
-              updatedAt: issue.updated_at,
-            };
-          } catch (e) {
-            return null;
-          }
-        })
-    );
-
-    // Filter out nulls and filter by username
-    const filtered = wishlists
-      .filter((w): w is NonNullable<typeof w> => w !== null && w.maintainer === username);
-
-    // Sort: approved first, then pending
-    filtered.sort((a, b) => {
-      if (a.approvalStatus === 'approved' && b.approvalStatus === 'pending') return -1;
-      if (a.approvalStatus === 'pending' && b.approvalStatus === 'approved') return 1;
-      return 0;
+    // Sort: newest first
+    userWishlists.sort((a: any, b: any) => {
+      const dateA = new Date(b.updatedAt).getTime();
+      const dateB = new Date(a.updatedAt).getTime();
+      return dateA - dateB;
     });
 
-    return filtered;
+    console.log(`[user-wishlists] Loaded ${userWishlists.length} wishlists for ${username} from content collections`);
+    return userWishlists;
   } catch (error) {
-    console.error('Error fetching user wishlists:', error);
-    throw error;
+    console.error('[user-wishlists] Error fetching wishlists from content collections:', error);
+    // Return empty array if no wishlists exist yet (new user or no markdown files)
+    return [];
   }
 }
 
 export const GET: APIRoute = async ({ url }) => {
   try {
-    if (!GITHUB_TOKEN) {
-      return new Response(JSON.stringify({ error: 'GitHub token not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     const username = url.searchParams.get('username');
     if (!username) {
       return new Response(
@@ -162,11 +74,11 @@ export const GET: APIRoute = async ({ url }) => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'private, no-cache',
+        'Cache-Control': 'no-store', // Don't cache - we want fresh data from markdown
       },
     });
   } catch (error) {
-    console.error('User wishlists API error:', error);
+    console.error('[user-wishlists] API error:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Failed to fetch user wishlists',

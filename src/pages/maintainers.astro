@@ -111,19 +111,111 @@ try {
   <section id="create-wishlist-section" class="py-12 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">
+        <h2 id="create-wishlist-header" class="text-3xl font-bold text-gray-900 mb-4">
           <span id="title-action-verb">Create</span><span id="title-action-noun"> a New Wishlist</span>
         </h2>
-        <p class="text-gray-600 text-base mb-8">
+        <p id="create-wishlist-instructions" class="text-gray-600 text-base mb-8">
           Choose from the provided list of GitHub repositories associated with your account or provide a different project URL. You may only create one wishlist per project.
           This will create a public issue in the <a href="https://github.com/oss-wishlist/wishlists/issues" target="_new" class="underline hover:text-gray-900">GitHub wishlists repository</a>. Private wishes are not yet available.
           <br />
           <strong>Note:</strong> New wishes remain in a <em>pending</em> state until verified (to prevent spam). Once verified, they'll appear publicly and be eligible for fulfillment.
         </p>
         <!-- Wishlist Form Component (user already authenticated, repos fetched server-side) -->
-        <WishlistForm client:load services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
+                        <WishlistForm client:load services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
       </div>
     </div>
   </section>
+
+</Layout>
+
+      </div>
+```  <script>
+    // Hide instructions and header when success message is showing
+    function checkForSuccessMessage() {
+      const successMessage = document.querySelector('[role="alert"]');
+      const instructions = document.getElementById('create-wishlist-instructions');
+      const header = document.getElementById('create-wishlist-header');
+      
+      const isShowingSuccess = successMessage && successMessage.textContent?.includes('successfully');
+      
+      if (instructions) {
+        instructions.style.display = isShowingSuccess ? 'none' : 'block';
+      }
+      
+      if (header) {
+        header.style.display = isShowingSuccess ? 'none' : 'block';
+      }
+    }
+    
+    // Check on load and periodically (for when React renders success)
+    checkForSuccessMessage();
+    const observer = setInterval(checkForSuccessMessage, 100);
+    
+    // Stop checking after 5 seconds (success will be rendered by then)
+    setTimeout(() => clearInterval(observer), 5000);
+  </script>
+
+</Layout>
+```
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Hide wishlist cards when form is active (edit mode, success, or form visible)
+    function updateCardVisibility() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isEditMode = urlParams.has('edit');
+      const wishlistSection = document.getElementById('your-wishlists-section');
+      const heroSection = document.getElementById('hero-section');
+      
+      // Check if success message is showing (wait a tick for it to render)
+      setTimeout(() => {
+        const successMessage = document.querySelector('[role="alert"]');
+        const isShowingSuccess = successMessage && successMessage.textContent?.includes('successfully');
+        
+        if (wishlistSection) {
+          if (isEditMode || isShowingSuccess) {
+            wishlistSection.style.display = 'none';
+            console.log('[maintainers] Hiding wishlist cards - edit mode or success showing');
+          } else {
+            wishlistSection.style.display = 'block';
+          }
+        }
+        
+        // Also scroll to form when in edit mode
+        if (isEditMode && heroSection) {
+          heroSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+    
+    // Check on page load
+    updateCardVisibility();
+    
+    // Listen for wishlist events to show cards again
+    window.addEventListener('wishlist-created', () => {
+      console.log('[maintainers] Wishlist created - showing cards in 3 seconds');
+      setTimeout(() => {
+        const wishlistSection = document.getElementById('your-wishlists-section');
+        if (wishlistSection) {
+          wishlistSection.style.display = 'block';
+        }
+      }, 3000);
+    });
+    
+    window.addEventListener('wishlist-updated', () => {
+      console.log('[maintainers] Wishlist updated - showing cards in 3 seconds');
+      setTimeout(() => {
+        const wishlistSection = document.getElementById('your-wishlists-section');
+        if (wishlistSection) {
+          wishlistSection.style.display = 'block';
+        }
+      }, 3000);
+    });
+    
+    // Listen for URL changes (when user clicks edit)
+    window.addEventListener('popstate', updateCardVisibility);
+  </script>
 
 </Layout>

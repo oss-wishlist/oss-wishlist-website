@@ -13,10 +13,6 @@ const { title, description = "Get the help your open source project needs", show
 // Use centralized path utility for consistent handling
 const basePath = getBasePath(); // Returns with trailing slash
 const logoUrl = `${basePath}logo.png`;
-
-// StatCounter configuration from environment variables
-const statCounterProjectId = import.meta.env.PUBLIC_STATCOUNTER_PROJECT_ID;
-const statCounterSecurityCode = import.meta.env.PUBLIC_STATCOUNTER_SECURITY_CODE;
 ---
 
 <!DOCTYPE html>
@@ -31,18 +27,6 @@ const statCounterSecurityCode = import.meta.env.PUBLIC_STATCOUNTER_SECURITY_CODE
     <link rel="icon" type="image/png" href={logoUrl} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    
-    <!-- StatCounter Analytics -->
-    {statCounterProjectId && statCounterSecurityCode && (
-      <>
-        <script type="text/javascript">
-          var sc_project={statCounterProjectId}; 
-          var sc_invisible=1; 
-          var sc_security="{statCounterSecurityCode}"; 
-        </script>
-        <script type="text/javascript" src="https://www.statcounter.com/counter/counter.js" async></script>
-      </>
-    )}
   </head>
   <body class="bg-gray-50 min-h-screen overflow-x-hidden">
     <!-- Skip to main content link for keyboard users -->

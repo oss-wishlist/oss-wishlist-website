@@ -82,6 +82,7 @@ export function parseIssueForm(body: string): ParsedIssueForm {
         break;
       
       case 'Project Repository':
+      case 'Repository': // Support new minimal format
         result.repository = content.replace('_No response_', '').trim();
         break;
       

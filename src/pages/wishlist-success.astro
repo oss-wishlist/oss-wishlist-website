@@ -1,0 +1,88 @@
+---
+import Layout from '../components/Layout.astro';
+import { getBasePath } from '../lib/paths';
+import { getCollection } from 'astro:content';
+
+const basePath = getBasePath();
+
+// Get success data from URL params
+const issueNumber = Astro.url.searchParams.get('id');
+const isUpdate = Astro.url.searchParams.get('update') === 'true';
+
+if (!issueNumber) {
+  return Astro.redirect(`${basePath}maintainers`);
+}
+
+// Get the wishlist title from content collections (most up-to-date)
+let wishlistTitle = null;
+try {
+  const wishlists = await getCollection('wishlists');
+  const wishlist = wishlists.find(w => w.data.id === parseInt(issueNumber));
+  if (wishlist) {
+    wishlistTitle = wishlist.data.projectName;
+  }
+} catch (error) {
+  console.error('Error fetching wishlist from content collections:', error);
+}
+
+const pageTitle = isUpdate ? 'Wishlist Updated Successfully' : 'Wishlist Created Successfully';
+---
+
+<Layout title={pageTitle} description="Your wishlist has been submitted successfully">
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white p-8 rounded-lg shadow-sm border">
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
+            <svg class="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">
+            {isUpdate ? 'Wishlist Updated Successfully!' : 'Wishlist Created Successfully!'}
+          </h1>
+          
+          <p class="text-gray-600 mb-6">
+            {isUpdate 
+              ? 'Your wishlist has been updated successfully.'
+              : 'Your wishlist has been created and is now visible to the community.'
+            }
+          </p>
+          
+          {wishlistTitle && (
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+              <h2 class="font-semibold text-gray-900 mb-2">{wishlistTitle}</h2>
+              <p class="text-sm text-gray-600">
+                Your wishlist will be visible to potential contributors and supporters once approved (approx 24 hours for review).
+              </p>
+            </div>
+          )}
+
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href={`${basePath}wishlist/${issueNumber}`}
+              class="btn-sparkle inline-flex items-center justify-center px-6 py-3"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+              View Wishlist
+            </a>
+            
+            <a
+              href={`${basePath}maintainers`}
+              class="btn-secondary inline-flex items-center justify-center px-6 py-3"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+              </svg>
+              <span>Back to Your Wishlists</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

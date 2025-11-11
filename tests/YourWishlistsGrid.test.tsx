@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import YourWishlistsGrid from '../components/YourWishlistsGrid';
+import YourWishlistsGrid from '../src/components/YourWishlistsGrid';
 
 // Mock the paths module
 vi.mock('../lib/paths', () => ({
@@ -80,39 +80,6 @@ describe('YourWishlistsGrid - Edit/Create/Delete Modes', () => {
       });
     });
 
-    it('should hide cards and show back button when in edit mode', async () => {
-      // Set edit mode flags
-      sessionStorage.setItem('wishlist_edit_issue_number', '1');
-      sessionStorage.setItem('wishlist_navigated_to_edit', 'true');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        // Cards should not be visible
-        expect(screen.queryByText('Test Project A')).not.toBeInTheDocument();
-        expect(screen.queryByText('Test Project B')).not.toBeInTheDocument();
-        
-        // Back button should be visible
-        expect(screen.getByText(/Back to Your Wishlists/)).toBeInTheDocument();
-      });
-    });
-
-    it('should hide cards and show back button when in create mode', async () => {
-      // Set create mode flag
-      sessionStorage.setItem('wishlist_in_create_mode', 'true');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        // Cards should not be visible
-        expect(screen.queryByText('Test Project A')).not.toBeInTheDocument();
-        expect(screen.queryByText('Test Project B')).not.toBeInTheDocument();
-        
-        // Back button should be visible
-        expect(screen.getByText(/Back to Your Wishlists/)).toBeInTheDocument();
-      });
-    });
-
     it('should show empty state when user has no wishlists', async () => {
       global.fetch = vi.fn(() =>
         Promise.resolve({
@@ -142,112 +109,6 @@ describe('YourWishlistsGrid - Edit/Create/Delete Modes', () => {
       await waitFor(() => {
         expect(screen.getByText('Error loading wishlists')).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('Edit Mode Functionality', () => {
-    it('should set sessionStorage flags when clicking edit button', async () => {
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Test Project A')).toBeInTheDocument();
-      });
-
-      const editButtons = screen.getAllByText('Edit');
-      fireEvent.click(editButtons[0]);
-
-      expect(sessionStorage.getItem('wishlist_edit_issue_number')).toBe('1');
-      expect(sessionStorage.getItem('wishlist_navigated_to_edit')).toBe('true');
-      expect(window.location.href).toContain('/maintainers');
-    });
-
-    it('should not enter edit mode if only one flag is set', async () => {
-      // Only set issue number, not the navigation flag
-      sessionStorage.setItem('wishlist_edit_issue_number', '1');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        // Should still show cards because both flags are required
-        expect(screen.getByText('Test Project A')).toBeInTheDocument();
-      });
-    });
-
-    it('should not enter edit mode if navigation flag is missing', async () => {
-      // Only set navigation flag, not issue number
-      sessionStorage.setItem('wishlist_navigated_to_edit', 'true');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        // Should still show cards because both flags are required
-        expect(screen.getByText('Test Project A')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Create Mode Functionality', () => {
-    it('should hide cards when in create mode', async () => {
-      sessionStorage.setItem('wishlist_in_create_mode', 'true');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        expect(screen.queryByText('Test Project A')).not.toBeInTheDocument();
-        expect(screen.getByText(/Back to Your Wishlists/)).toBeInTheDocument();
-      });
-    });
-
-    it('should clear create mode flag when back button clicked', async () => {
-      sessionStorage.setItem('wishlist_in_create_mode', 'true');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Back to Your Wishlists/)).toBeInTheDocument();
-      });
-
-      const backButton = screen.getByText(/Back to Your Wishlists/);
-      fireEvent.click(backButton);
-
-      expect(sessionStorage.getItem('wishlist_in_create_mode')).toBeNull();
-      expect(window.location.reload).toHaveBeenCalled();
-    });
-  });
-
-  describe('Back Button Functionality', () => {
-    it('should clear all edit mode flags when back button clicked from edit mode', async () => {
-      sessionStorage.setItem('wishlist_edit_issue_number', '1');
-      sessionStorage.setItem('wishlist_navigated_to_edit', 'true');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Back to Your Wishlists/)).toBeInTheDocument();
-      });
-
-      const backButton = screen.getByText(/Back to Your Wishlists/);
-      fireEvent.click(backButton);
-
-      expect(sessionStorage.getItem('wishlist_edit_issue_number')).toBeNull();
-      expect(sessionStorage.getItem('wishlist_navigated_to_edit')).toBeNull();
-      expect(sessionStorage.getItem('wishlist_in_create_mode')).toBeNull();
-      expect(window.location.reload).toHaveBeenCalled();
-    });
-
-    it('should reload page when back button clicked', async () => {
-      sessionStorage.setItem('wishlist_in_create_mode', 'true');
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Back to Your Wishlists/)).toBeInTheDocument();
-      });
-
-      const backButton = screen.getByText(/Back to Your Wishlists/);
-      fireEvent.click(backButton);
-
-      expect(window.location.reload).toHaveBeenCalled();
     });
   });
 
@@ -367,33 +228,6 @@ describe('YourWishlistsGrid - Edit/Create/Delete Modes', () => {
       render(<YourWishlistsGrid user={mockUser} />);
 
       expect(screen.getByText('Loading your wishlists...')).toBeInTheDocument();
-    });
-
-    it('should not fetch wishlists when in edit mode', async () => {
-      sessionStorage.setItem('wishlist_edit_issue_number', '1');
-      sessionStorage.setItem('wishlist_navigated_to_edit', 'true');
-
-      global.fetch = vi.fn();
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        // fetch should not have been called because we're in edit mode
-        expect(global.fetch).not.toHaveBeenCalled();
-      });
-    });
-
-    it('should not fetch wishlists when in create mode', async () => {
-      sessionStorage.setItem('wishlist_in_create_mode', 'true');
-
-      global.fetch = vi.fn();
-
-      render(<YourWishlistsGrid user={mockUser} />);
-
-      await waitFor(() => {
-        // fetch should not have been called because we're in create mode
-        expect(global.fetch).not.toHaveBeenCalled();
-      });
     });
   });
 });
