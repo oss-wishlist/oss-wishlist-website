@@ -121,30 +121,16 @@ async function getLatestUpdateTimestamp(issue) {
  * Parse a wishlist issue into simplified format
  */
 async function parseWishlistIssue(issue, labels) {
+  // Check if approved (no longer filtering out non-approved)
   const isApproved = labels.some((label) => label.name === "approved-wishlist");
-  
-  // Skip if not approved
-  if (!isApproved) {
-    return null;
-  }
-  
-  // Debug: print the full issue body to see available sections
-  console.log(`\n=== Issue #${issue.number} Body ===`);
-  console.log(issue.body);
-  console.log(`=== End Issue #${issue.number} ===\n`);
   
   // Get project name and repo from issue body (original form data)
   const projectName = extractSection(issue.body, "Project Name").trim();
   const repositoryUrl = extractSection(issue.body, "Repository").trim();
   
-  console.log(`Issue #${issue.number} extracted:`);
-  console.log(`  - Project Name: "${projectName}"`);
-  console.log(`  - Repository URL: "${repositoryUrl}"`);
-  
-  // Debug: log what we extracted
+  // Log warning if no repository URL found
   if (!repositoryUrl) {
     console.warn(`WARNING: Issue #${issue.number}: No repository URL found. Project: "${projectName}"`);
-    console.warn(`   Using project name for ID generation`);
   }
   
   // Generate unique ID based on repo name + issue number
@@ -166,7 +152,43 @@ async function parseWishlistIssue(issue, labels) {
     fulfillmentUrl,
     issueNumber: issue.number,
     updatedAt,
+    approved: isApproved, // True if has "approved-wishlist" label, false otherwise
+    labels: labels.map(l => l.name), // Keep all labels for reference
   };
+}
+
+/**
+ * Update markdown file to set approved status
+ */
+function updateMarkdownApprovalStatus(issueNumber, approved) {
+  const markdownPath = path.join(process.cwd(), 'src', 'content', 'wishlists', `wishlist-${issueNumber}.md`);
+  
+  if (!fs.existsSync(markdownPath)) {
+    console.warn(`Markdown file not found for issue ${issueNumber}: ${markdownPath}`);
+    return false;
+  }
+  
+  try {
+    let content = fs.readFileSync(markdownPath, 'utf8');
+    
+    // Update the approved field in frontmatter
+    const updatedContent = content.replace(
+      /^approved:\s*(true|false)/m,
+      `approved: ${approved}`
+    );
+    
+    if (content !== updatedContent) {
+      fs.writeFileSync(markdownPath, updatedContent, 'utf8');
+      console.log(`Updated wishlist-${issueNumber}.md: approved = ${approved}`);
+      return true;
+    } else {
+      console.log(`No change needed for wishlist-${issueNumber}.md (already approved = ${approved})`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Error updating markdown for issue ${issueNumber}:`, error.message);
+    return false;
+  }
 }
 
 /**
@@ -176,16 +198,16 @@ async function generateCache() {
   try {
     console.log("Fetching wishlists from GitHub...");
 
-    // Fetch only OPEN issues (closed ones are excluded)
+    // Fetch ALL open issues (both approved and pending)
     const issues = await octokit.paginate("GET /repos/{owner}/{repo}/issues", {
       owner: "oss-wishlist",
       repo: "wishlists",
       state: "open",
-      labels: "approved-wishlist", // Only fetch approved wishlists
+      // No label filter - we want both approved and pending wishlists
       per_page: 100,
     });
 
-    console.log(`Found ${issues.length} approved issues`);
+    console.log(`Found ${issues.length} open issues`);
 
     // Parse all wishlists concurrently
     const parsedWishlists = await Promise.all(
@@ -194,23 +216,32 @@ async function generateCache() {
         .map((issue) => parseWishlistIssue(issue, issue.labels))
     );
     
-    // Filter out nulls (non-approved wishlists)
-    const wishlists = parsedWishlists.filter((w) => w !== null);
+    // No filtering - keep all wishlists (both approved and pending)
+    const wishlists = parsedWishlists;
+    
+    // Count approved vs pending
+    const approvedCount = wishlists.filter(w => w.approved).length;
+    const pendingCount = wishlists.length - approvedCount;
 
-    console.log(`Parsed ${wishlists.length} approved wishlists`);
+    console.log(`Parsed ${wishlists.length} total wishlists`);
+    console.log(`  - ${approvedCount} approved`);
+    console.log(`  - ${pendingCount} pending`);
 
     // Generate cache data
     const cacheData = {
       version: "2.0.0",
       generatedAt: new Date().toISOString(),
       totalWishlists: wishlists.length,
+      approvedWishlists: approvedCount,
+      pendingWishlists: pendingCount,
       wishlists,
     };
 
     fs.writeFileSync("all-wishlists.json", JSON.stringify(cacheData, null, 2));
 
     console.log("Cache generated successfully");
-    console.log(`  - ${wishlists.length} approved wishlists`);
+    console.log(`  - ${wishlists.length} total wishlists`);
+    console.log(`  - ${approvedCount} approved, ${pendingCount} pending`);
     console.log(`  - File: all-wishlists.json`);
   } catch (error) {
     console.error("ERROR generating cache:", error);

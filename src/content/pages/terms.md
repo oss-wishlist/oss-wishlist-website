@@ -4,7 +4,7 @@ description: "Terms of service for using the OSS Wishlist platform"
 date: 2025-10-29
 ---
 
-# Terms & Conditions
+# Terms & <span class="text-accent">Conditions</span>
 
 **Effective Date:** October 29, 2025  
 **Last Updated:** October 29, 2025

@@ -4,7 +4,7 @@ description: About the OSS Wishlist initiative
 date: 2025-10-27
 ---
 
-# About Us
+# About <span class="text-accent">Us</span>
 
 `Open Source Wishlist`  *is* an open source, open content, community project created by [Emma Irwin](https://github.com/emmairwin) with help from long-time open source collaborator [Christos Bacharakis](https://github.com/bacharakis) and with feedback from many of our peers, maintainers and potential funders . 
 
