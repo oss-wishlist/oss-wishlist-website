@@ -72,8 +72,8 @@ if (wishlist) {
                 Which specific wishes do you want to fulfill?
               </label>
               <div class="space-y-3 mb-4">
-                <p class="text-sm text-green-700 mb-4">
-                  <strong>Wishes available for fulfillment</strong> from <strong>{wishlistData.data.project_name}</strong>:
+                <p class="text-sm text-gray-700 mb-4 font-semibold">
+                  Wishes available for fulfillment from {wishlistData.data.project_name}:
                 </p>
                 {wishlistData.data.services_needed?.map((serviceName: string) => {
                   const serviceDetails = servicesByTitle[serviceName];
@@ -407,8 +407,8 @@ if (wishlist) {
             // Show success message
             form.innerHTML = `
               <div class="text-center py-12">
-                <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                   </svg>
                 </div>

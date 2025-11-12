@@ -1,6 +1,6 @@
 ---
 id: 49
-projectName: "oo2233My first test edited again plus 300xyzc4444fff"
+projectName: "Nice title 1"
 repositoryUrl: "https://github.com/emmairwin/community-portal"
 maintainerUsername: "emmairwin"
 
@@ -13,10 +13,10 @@ urgency: "medium"
 projectSize: "medium"
 additionalNotes: "project description asfsdf"
 createdAt: "2025-11-11T21:11:16Z"
-updatedAt: "2025-11-11T23:12:29.148Z"
+updatedAt: "2025-11-12T19:51:26.233Z"
 ---
 
-# oo2233My first test edited again plus 300xyzc4444fff
+# Nice title 1
 
 **Maintainer**: [@emmairwin](https://github.com/emmairwin)
 **Repository**: [https://github.com/emmairwin/community-portal](https://github.com/emmairwin/community-portal)

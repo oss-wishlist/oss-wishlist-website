@@ -125,7 +125,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
               <label class="flex items-start" key={service.slug}>
                 <input type="checkbox" name="specialties" value={service.data.title} class="mr-2 rounded mt-1" />
                 <span class="text-sm">
-                  <a href={`${basePath}services/${service.slug}`} target="_blank" class="text-blue-600 hover:text-blue-800 underline">
+                  <a href={`${basePath}services/${service.slug}`} target="_blank" class="text-gray-700 hover:text-gray-900 underline">
                     {service.data.title}
                   </a>
                   {service.data.service_category && (
@@ -307,9 +307,9 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
 
     // Clear all field errors
     function clearFieldErrors() {
-      const fields = document.querySelectorAll('.border-red-500');
+      const fields = document.querySelectorAll('.border-gray-700');
       fields.forEach(field => {
-        field.classList.remove('border-red-500', 'border-2');
+        field.classList.remove('border-gray-700', 'border-2');
         field.classList.add('border-gray-300');
       });
       const errorMessages = document.querySelectorAll('.field-error-message');
@@ -324,13 +324,13 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
         const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
         if (field) {
           field.classList.remove('border-gray-300');
-          field.classList.add('border-red-500', 'border-2');
+          field.classList.add('border-gray-700', 'border-2');
           
           // Add error message if not already present
           const parent = field.parentElement;
           if (parent && !parent.querySelector('.field-error-message')) {
             const errorMsg = document.createElement('p');
-            errorMsg.className = 'field-error-message text-red-600 text-sm mt-1';
+            errorMsg.className = 'field-error-message text-gray-700 text-sm mt-1';
             errorMsg.textContent = 'This field is required';
             parent.appendChild(errorMsg);
           }

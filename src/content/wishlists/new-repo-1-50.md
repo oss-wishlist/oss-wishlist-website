@@ -1,6 +1,6 @@
 ---
 id: 50
-projectName: "cdc11Testing 2 another test2 4000xcccxxccc"
+projectName: "Nice title 2"
 repositoryUrl: "https://github.com/emmairwin/new-repo-1"
 maintainerUsername: "emmairwin"
 
@@ -13,10 +13,10 @@ urgency: "medium"
 projectSize: "medium"
 additionalNotes: "Kitchen"
 createdAt: "2025-11-11T21:19:13Z"
-updatedAt: "2025-11-11T23:15:27.570Z"
+updatedAt: "2025-11-12T19:52:01.251Z"
 ---
 
-# cdc11Testing 2 another test2 4000xcccxxccc
+# Nice title 2
 
 **Maintainer**: [@emmairwin](https://github.com/emmairwin)
 **Repository**: [https://github.com/emmairwin/new-repo-1](https://github.com/emmairwin/new-repo-1)

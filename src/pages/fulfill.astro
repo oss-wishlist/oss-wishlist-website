@@ -440,7 +440,7 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
           </div>
 
           <!-- Process Agreement for custom practitioners -->
-          <div class="bg-blue-50 border border-blue-200 p-4 rounded-md" id="custom-practitioner-agreement" style="display: none;">
+          <div class="bg-gray-50 border border-gray-300 p-4 rounded-md" id="custom-practitioner-agreement" style="display: none;">
             <div class="flex items-start">
               <input 
                 type="checkbox" 
@@ -644,7 +644,7 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
     function clearFieldError(fieldName) {
       const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
       if (field) {
-        field.classList.remove('border-red-500', 'border-2');
+        field.classList.remove('border-gray-700', 'border-2');
         field.classList.add('border-gray-300');
       }
       const errorMsg = field?.parentElement?.querySelector('.field-error-message');
@@ -656,12 +656,12 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
       const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
       if (field) {
         field.classList.remove('border-gray-300');
-        field.classList.add('border-red-500', 'border-2');
+        field.classList.add('border-gray-700', 'border-2');
         
         const parent = field.parentElement;
         if (parent && !parent.querySelector('.field-error-message')) {
           const errorMsg = document.createElement('p');
-          errorMsg.className = 'field-error-message text-red-600 text-sm mt-1';
+          errorMsg.className = 'field-error-message text-gray-700 text-sm mt-1';
           errorMsg.textContent = message;
           parent.appendChild(errorMsg);
         }
@@ -754,7 +754,7 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
       if (hasErrors) {
         e.preventDefault();
         // Scroll to first error
-        const firstError = document.querySelector('.border-red-500');
+        const firstError = document.querySelector('.border-gray-700');
         if (firstError) {
           firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setTimeout(() => firstError.focus(), 500);

@@ -36,39 +36,7 @@ const GUEST_ONLY_ROUTES: string[] = [
 ];
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const { url, cookies, locals, redirect, request } = context;
-  
-  // Basic Auth for staging environment
-  // Use process.env for server-side runtime variables in Node adapter
-  const requireBasicAuth = process.env.REQUIRE_BASIC_AUTH === 'true';
-  
-  if (requireBasicAuth) {
-    const authHeader = request.headers.get('Authorization');
-    const expectedUser = process.env.BASIC_AUTH_USER || 'staging';
-    const expectedPass = process.env.BASIC_AUTH_PASSWORD || 'changeme';
-    
-    if (!authHeader || !authHeader.startsWith('Basic ')) {
-      return new Response('Unauthorized', {
-        status: 401,
-        headers: {
-          'WWW-Authenticate': 'Basic realm="Staging Environment"',
-        },
-      });
-    }
-    
-    const base64Credentials = authHeader.split(' ')[1];
-    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-    const [username, password] = credentials.split(':');
-    
-    if (username !== expectedUser || password !== expectedPass) {
-      return new Response('Unauthorized', {
-        status: 401,
-        headers: {
-          'WWW-Authenticate': 'Basic realm="Staging Environment"',
-        },
-      });
-    }
-  }
+  const { url, cookies, locals, redirect } = context;
   
   // Add X-Robots-Tag header if indexing is disabled (for staging environments)
   const disableIndexing = import.meta.env.DISABLE_INDEXING === 'true';
