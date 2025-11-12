@@ -71,10 +71,11 @@ export function getSession(cookies: AstroCookies): AuthSession | null {
     }
 
     // Get session secret from environment
-    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET || process.env.OAUTH_STATE_SECRET;
+    // Using import.meta.env (Astro standard for build-time env vars)
+    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
     
     if (!sessionSecret) {
-      console.error('[Auth] Session secret not configured');
+      console.error('[Auth] Session secret not configured - set OAUTH_STATE_SECRET in .env');
       return null;
     }
 

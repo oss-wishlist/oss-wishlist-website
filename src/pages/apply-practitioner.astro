@@ -391,7 +391,28 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
       const originalText = btnText.textContent;
       
       submitBtn.disabled = true;
-      btnText.innerHTML = '<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Submitting...</span>';
+      btnText.textContent = '';
+      const spinner = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      spinner.setAttribute('class', 'animate-spin h-4 w-4 inline mr-2');
+      spinner.setAttribute('fill', 'none');
+      spinner.setAttribute('viewBox', '0 0 24 24');
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('class', 'opacity-25');
+      circle.setAttribute('cx', '12');
+      circle.setAttribute('cy', '12');
+      circle.setAttribute('r', '10');
+      circle.setAttribute('stroke', 'currentColor');
+      circle.setAttribute('stroke-width', '4');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('class', 'opacity-75');
+      path.setAttribute('fill', 'currentColor');
+      path.setAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z');
+      spinner.appendChild(circle);
+      spinner.appendChild(path);
+      const loadingText = document.createElement('span');
+      loadingText.textContent = 'Submitting...';
+      btnText.appendChild(spinner);
+      btnText.appendChild(loadingText);
       
       const formData = new FormData(this);
       const data = Object.fromEntries(formData);
@@ -406,7 +427,8 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
         const errorBox = document.getElementById('formError');
         if (errorBox) {
           errorBox.classList.add('hidden');
-          errorBox.innerHTML = '';
+          // Safe: Clear content with textContent
+          errorBox.textContent = '';
         }
         clearFieldErrors();
 
@@ -499,6 +521,14 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
         const errorBox = document.getElementById('formError');
         if (errorBox) {
           errorBox.classList.remove('hidden');
+          // Safe: Clear and rebuild with DOM methods
+          errorBox.textContent = '';
+          
+          const title = document.createElement('p');
+          title.className = 'font-semibold mb-1';
+          title.textContent = 'Unexpected error';
+          errorBox.appendChild(title);
+          
           let errorMessage = 'Please try again or contact us directly.';
           
           if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -507,7 +537,10 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
             errorMessage += ` (${error.message})`;
           }
           
-          errorBox.innerHTML = '<p class="font-semibold mb-1">Unexpected error</p><p>' + errorMessage + '</p>';
+          const msg = document.createElement('p');
+          msg.textContent = errorMessage; // Safe: textContent escapes HTML
+          errorBox.appendChild(msg);
+          
           errorBox.setAttribute('tabindex', '-1');
           errorBox.focus();
         }

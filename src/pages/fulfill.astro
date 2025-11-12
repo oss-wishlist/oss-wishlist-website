@@ -705,13 +705,37 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
       if (submitButton) {
         const originalText = submitButton.innerHTML;
         submitButton.disabled = true;
-        submitButton.innerHTML = `
-          <svg class="btn-sparkle-icon animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span class="btn-sparkle-text">Submitting...</span>
-        `;
+        
+        // Safe: Create loading state with DOM methods
+        submitButton.textContent = '';
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'btn-sparkle-icon animate-spin');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('class', 'opacity-25');
+        circle.setAttribute('cx', '12');
+        circle.setAttribute('cy', '12');
+        circle.setAttribute('r', '10');
+        circle.setAttribute('stroke', 'currentColor');
+        circle.setAttribute('stroke-width', '4');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'opacity-75');
+        path.setAttribute('fill', 'currentColor');
+        path.setAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z');
+        svg.appendChild(circle);
+        svg.appendChild(path);
+        
+        const loadingText = document.createElement('span');
+        loadingText.className = 'btn-sparkle-text';
+        loadingText.textContent = 'Submitting...';
+        
+        submitButton.appendChild(svg);
+        submitButton.appendChild(loadingText);
+        
         // Re-enable button after 5 seconds if form validation fails
         setTimeout(() => {
           if (!form.classList.contains('submitting')) {

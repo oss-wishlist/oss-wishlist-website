@@ -116,5 +116,42 @@ export const onRequest = defineMiddleware(async (context, next) => {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   }
   
+  // Add security headers
+  // Content Security Policy - Allow same origin, GitHub OAuth, and necessary external resources
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'", // unsafe-inline needed for Astro hydration
+      "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
+      "img-src 'self' data: https:", // Allow images from HTTPS and data URIs
+      "font-src 'self'",
+      "connect-src 'self' https://api.github.com", // GitHub API for OAuth
+      "frame-ancestors 'none'", // Prevent clickjacking
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ')
+  );
+  
+  // Prevent clickjacking
+  response.headers.set('X-Frame-Options', 'DENY');
+  
+  // Prevent MIME type sniffing
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  
+  // Control referrer information
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Disable legacy XSS protection (modern browsers use CSP instead)
+  response.headers.set('X-XSS-Protection', '0');
+  
+  // Enforce HTTPS (only in production)
+  if (import.meta.env.PROD) {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains'
+    );
+  }
+  
   return response;
 });
