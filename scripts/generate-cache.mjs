@@ -145,7 +145,12 @@ async function parseWishlistIssue(issue, labels) {
   if (!repositoryUrl) {
     console.warn(`WARNING: Issue #${issue.number}: No repository URL found. Project: "${projectName}"`);
     console.warn(`   Using project name for ID generation`);
-  } ? generateWishlistId(repositoryUrl, issue.number)
+  }
+  
+  // Generate unique ID based on repo name + issue number
+  // If no repo URL, use project name as fallback
+  const id = repositoryUrl 
+    ? generateWishlistId(repositoryUrl, issue.number)
     : `${projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}-${issue.number}`;
   
   // Extract fulfillment URL from issue body

@@ -292,7 +292,7 @@ function WishlistCard({
           {/* Approval Status Badge */}
           <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
             wishlist.approvalStatus === 'pending'
-              ? 'bg-gray-300 text-gray-900'
+              ? 'badge-pending'
               : 'bg-gray-700 text-white'
           }`}>
             {wishlist.approvalStatus === 'pending' ? 'Pending' : 'Approved'}

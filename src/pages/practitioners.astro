@@ -29,7 +29,7 @@ if (wishlistSlug) {
       {selectedWishlist ? (
         <>
           <h1 class="text-5xl font-bold text-gray-900 mb-6">
-            Practitioners for <span class="text-gray-700">{projectName || selectedWishlist.data.project_name}</span>
+            <span class="text-accent">Practitioners</span> for {projectName || selectedWishlist.data.project_name}
           </h1>
           <p class="text-xl text-gray-600 max-w-3xl mx-auto">
             Choose a practitioner to hire for the "{projectName || selectedWishlist.data.project_name}" project. 
@@ -38,7 +38,7 @@ if (wishlistSlug) {
         </>
       ) : (
         <>
-          <h1 class="text-5xl font-bold text-gray-900 mb-6">Open Source <span class="text-gray-700">Practitioners</span></h1>
+          <h1 class="text-5xl font-bold text-gray-900 mb-6">Open Source <span class="text-accent">Practitioners</span></h1>
           <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
            Open source practitioners are experienced subject matter experts in sustainability-critical areas.
           </p>

@@ -13,9 +13,10 @@
     @apply bg-gray-50 text-gray-900;
   }
   
-  /* Improved focus styles for accessibility */
+  /* Improved focus styles for accessibility - with subtle purple accent */
   *:focus-visible {
-    @apply outline-2 outline-offset-2 outline-gray-600;
+    outline: 2px solid rgb(147, 51, 234);
+    outline-offset: 2px;
   }
 }
 
@@ -103,7 +104,7 @@
     pointer-events: none;
   }
   
-  /* Secondary Link - Grayscale alternative to colored links */
+  /* Secondary Link - With subtle purple hover */
   .link-secondary {
     display: inline-flex;
     align-items: center;
@@ -119,13 +120,13 @@
   }
   
   .link-secondary:hover {
-    background-color: rgb(249, 250, 251);
-    border-color: rgb(191, 199, 212);
-    color: rgb(17, 24, 39);
+    background: linear-gradient(135deg, rgb(249, 250, 251) 0%, rgb(250, 245, 255) 100%);
+    border-color: rgb(216, 180, 254);
+    color: rgb(109, 40, 217);
   }
   
   .link-secondary:focus-visible {
-    outline: 2px solid rgb(75, 85, 99);
+    outline: 2px solid rgb(147, 51, 234);
     outline-offset: 2px;
   }
   
@@ -183,6 +184,18 @@
     font-weight: 600;
   }
   
+  /* Purple badge for pending/in-progress states */
+  .badge-pending {
+    display: inline-block;
+    background: linear-gradient(135deg, rgb(233, 213, 255), rgb(243, 232, 255));
+    color: rgb(109, 40, 217);
+    border: 1px solid rgb(216, 180, 254);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
   /* Disabled field styling */
   .field-disabled {
     background-color: rgb(243, 244, 246);
@@ -210,9 +223,44 @@
     @apply block text-sm font-medium text-gray-800 mb-2;
   }
   
-  /* Service card component */
+  /* Service card component with purple accent on hover */
   .service-card {
-    @apply bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 hover:border-gray-400;
+    @apply bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200;
+    border-color: rgb(229, 231, 235);
+  }
+  
+  .service-card:hover {
+    border-color: rgb(216, 180, 254);
+    box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.1), 0 2px 4px -1px rgba(147, 51, 234, 0.06);
+  }
+  
+  /* Featured card variant with purple gradient accent */
+  .card-featured {
+    position: relative;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: all 300ms ease-in-out;
+  }
+  
+  .card-featured::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 0.5rem;
+    padding: 2px;
+    background: linear-gradient(135deg, rgb(216, 180, 254), rgb(167, 139, 250));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 300ms ease-in-out;
+  }
+  
+  .card-featured:hover::before {
+    opacity: 1;
   }
   
   /* Price tier badges */
@@ -250,13 +298,38 @@
     @apply bg-white text-gray-700 border-gray-300 hover:bg-gray-50;
   }
   
-  /* Accessibility-focused link styles */
+  /* Accessibility-focused link styles with purple accents */
   .link-primary {
-    @apply text-gray-800 hover:text-gray-950 underline decoration-gray-300 hover:decoration-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 rounded transition-colors;
+    color: rgb(55, 65, 81);
+    text-decoration: underline;
+    text-decoration-color: rgb(209, 213, 219);
+    transition: all 200ms ease-in-out;
+    border-radius: 0.25rem;
+  }
+  
+  .link-primary:hover {
+    color: rgb(109, 40, 217);
+    text-decoration-color: rgb(167, 139, 250);
+  }
+  
+  .link-primary:focus-visible {
+    outline: 2px solid rgb(147, 51, 234);
+    outline-offset: 2px;
   }
   
   .link-subtle {
-    @apply text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 rounded transition-colors;
+    color: rgb(107, 114, 128);
+    transition: all 200ms ease-in-out;
+    border-radius: 0.25rem;
+  }
+  
+  .link-subtle:hover {
+    color: rgb(109, 40, 217);
+  }
+  
+  .link-subtle:focus-visible {
+    outline: 2px solid rgb(147, 51, 234);
+    outline-offset: 2px;
   }
   
   /* Accessible text colors (WCAG AA compliant) */
@@ -270,6 +343,12 @@
   
   .text-muted {
     @apply text-gray-600;
+  }
+  
+  /* Purple accent text for highlighting key words in headings */
+  .text-accent {
+    color: rgb(109, 40, 217);
+    font-weight: inherit;
   }
 }
 
@@ -305,6 +384,33 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-500;
   }
+  
+  /* Purple accent utilities for headings and special elements */
+  .heading-accent {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .heading-accent::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(to right, rgb(147, 51, 234), rgb(167, 139, 250));
+    border-radius: 2px;
+  }
+  
+  /* Purple glow effect for special cards/sections */
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.15);
+  }
+  
+  /* Subtle purple background tint */
+  .bg-purple-subtle {
+    background: linear-gradient(135deg, rgb(255, 255, 255) 0%, rgb(250, 245, 255) 100%);
+  }
 }
 
 /* Animations */
@@ -330,7 +436,7 @@
   }
 }
 
-/* Loading states */
+/* Loading states with purple shimmer */
 .loading {
   position: relative;
   overflow: hidden;
@@ -343,7 +449,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.3), transparent);
   animation: shimmer 1.5s infinite;
 }
 
