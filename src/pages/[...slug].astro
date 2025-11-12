@@ -20,7 +20,7 @@ const basePath = getBasePath();
   title={`${page.data.title} - OSS Wishlist`} 
   description={page.data.description || page.data.title}
 >
-  <article class="py-16">
+  <article class="py-16" data-page={pageSlug}>
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Date only (title is in content) -->
       {page.data.date && (

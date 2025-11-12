@@ -23,7 +23,9 @@ export const prerender = false;
           <h2 class="text-xl font-semibold text-gray-900">{c.data.title}</h2>
           {c.data.organization && <p class="text-sm text-gray-600">{c.data.organization}</p>}
           <p class="text-sm text-gray-700 mt-2 line-clamp-4">{c.data.description}</p>
-          <div class="mt-4 text-gray-700 text-sm">View details →</div>
+          <div class="mt-4">
+            <span class="badge-pending inline-block px-4 py-2 rounded-lg text-sm font-medium">View details →</span>
+          </div>
         </a>
       ))}
     </div>

@@ -411,7 +411,7 @@ const urgencyColors = {
     // Format services list
     const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0 
       ? wishlist.wishes.slice(0, 3).map(service => `
-          <span class="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">${service}</span>
+          <span class="inline-block badge-pending px-2 py-1 text-xs rounded">${service}</span>
         `).join('')
       : '<span class="text-sm text-gray-500 italic">No services specified</span>';
     
@@ -446,7 +446,7 @@ const urgencyColors = {
               </span>
             ` : ''}
             ${wishlist.urgency && wishlist.urgency !== 'medium' ? `
-              <span class="px-2 py-1 text-xs rounded-full ${urgencyColorClass}">
+              <span class="badge-pending px-2 py-1 text-xs rounded-full">
                 ${wishlist.urgency}
               </span>
             ` : ''}

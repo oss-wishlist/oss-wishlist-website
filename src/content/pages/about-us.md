@@ -4,23 +4,23 @@ description: About the OSS Wishlist initiative
 date: 2025-10-27
 ---
 
-# About <span class="text-accent">Us</span>
+# <span class="text-accent">About</span> <span class="text-accent">Us</span>
 
 `Open Source Wishlist`  *is* an open source, open content, community project created by [Emma Irwin](https://github.com/emmairwin) with help from long-time open source collaborator [Christos Bacharakis](https://github.com/bacharakis) and with feedback from many of our peers, maintainers and potential funders . 
+
+This is an unfunded volunteer project intended to push the conversation about how we fund and improve open source sustainability. Please keep all feedback constructive, and kind.
 
 ## About Open Source Wishlist
 
 `Open Source Wishlist` seeks to break down the silos of isolation between maintainers and funders by standardizing the way in which projects can express and receive meaningful support.  
 
-**From isolation to connection**: Instead of pleading into the void, maintainers can articulate need aligned with known sustainability risk and connect with skilled open source pracitioners ready to help.
+**From isolation to connection**: Instead of pleading into the void, maintainers can articulate need aligned with known sustainability risk and identify either fund community contribution, get matched with a pracitioner, or recieve corperate contribution (via designated employee time).
 
 **From burden to support**: Instead of shouldering sustainability work alone, maintainers can access paid open source practitioners with proven experience and expertise.
 
 **From guesswork to insight**: Instead of relying on quantitative metrics alone, companies and funders can gain firsthand, qualitative understanding of sustainability risks and take immediate action to address them.
 
 **From hope to evidence**: Instead of hoping for help and impact, both maintainers and funders can track real outcomes and demonstrate tangible results.  The ecosystem gets healthier!
-
-
 
 ## Look for the Helpers
 

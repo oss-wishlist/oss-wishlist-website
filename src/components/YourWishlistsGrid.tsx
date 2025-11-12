@@ -251,7 +251,7 @@ function WishlistCard({
   // Format services list
   const servicesHtml = wishlist.services && wishlist.services.length > 0
     ? wishlist.services.slice(0, 3).map((service) => (
-        <span key={service} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+        <span key={service} className="inline-block badge-pending px-2 py-1 text-xs rounded">
           {service}
         </span>
       ))
@@ -290,15 +290,11 @@ function WishlistCard({
         </div>
         <div className="flex flex-col items-end space-y-1">
           {/* Approval Status Badge */}
-          <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
-            wishlist.approvalStatus === 'pending'
-              ? 'badge-pending'
-              : 'bg-gray-700 text-white'
-          }`}>
+          <span className="badge-pending px-2 py-1 text-xs rounded-full font-semibold">
             {wishlist.approvalStatus === 'pending' ? 'Pending' : 'Approved'}
           </span>
           {wishlist.urgency && wishlist.urgency !== 'medium' && (
-            <span className={`px-2 py-1 text-xs rounded-full ${urgencyColorClass}`}>
+            <span className="badge-pending px-2 py-1 text-xs rounded-full">
               {wishlist.urgency}
             </span>
           )}
