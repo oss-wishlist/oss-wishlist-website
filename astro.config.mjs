@@ -6,7 +6,7 @@ import node from '@astrojs/node';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://oss-wish-list.github.io',
-  base: '/oss-wishlist-website', // Uncomment for GitHub Pages, comment out for Digital Ocean
+  base: process.env.PUBLIC_BASE_PATH || '/',
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],
     defaultLocale: 'en',

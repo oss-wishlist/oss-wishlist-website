@@ -12,8 +12,8 @@ resources: []
 urgency: "medium"
 projectSize: "medium"
 additionalNotes: "project description"
-openToSponsorship: true
-preferredPractitioner: "emma-irwin-practitioner"
+openToSponsorship: false
+
 organizationType: "single-maintainer"
 
 
@@ -21,7 +21,7 @@ organizationType: "single-maintainer"
 
 
 createdAt: "2025-11-13T22:03:48Z"
-updatedAt: "2025-11-13T22:03:48Z"
+updatedAt: "2025-11-13T23:08:12.747Z"
 ---
 
 # Project title
