@@ -193,6 +193,17 @@ const wishlists = defineCollection({
     urgency: z.string().optional(),
     projectSize: z.string().optional(),
     additionalNotes: z.string().optional(),
+    // Maintainer organization info
+    organizationType: z.string().optional(),
+    organizationName: z.string().optional(),
+    otherOrganizationType: z.string().optional(),
+    // Sponsorship and practitioner preferences
+    openToSponsorship: z.boolean().optional(),
+    preferredPractitioner: z.string().optional(),
+    // Nominee information (not stored in GitHub issue, only in markdown for internal coordination)
+    nomineeName: z.string().optional(),
+    nomineeEmail: z.string().optional(),
+    nomineeGithub: z.string().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
   }),

@@ -162,8 +162,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Delete markdown file for closed wishlist
     // Extract repository URL from issue body to generate correct slug
     try {
-      // Parse issue body to get repository URL
-      const repoMatch = closedIssue.body?.match(/### Repository\s+(.+)/);
+      // Parse issue body to get repository URL (try both old and new formats)
+      const repoMatch = closedIssue.body?.match(/### (?:Project Repository|Repository)\s+(.+)/) || 
+                       closedIssue.body?.match(/\*\*Project Repository\*\*\s+(.+)/);
       const repositoryUrl = repoMatch ? repoMatch[1].trim() : null;
       
       if (!repositoryUrl) {

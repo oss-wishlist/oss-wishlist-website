@@ -10,8 +10,259 @@ import { formatIssueFormBody } from '../../lib/issue-form-parser.js';
 import { withBaseUrl } from '../../lib/paths.js';
 import { writeWishlistMarkdown } from '../../lib/wishlist-markdown.js';
 import { generateWishlistSlug } from '../../lib/slugify.js';
+import { sendAdminEmail, sendEmail } from '../../lib/mail.js';
 
 export const prerender = false;
+
+/**
+ * Format wishlist data for admin email notification
+ */
+function formatWishlistEmail(formData: any, issueNumber: number, issueUrl: string, isUpdate: boolean): { subject: string; text: string; html: string } {
+  const action = isUpdate ? 'Updated' : 'New';
+  const subject = `${action} Wishlist: ${formData.projectTitle} (#${issueNumber})`;
+  
+  const organizationTypeLabels: Record<string, string> = {
+    'single-maintainer': 'Single Maintainer',
+    'maintainer-team': 'Maintainer Team',
+    'foundation-team': 'Foundation/Fiscal Host Team',
+    'company-team': 'Company-Backed Team',
+    'other': 'Other'
+  };
+  
+  const urgencyLabels: Record<string, string> = {
+    'low': 'Low',
+    'medium': 'Medium',
+    'high': 'High'
+  };
+  
+  const projectSizeLabels: Record<string, string> = {
+    'small': 'Small',
+    'medium': 'Medium',
+    'large': 'Large'
+  };
+  
+  // Build text version
+  const textParts = [
+    `${action} Wishlist Submission`,
+    '',
+    `Wishlist #${issueNumber}`,
+    '',
+    '=== PROJECT INFORMATION ===',
+    `Wishlist URL: ${issueUrl.replace('/issues/', '/wishlists/').replace(/\/\d+$/, '')}`,
+    '',
+    `Project Name: ${formData.projectTitle}`,
+    `Repository: ${formData.projectUrl}`,
+    `Maintainer: @${formData.maintainer}`,
+    `Project Size: ${projectSizeLabels[formData.projectSize] || formData.projectSize || 'Not specified'}`,
+    `Urgency: ${urgencyLabels[formData.urgency] || formData.urgency || 'Not specified'}`,
+  ];
+  
+  if (formData.additionalNotes) {
+    textParts.push(`Description: ${formData.additionalNotes}`);
+  }
+  
+  textParts.push('');
+  textParts.push('=== MAINTAINER INFORMATION ===');
+  textParts.push(`Organization Type: ${organizationTypeLabels[formData.organizationType] || formData.organizationType || 'Not specified'}`);
+  
+  if (formData.organizationName) {
+    textParts.push(`Organization Name: ${formData.organizationName}`);
+  }
+  if (formData.otherOrganizationType) {
+    textParts.push(`Other Organization Type: ${formData.otherOrganizationType}`);
+  }
+  if (formData.maintainerEmail) {
+    textParts.push(`Maintainer Email: ${formData.maintainerEmail}`);
+  }
+  textParts.push(`Open to Honorarium: ${formData.openToSponsorship ? 'Yes' : 'No'}`);
+  
+  textParts.push('');
+  textParts.push('=== SERVICES REQUESTED ===');
+  if (formData.services && formData.services.length > 0) {
+    formData.services.forEach((service: string) => {
+      textParts.push(`- ${service}`);
+    });
+  } else {
+    textParts.push('None specified');
+  }
+  
+  if (formData.technologies && formData.technologies.length > 0) {
+    textParts.push('');
+    textParts.push('=== TECHNOLOGIES ===');
+    formData.technologies.forEach((tech: string) => {
+      textParts.push(`- ${tech}`);
+    });
+  }
+  
+  textParts.push('');
+  textParts.push('=== HELPER PREFERENCES ===');
+  if (formData.preferredPractitioner) {
+    textParts.push(`Preferred Helper: ${formData.preferredPractitioner}`);
+  } else {
+    textParts.push('No preferred helper specified');
+  }
+  
+  if (formData.nomineeName || formData.nomineeEmail || formData.nomineeGithub) {
+    textParts.push('');
+    textParts.push('NOMINATED COMMUNITY MEMBER:');
+    if (formData.nomineeName) {
+      textParts.push(`  Name: ${formData.nomineeName}`);
+    }
+    if (formData.nomineeEmail) {
+      textParts.push(`  Email: ${formData.nomineeEmail}`);
+    }
+    if (formData.nomineeGithub) {
+      textParts.push(`  GitHub: @${formData.nomineeGithub}`);
+    }
+  }
+  
+  if (formData.additionalNotes) {
+    textParts.push('');
+    textParts.push('=== ADDITIONAL NOTES ===');
+    textParts.push(formData.additionalNotes);
+  }
+  
+  if (formData.createFundingPR) {
+    textParts.push('');
+    textParts.push('=== FUNDING.yml ===');
+    textParts.push('✓ Maintainer requested FUNDING.yml PR');
+  }
+  
+  const text = textParts.join('\n');
+  
+  // Build HTML version
+  const htmlParts = [
+    `<h2>${action} Wishlist Submission</h2>`,
+    `<p><strong>Wishlist #${issueNumber}</strong></p>`,
+    '<h3>Project Information</h3>',
+    '<ul>',
+    `<li><strong>Project Name:</strong> ${formData.projectTitle}</li>`,
+    `<li><strong>Repository:</strong> <a href="${formData.projectUrl}">${formData.projectUrl}</a></li>`,
+    `<li><strong>Maintainer:</strong> <a href="https://github.com/${formData.maintainer}">@${formData.maintainer}</a></li>`,
+    `<li><strong>Project Size:</strong> ${projectSizeLabels[formData.projectSize] || formData.projectSize || 'Not specified'}</li>`,
+    `<li><strong>Urgency:</strong> ${urgencyLabels[formData.urgency] || formData.urgency || 'Not specified'}</li>`,
+  ];
+  
+  if (formData.additionalNotes) {
+    htmlParts.push(`<li><strong>Description:</strong> ${formData.additionalNotes.replace(/\n/g, '<br>')}</li>`);
+  }
+  
+  htmlParts.push('</ul>');
+  htmlParts.push('<h3>Maintainer Information</h3>');
+  htmlParts.push('<ul>');
+  htmlParts.push(`<li><strong>Organization Type:</strong> ${organizationTypeLabels[formData.organizationType] || formData.organizationType || 'Not specified'}</li>`);
+  
+  if (formData.organizationName) {
+    htmlParts.push(`<li><strong>Organization Name:</strong> ${formData.organizationName}</li>`);
+  }
+  if (formData.otherOrganizationType) {
+    htmlParts.push(`<li><strong>Other Organization Type:</strong> ${formData.otherOrganizationType}</li>`);
+  }
+  if (formData.maintainerEmail) {
+    htmlParts.push(`<li><strong>Maintainer Email:</strong> <a href="mailto:${formData.maintainerEmail}">${formData.maintainerEmail}</a></li>`);
+  }
+  htmlParts.push(`<li><strong>Open to Honorarium:</strong> ${formData.openToSponsorship ? 'Yes ✓' : 'No'}</li>`);
+  htmlParts.push('</ul>');
+  
+  htmlParts.push('<h3>Services Requested</h3>');
+  if (formData.services && formData.services.length > 0) {
+    htmlParts.push('<ul>');
+    formData.services.forEach((service: string) => {
+      htmlParts.push(`<li>${service}</li>`);
+    });
+    htmlParts.push('</ul>');
+  } else {
+    htmlParts.push('<p>None specified</p>');
+  }
+  
+  if (formData.technologies && formData.technologies.length > 0) {
+    htmlParts.push('<h3>Technologies</h3>');
+    htmlParts.push('<ul>');
+    formData.technologies.forEach((tech: string) => {
+      htmlParts.push(`<li>${tech}</li>`);
+    });
+    htmlParts.push('</ul>');
+  }
+  
+  htmlParts.push('<h3>Helper Preferences</h3>');
+  if (formData.preferredPractitioner) {
+    htmlParts.push(`<p><strong>Preferred Helper:</strong> ${formData.preferredPractitioner}</p>`);
+  } else {
+    htmlParts.push('<p>No preferred helper specified</p>');
+  }
+  
+  if (formData.nomineeName || formData.nomineeEmail || formData.nomineeGithub) {
+    htmlParts.push('<p><strong>Nominated Community Member:</strong></p>');
+    htmlParts.push('<ul>');
+    if (formData.nomineeName) {
+      htmlParts.push(`<li><strong>Name:</strong> ${formData.nomineeName}</li>`);
+    }
+    if (formData.nomineeEmail) {
+      htmlParts.push(`<li><strong>Email:</strong> <a href="mailto:${formData.nomineeEmail}">${formData.nomineeEmail}</a></li>`);
+    }
+    if (formData.nomineeGithub) {
+      htmlParts.push(`<li><strong>GitHub:</strong> <a href="https://github.com/${formData.nomineeGithub}">@${formData.nomineeGithub}</a></li>`);
+    }
+    htmlParts.push('</ul>');
+  }
+  
+  if (formData.additionalNotes) {
+    htmlParts.push('<h3>Additional Notes</h3>');
+    htmlParts.push(`<p>${formData.additionalNotes.replace(/\n/g, '<br>')}</p>`);
+  }
+  
+  if (formData.createFundingPR) {
+    htmlParts.push('<h3>FUNDING.yml</h3>');
+    htmlParts.push('<p>✓ Maintainer requested FUNDING.yml PR</p>');
+  }
+  
+  const html = htmlParts.join('\n');
+  
+  return { subject, text, html };
+}
+
+/**
+ * Format maintainer confirmation email
+ */
+function formatMaintainerConfirmationEmail(formData: any, issueNumber: number, issueUrl: string, wishlistUrl: string, isUpdate: boolean): { subject: string; text: string; html: string } {
+  const action = isUpdate ? 'updated' : 'created';
+  const subject = `Your wishlist has been ${action}: ${formData.projectTitle}`;
+  
+  const text = `Hello,
+
+Your wishlist for "${formData.projectTitle}" has been ${action} successfully!
+
+Project: ${formData.projectUrl}
+View your wishlist: ${wishlistUrl}
+
+What happens next?
+${isUpdate ? '- Your updated wishlist is now live' : '- Your wishlist will be reviewed by our team'}
+${isUpdate ? '' : '- Once approved, it will be visible to helpers in our community'}
+- Helpers can discover your project and offer assistance
+- You'll be notified when someone expresses interest in fulfilling your wish
+
+Thank you for being part of the OSS Wishlist community!`;
+
+  const html = `
+    <h2>Hello,</h2>
+    <p>Your wishlist for <strong>"${formData.projectTitle}"</strong> has been ${action} successfully!</p>
+    
+    <p><strong>Project:</strong> <a href="${formData.projectUrl}">${formData.projectUrl}</a><br>
+    <strong>View your wishlist:</strong> <a href="${wishlistUrl}">${wishlistUrl}</a></p>
+    
+    <h3>What happens next?</h3>
+    <ul>
+      ${isUpdate ? '<li>Your updated wishlist is now live</li>' : '<li>Your wishlist will be reviewed by our team</li>'}
+      ${isUpdate ? '' : '<li>Once approved, it will be visible to helpers in our community</li>'}
+      <li>Helpers can discover your project and offer assistance</li>
+      <li>You'll be notified when someone expresses interest in fulfilling your wish</li>
+    </ul>
+    
+    <p>Thank you for being part of the OSS Wishlist community!</p>
+  `;
+  
+  return { subject, text, html };
+}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -60,36 +311,10 @@ export const POST: APIRoute = async ({ request }) => {
       return ApiErrors.serverError('Server configuration error');
     }
 
-    // Create MINIMAL issue body - the markdown file is the source of truth
-    // GitHub issue is just a pointer for triage/approval workflow
-    let finalIssueBody = issueBody;
-    if (formData) {
-      const slug = generateWishlistSlug(formData.projectUrl, issueNumber || 0);
-      const wishlistUrl = `${origin}${basePath}/wishlists/${slug}`;
-      
-      finalIssueBody = `### Project Name
-${formData.projectTitle}
+    // For updates, we'll add a comment with just the update timestamp
+    // For new issues, we'll use the full markdown body from the form
 
-### Repository
-${formData.projectUrl}
-
-### Wishlist Details
-View complete wishlist: ${isUpdate && issueNumber ? wishlistUrl.replace('/0', `/${issueNumber}`) : '(will be available after approval)'}
-
----
-**Note**: This issue is a pointer for triage/approval only. The complete wishlist data is stored in the website's content collections.
-
-<!-- Metadata for JSON ingestors -->
-\`\`\`json
-{
-  "project_name_id": "${slug}",
-  "issue_number": ${issueNumber || 'TBD'},
-  "created_at": "${new Date().toISOString()}"
-}
-\`\`\``;
-    }
-
-    // If this is an update, add a minimal comment
+    // If this is an update, add a comment with the required fields for the FUNDING.yml action
     // The markdown file is the source of truth, not the issue comments
     if (isUpdate && issueNumber) {
       const slug = generateWishlistSlug(formData.projectUrl, issueNumber);
@@ -99,7 +324,23 @@ View complete wishlist: ${isUpdate && issueNumber ? wishlistUrl.replace('/0', `/
 
 **Updated:** ${new Date().toISOString()}
 
-View complete updated wishlist: ${wishlistUrl}`;
+View complete updated wishlist: ${wishlistUrl}
+
+---
+
+### Project Name
+${formData.projectTitle}
+
+### Maintainer GitHub Username
+${formData.maintainer}
+
+### Project Repository
+${formData.projectUrl}
+
+### FUNDING.yml Setup
+
+- [${formData.createFundingPR ? 'x' : ' '}] Yes, create a FUNDING.yml PR for my repository
+`;
 
       const commentResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}/comments`, {
         method: 'POST',
@@ -173,6 +414,14 @@ View complete updated wishlist: ${wishlistUrl}`;
           additionalNotes: formData.additionalNotes,
           createdAt: issue.created_at,
           updatedAt: new Date().toISOString(),
+          organizationType: formData.organizationType,
+          organizationName: formData.organizationName,
+          otherOrganizationType: formData.otherOrganizationType,
+          openToSponsorship: formData.openToSponsorship,
+          preferredPractitioner: formData.preferredPractitioner,
+          nomineeName: formData.nomineeName,
+          nomineeEmail: formData.nomineeEmail,
+          nomineeGithub: formData.nomineeGithub,
         });
         console.log('[submit-wishlist] ✓ Updated markdown file for wishlist #' + issueNumber + ' (slug: ' + slug + ')');
       } catch (mdError) {
@@ -195,6 +444,41 @@ View complete updated wishlist: ${wishlistUrl}`;
         console.log('[submit-wishlist] In-memory cache invalidated for update');
       } catch (err) {
         console.warn('[submit-wishlist] Failed to invalidate cache:', err);
+      }
+      
+      // Send admin notification email for update
+      try {
+        const emailContent = formatWishlistEmail(formData, issueNumber, issue.html_url, true);
+        const emailResult = await sendAdminEmail(emailContent.subject, emailContent.text, emailContent.html);
+        if (emailResult.success) {
+          console.log('[submit-wishlist] ✓ Admin notification email sent for wishlist update #' + issueNumber);
+        } else {
+          console.warn('[submit-wishlist] ✗ Failed to send admin notification email:', emailResult.error);
+        }
+      } catch (emailError) {
+        console.error('[submit-wishlist] ✗ Error sending admin notification email:', emailError);
+        // Don't fail the request if email fails
+      }
+      
+      // Send confirmation email to maintainer
+      if (formData.maintainerEmail) {
+        try {
+          const wishlistUrl = `${origin}${basePath}wishlists/${slug}`;
+          const confirmationContent = formatMaintainerConfirmationEmail(formData, issueNumber, issue.html_url, wishlistUrl, true);
+          const confirmResult = await sendEmail({
+            to: formData.maintainerEmail,
+            subject: confirmationContent.subject,
+            text: confirmationContent.text,
+            html: confirmationContent.html
+          });
+          if (confirmResult.success) {
+            console.log('[submit-wishlist] ✓ Confirmation email sent to maintainer for update #' + issueNumber);
+          } else {
+            console.warn('[submit-wishlist] ✗ Failed to send confirmation email to maintainer:', confirmResult.error);
+          }
+        } catch (emailError) {
+          console.error('[submit-wishlist] ✗ Error sending confirmation email to maintainer:', emailError);
+        }
       }
       
       return jsonSuccess({
@@ -235,10 +519,11 @@ View complete updated wishlist: ${wishlistUrl}`;
       console.warn('Could not fetch latest issue number:', error);
     }
     
-    // Add fulfillment link to the issue body if we have a predicted issue number
+    // Build the final issue body with fulfillment link
+    let finalIssueBody = issueBody; // Use the full markdown from the form
     if (nextIssueNumber) {
       const fulfillUrl = withBaseUrl(`fulfill?issue=${nextIssueNumber}`, origin);
-      finalIssueBody += `\n\n---\n\nFulfill this wishlist: ${fulfillUrl}`;
+      finalIssueBody += `\n\nFulfill this wishlist: ${fulfillUrl}`;
     }
     
     const response = await fetch(GITHUB_CONFIG.API_ISSUES_URL, {
@@ -290,6 +575,14 @@ View complete updated wishlist: ${wishlistUrl}`;
         additionalNotes: formData.additionalNotes,
         createdAt: issue.created_at,
         updatedAt: issue.updated_at,
+        organizationType: formData.organizationType,
+        organizationName: formData.organizationName,
+        otherOrganizationType: formData.otherOrganizationType,
+        openToSponsorship: formData.openToSponsorship,
+        preferredPractitioner: formData.preferredPractitioner,
+        nomineeName: formData.nomineeName,
+        nomineeEmail: formData.nomineeEmail,
+        nomineeGithub: formData.nomineeGithub,
       });
       console.log('[submit-wishlist] ✓ Created markdown file for wishlist #' + issue.number + ' (slug: ' + slug + ')');
     } catch (mdError) {
@@ -312,6 +605,42 @@ View complete updated wishlist: ${wishlistUrl}`;
       console.log('[submit-wishlist] In-memory cache invalidated for new wishlist creation');
     } catch (err) {
       console.warn('[submit-wishlist] Failed to invalidate cache after creation:', err);
+    }
+
+    // Send admin notification email for new wishlist
+    try {
+      const emailContent = formatWishlistEmail(formData, issue.number, issue.html_url, false);
+      const emailResult = await sendAdminEmail(emailContent.subject, emailContent.text, emailContent.html);
+      if (emailResult.success) {
+        console.log('[submit-wishlist] ✓ Admin notification email sent for new wishlist #' + issue.number);
+      } else {
+        console.warn('[submit-wishlist] ✗ Failed to send admin notification email:', emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('[submit-wishlist] ✗ Error sending admin notification email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    // Send confirmation email to maintainer
+    if (formData.maintainerEmail) {
+      try {
+        const slug = generateWishlistSlug(formData.projectUrl, issue.number);
+        const wishlistUrl = `${origin}${basePath}wishlists/${slug}`;
+        const confirmationContent = formatMaintainerConfirmationEmail(formData, issue.number, issue.html_url, wishlistUrl, false);
+        const confirmResult = await sendEmail({
+          to: formData.maintainerEmail,
+          subject: confirmationContent.subject,
+          text: confirmationContent.text,
+          html: confirmationContent.html
+        });
+        if (confirmResult.success) {
+          console.log('[submit-wishlist] ✓ Confirmation email sent to maintainer for new wishlist #' + issue.number);
+        } else {
+          console.warn('[submit-wishlist] ✗ Failed to send confirmation email to maintainer:', confirmResult.error);
+        }
+      } catch (emailError) {
+        console.error('[submit-wishlist] ✗ Error sending confirmation email to maintainer:', emailError);
+      }
     }
 
     return jsonSuccess({

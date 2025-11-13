@@ -202,6 +202,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   
   // Wishlist form state
   const [wishlistData, setWishlistData] = useState({
+    maintainerEmail: '',
     projectTitle: '',
     selectedServices: [] as string[],
     technologies: [] as string[],
@@ -430,6 +431,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       const title = cachedData.projectTitle || cachedData.project || cachedData.title || '';
       
       const updatedData: any = {
+        maintainerEmail: '', // Email is not stored in markdown, always empty on edit
         projectTitle: title,
         selectedServices: incomingWishes,
         urgency: cachedData.urgency || 'medium',
@@ -440,7 +442,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         otherOrganizationType: cachedData.otherOrganizationType || '',
         additionalNotes: cachedData.additionalNotes || '',
         technologies: cachedData.technologies || [],
-        openToSponsorship: cachedData.openToSponsorship || false,
+        openToSponsorship: cachedData.openToSponsorship ?? false,
         preferredPractitioner: cachedData.preferredPractitioner || '',
         nomineeName: cachedData.nomineeName || '',
         nomineeEmail: cachedData.nomineeEmail || '',
@@ -720,46 +722,22 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
 
       const issueTitle = `Wishlist: ${wishlistData.projectTitle}`;
       
-      // Format repositories section
-      const repositoriesSection = repositories.length === 1
-        ? `- **Project:** [${wishlistData.projectTitle}](${repositories[0].url})
-- **Maintainer:** @${repositories[0].username}
-- **Description:** ${repositories[0].description}`
-        : `- **Projects:**
-${repositories.map(repo => `  - [${repo.name}](${repo.url}) - ${repo.description || 'No description'}`).join('\n')}
-- **Maintainer:** @${repositories[0].username}`;
+      // Simple issue body format matching what the action expects
+      const issueBody = `### Project Name
+${wishlistData.projectTitle}
 
-  const issueBody = `# OSS Project Wishlist
+### Maintainer GitHub Username
+${repositories[0].username}
 
-## Project Information
-${repositoriesSection}
-${wishlistData.technologies.length > 0 ? `- **Package Ecosystems:** ${wishlistData.technologies.join(', ')}` : ''}
+### Project Repository
+${repositories[0].url}
 
-## Services Requested
-${wishlistData.selectedServices.map(serviceId => {
-  const service = availableServices.find(s => s.id === serviceId);
-  const serviceLink = service?.slug ? withBaseUrl(`services/${service.slug}`) : '';
-  return `- **${service?.title || serviceId}** (${service?.category || 'General'})
-  ${service?.description || 'No description available'}${serviceLink ? `
-  [Learn more about this service](${serviceLink})` : ''}`;
-}).join('\n')}
+### FUNDING.yml Setup
 
-## Project Details
-- **Urgency:** ${wishlistData.urgency.charAt(0).toUpperCase() + wishlistData.urgency.slice(1)}
-- **Timeline:** ${wishlistData.timeline || 'Flexible'}
-- **Open to Honorarium:** ${wishlistData.openToSponsorship ? 'Yes' : 'No'}
+- [${createFundingPR ? 'x' : ' '}] Yes, create a FUNDING.yml PR for my repository
 
-## Organization
-- **Type:** ${wishlistData.organizationType.charAt(0).toUpperCase() + wishlistData.organizationType.slice(1)}
-${wishlistData.organizationName ? `- **Name:** ${wishlistData.organizationName}` : ''}
-
-## Additional Notes
-${wishlistData.additionalNotes || 'None provided'}
-
----
-**Ready to help?** Comment below or reach out to the maintainer!
-
-*Created via [OSS Wishlist Platform](${withBaseUrl('')})*
+**Created:** ${new Date().toISOString()}
+**Updated:** ${new Date().toISOString()}
 `;
 
       // Submit directly to our API instead of opening GitHub
@@ -771,6 +749,13 @@ ${wishlistData.additionalNotes || 'None provided'}
         issueNumber: existingIssueNumber
       });
       
+      console.log('[WishlistForm] About to fetch with payload:', {
+        projectUrl: repositories[0]?.url,
+        maintainer: repositories[0]?.username,
+        isUpdate: isEditingExisting,
+        issueNumber: existingIssueNumber
+      });
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -801,10 +786,19 @@ ${wishlistData.additionalNotes || 'None provided'}
             nomineeGithub: wishlistData.nomineeGithub,
             organizationType: wishlistData.organizationType,
             organizationName: wishlistData.organizationName,
-            otherOrganizationType: wishlistData.otherOrganizationType
+            otherOrganizationType: wishlistData.otherOrganizationType,
+            maintainerEmail: wishlistData.maintainerEmail // Include maintainer email for admin notification (not saved to markdown/GitHub)
           }
         })
       });
+
+      console.log('[WishlistForm] Fetch completed, status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[WishlistForm] API error response:', errorText);
+        throw new Error(`API error (${response.status}): ${errorText}`);
+      }
 
       const result = await response.json();
 
@@ -1165,12 +1159,7 @@ ${wishlistData.additionalNotes || 'None provided'}
                                   <span>Close</span>
                                 </button>
                               </>
-                            ) : (
-                              <span className="text-xs px-2 py-1 rounded border bg-gray-50 text-gray-700 border-gray-300 flex items-center gap-1 shrink-0">
-                                <SparklesIcon />
-                                <span>Create Wishlist</span>
-                              </span>
-                            )}
+                            ) : null}
                           </div>
                         </div>
                         {repo.description && <p className="text-sm text-gray-600 mt-1">{repo.description}</p>}
@@ -1469,122 +1458,262 @@ ${wishlistData.additionalNotes || 'None provided'}
     return (
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmitWishlist} className="space-y-8">
-          {/* Repository Info Header - only show when creating, not editing */}
-          {!isEditingExisting && (
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-300 rounded-lg p-6 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <svg className="w-12 h-12 text-gray-600" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 1 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 0 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 0 1 1-1h8zM5 12.25v3.25a.25.25 0 0 0 .4.2l1.45-1.087a.25.25 0 0 1 .3 0L8.6 15.7a.25.25 0 0 0 .4-.2v-3.25a.25.25 0 0 0-.25-.25h-3.5a.25.25 0 0 0-.25.25z"/>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-gray-600 mb-1">Creating Wishlist For</h3>
-                  {selectedRepo ? (
-                    <>
-                      <p className="text-xl font-bold text-gray-900 mb-2">{selectedRepo.name}</p>
-                      <a 
-                        href={selectedRepo.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-700 hover:text-gray-900 hover:underline break-all inline-flex items-center gap-1"
-                      >
-                        {selectedRepo.html_url}
-                        <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                      {selectedRepo.description && (
-                        <p className="text-sm text-gray-600 mt-2">{selectedRepo.description}</p>
-                      )}
-                    </>
-                  ) : manualRepoData ? (
-                    <>
-                      <p className="text-xl font-bold text-gray-900 mb-2">{manualRepoData.name}</p>
-                      <a 
-                        href={manualRepoData.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-700 hover:text-gray-900 hover:underline break-all inline-flex items-center gap-1"
-                      >
-                        {manualRepoData.url}
-                        <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                      {manualRepoData.description && (
-                        <p className="text-sm text-gray-600 mt-2">{manualRepoData.description}</p>
-                      )}
-                    </>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Edit Mode Header */}
-          {isEditingExisting && (
-            <div className="bg-gray-100 border border-gray-300 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                </svg>
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Editing Existing Wishlist</h2>
-                </div>
-              </div>
-            </div>
-          )}
-          
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-red-800">{error}</p>
             </div>
           )}
 
-          {/* Project Title */}
+          {/* ========== SECTION 1: MAINTAINER INFO ========== */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              📝 Project Title <span className="text-red-500">*</span>
+              About You (The Maintainer)
             </h3>
-            <input
-              type="text"
-              name="projectTitle"
-              id="projectTitle"
-              value={wishlistData.projectTitle}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setWishlistData(prev => ({ ...prev, projectTitle: newValue }));
-                clearFieldError('projectTitle');
-                validateField('projectTitle', newValue, 'text');
-              }}
-              onBlur={(e) => {
-                validateField('projectTitle', e.target.value, 'text');
-              }}
-              placeholder="Enter your project title (e.g., 'My Awesome Library')"
-              className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent ${getFieldBorderClass('projectTitle')}`}
-              required
-            />
-            {validationResults.projectTitle && (
-              <ValidationFeedback
-                label="Project Title"
-                value={wishlistData.projectTitle}
-                isValid={validationResults.projectTitle.isValid}
-                validationResult={validationResults.projectTitle}
-              />
-            )}
-            {fieldErrors.projectTitle && (
-              <p className="text-red-600 text-sm mt-1">{fieldErrors.projectTitle}</p>
-            )}
-            <p className="text-sm text-gray-500 mt-2">
-              This will be the main title for your wishlist and how people will identify and triage your project or projects
+            <p className="text-sm text-gray-600 mb-4">
+              Tell us about you and your team. This helps us coordinate fulfillment.
             </p>
+            
+            {/* Maintainer Email */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Your Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="maintainerEmail"
+                id="maintainerEmail"
+                value={wishlistData.maintainerEmail}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setWishlistData(prev => ({ ...prev, maintainerEmail: newValue }));
+                  clearFieldError('maintainerEmail');
+                  validateField('maintainerEmail', newValue, 'email');
+                }}
+                onBlur={(e) => {
+                  validateField('maintainerEmail', e.target.value, 'email');
+                }}
+                placeholder="your.email@example.com"
+                className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent ${getFieldBorderClass('maintainerEmail')}`}
+                required
+              />
+              {validationResults.maintainerEmail && (
+                <ValidationFeedback
+                  label="Email Address"
+                  value={wishlistData.maintainerEmail}
+                  isValid={validationResults.maintainerEmail.isValid}
+                  validationResult={validationResults.maintainerEmail}
+                />
+              )}
+              {fieldErrors.maintainerEmail && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.maintainerEmail}</p>
+              )}
+              <p className="text-sm text-gray-500 mt-2">
+                This email is NOT saved to your public wishlist. We'll use it only for coordination and follow-up.
+              </p>
+            </div>
+
+            {/* Organization Type */}
+            <div className="grid gap-6 md:grid-cols-2 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Who owns/runs this project?
+                </label>
+                <select
+                  value={wishlistData.organizationType}
+                  onChange={(e) => setWishlistData(prev => ({ ...prev, organizationType: e.target.value as any }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                >
+                  <option value="single-maintainer">Single maintainer</option>
+                  <option value="community-team">Community team</option>
+                  <option value="company-team">Company/employee team</option>
+                  <option value="foundation-team">Foundation/employee team</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {wishlistData.organizationType === 'other' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Please specify
+                  </label>
+                  <input
+                    type="text"
+                    value={wishlistData.otherOrganizationType}
+                    onChange={(e) => setWishlistData(prev => ({ ...prev, otherOrganizationType: e.target.value }))}
+                    placeholder="Describe ownership structure"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+
+              {(wishlistData.organizationType === 'company-team' || wishlistData.organizationType === 'foundation-team') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Organization Name
+                  </label>
+                  <input
+                    type="text"
+                    value={wishlistData.organizationName}
+                    onChange={(e) => setWishlistData(prev => ({ ...prev, organizationName: e.target.value }))}
+                    placeholder="Enter organization name"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Honorarium Opt-in */}
+            <div className="mt-6">
+              <label className="flex items-start">
+                <input
+                  type="checkbox"
+                  checked={wishlistData.openToSponsorship}
+                  onChange={(e) => setWishlistData(prev => ({ ...prev, openToSponsorship: e.target.checked }))}
+                  className="mt-1 h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  I am open to receiving an honorarium as part of wish fulfillment
+                  <span className="block text-xs text-gray-500 mt-1">
+                    Organizations fulfilling your wish may offer an optional honorarium to recognize your time and collaboration (not payment for services or obligation)
+                  </span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* ========== SECTION 2: PROJECT INFO ========== */}
+          {/* Project Details */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <ClockIcon />
+              <span>Project Details</span>
+            </h3>
+            
+            {/* Project Title */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Project Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="projectTitle"
+                id="projectTitle"
+                value={wishlistData.projectTitle}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setWishlistData(prev => ({ ...prev, projectTitle: newValue }));
+                  clearFieldError('projectTitle');
+                  validateField('projectTitle', newValue, 'text');
+                }}
+                onBlur={(e) => {
+                  validateField('projectTitle', e.target.value, 'text');
+                }}
+                placeholder="Enter your project title (e.g., 'My Awesome Library')"
+                className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent ${getFieldBorderClass('projectTitle')}`}
+                required
+              />
+              {validationResults.projectTitle && (
+                <ValidationFeedback
+                  label="Project Title"
+                  value={wishlistData.projectTitle}
+                  isValid={validationResults.projectTitle.isValid}
+                  validationResult={validationResults.projectTitle}
+                />
+              )}
+              {fieldErrors.projectTitle && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.projectTitle}</p>
+              )}
+              <p className="text-sm text-gray-500 mt-2">
+                This will be the main title for your wishlist and how people will identify and triage your project or projects
+              </p>
+            </div>
+
+            {/* Project Description */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Project Description <span className="text-red-500">*</span>
+              </label>
+              <p className="text-sm text-gray-600 mb-2">
+                This is your chance to motivate sponsors and helpers to get involved. Tell them why your project matters and what impact their help could have.
+              </p>
+              <textarea
+                value={wishlistData.additionalNotes}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setWishlistData(prev => ({ ...prev, additionalNotes: newValue }));
+                  validateField('additionalNotes', newValue, 'notes');
+                }}
+                onBlur={(e) => {
+                  validateField('additionalNotes', e.target.value, 'notes');
+                }}
+                rows={4}
+                placeholder="Describe your project, its impact, and why this help would matter..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+              />
+              {validationResults.additionalNotes && (
+                <ValidationFeedback
+                  label="Project Description"
+                  value={wishlistData.additionalNotes}
+                  isValid={validationResults.additionalNotes.isValid}
+                  validationResult={validationResults.additionalNotes}
+                  helpText={`${wishlistData.additionalNotes.length}/1000`}
+                />
+              )}
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Project Size <span className="text-red-600">*</span>
+                </label>
+                <select
+                  value={wishlistData.projectSize}
+                  onChange={(e) => setWishlistData(prev => ({ ...prev, projectSize: e.target.value as any }))}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                >
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Not sure? See our <a className="underline hover:text-gray-900" href={`${getBasePath()}faq#project-size-guidance`} target="_blank" rel="noopener noreferrer">sizing guidance</a>.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Urgency
+                </label>
+                <select
+                  value={wishlistData.urgency}
+                  onChange={(e) => setWishlistData(prev => ({ ...prev, urgency: e.target.value as any }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                >
+                  <option value="low">Low - Flexible timeline</option>
+                  <option value="medium">Medium - Preferred timeline</option>
+                  <option value="high">High - Urgent need</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Timeline
+                </label>
+                <input
+                  type="text"
+                  value={wishlistData.timeline}
+                  onChange={(e) => setWishlistData(prev => ({ ...prev, timeline: e.target.value }))}
+                  placeholder="e.g., 'Within 3 months', 'Q1 2024', 'Flexible'"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Package Ecosystems */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              � Package Ecosystem
+              Package Ecosystem
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               Select up to 2 package managers/ecosystems your project uses. This helps practitioners find projects in ecosystems they specialize in.
@@ -1689,6 +1818,7 @@ ${wishlistData.additionalNotes || 'None provided'}
 
           </div>
 
+          {/* ========== SECTION 3: SERVICES ========== */}
           {/* Services Selection */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -1792,85 +1922,39 @@ ${wishlistData.additionalNotes || 'None provided'}
             </div>
           </div>
 
-          {/* Project Details */}
+          {/* FUNDING.yml Checkbox (still in Project Info section) */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <ClockIcon />
-              <span>Project Details</span>
-            </h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Size <span className="text-red-600">*</span>
-                </label>
-                <select
-                  value={wishlistData.projectSize}
-                  onChange={(e) => setWishlistData(prev => ({ ...prev, projectSize: e.target.value as any }))}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                >
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Not sure? See our <a className="underline hover:text-gray-900" href={`${getBasePath()}faq#project-size-guidance`} target="_blank" rel="noopener noreferrer">sizing guidance</a>.
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Urgency
-                </label>
-                <select
-                  value={wishlistData.urgency}
-                  onChange={(e) => setWishlistData(prev => ({ ...prev, urgency: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                >
-                  <option value="low">Low - Flexible timeline</option>
-                  <option value="medium">Medium - Preferred timeline</option>
-                  <option value="high">High - Urgent need</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Timeline
-                </label>
-                <input
-                  type="text"
-                  value={wishlistData.timeline}
-                  onChange={(e) => setWishlistData(prev => ({ ...prev, timeline: e.target.value }))}
-                  placeholder="e.g., 'Within 3 months', 'Q1 2024', 'Flexible'"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Sponsorship Opt-in */}
-            <div className="mt-6">
-              <label className="flex items-start">
+            <div className={`p-4 rounded-lg border ${manualRepoData || fundingYmlProcessed ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200'}`}>
+              <label className={`flex items-start space-x-3 ${manualRepoData || fundingYmlProcessed ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
-                  checked={wishlistData.openToSponsorship}
-                  onChange={(e) => setWishlistData(prev => ({ ...prev, openToSponsorship: e.target.checked }))}
-                  className="mt-1 h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
+                  checked={createFundingPR && !manualRepoData && !fundingYmlProcessed}
+                  onChange={(e) => setCreateFundingPR(e.target.checked)}
+                  disabled={!!manualRepoData || fundingYmlProcessed}
+                  className="mt-0.5 h-5 w-5 text-gray-900 border-gray-300 rounded focus:ring-gray-500 disabled:cursor-not-allowed"
                 />
-                <span className="ml-2 text-sm text-gray-700">
-                  I am open to receiving an honorarium as part of wish fulfillment
-                  <span className="block text-xs text-gray-500 mt-1">
-                    Organizations fulfilling your wish may offer an optional honorarium to recognize your time and collaboration (not payment for services or obligation)
-                  </span>
-                </span>
+                <div className="flex-1">
+                  <span className="text-gray-900 font-medium text-sm">Create a PR to add FUNDING.yml to this repository</span>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {fundingYmlProcessed 
+                      ? 'FUNDING.yml PR has already been created for this repository'
+                      : manualRepoData 
+                        ? 'Only available for GitHub repositories selected from your account' 
+                        : 'Automatically submit a pull request to add GitHub Sponsors funding information to your repo'
+                    }
+                  </p>
+                </div>
               </label>
             </div>
           </div>
 
-          {/* Practitioner Preferences and Nomination */}
+          {/* ========== SECTION 4: WHO SHOULD DO THE WORK ========== */}
+          {/* Helper Preferences and Nomination */}
           {practitioners && practitioners.length > 0 && (
             <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Practitioner Preferences (Optional)</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Helper Preferences (Optional)</h3>
               <p className="text-sm text-gray-600 mb-4">
-                You can select a preferred practitioner or nominate someone from your community. 
+                You can select a preferred helper or nominate someone from your community. 
                 Preferences are considered but not guaranteed.{' '}
                 <a 
                   href={`${getBasePath()}faq#practitioner-preferences`} 
@@ -1946,119 +2030,9 @@ ${wishlistData.additionalNotes || 'None provided'}
             </div>
           )}
 
-          {/* Organization Details */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Ownership</h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Who owns/runs this project?
-                </label>
-                <select
-                  value={wishlistData.organizationType}
-                  onChange={(e) => setWishlistData(prev => ({ ...prev, organizationType: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                >
-                  <option value="single-maintainer">Single maintainer</option>
-                  <option value="community-team">Community team</option>
-                  <option value="company-team">Company/employee team</option>
-                  <option value="foundation-team">Foundation/employee team</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              {wishlistData.organizationType === 'other' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Please specify
-                  </label>
-                  <input
-                    type="text"
-                    value={wishlistData.otherOrganizationType}
-                    onChange={(e) => setWishlistData(prev => ({ ...prev, otherOrganizationType: e.target.value }))}
-                    placeholder="Describe ownership structure"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  />
-                </div>
-              )}
-
-              {(wishlistData.organizationType === 'company-team' || wishlistData.organizationType === 'foundation-team') && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Organization Name
-                  </label>
-                  <input
-                    type="text"
-                    value={wishlistData.organizationName}
-                    onChange={(e) => setWishlistData(prev => ({ ...prev, organizationName: e.target.value }))}
-                    placeholder="Enter organization name"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Project Description */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Project Description <span className="text-red-500">*</span>
-              </h3>
-              <p className="text-sm text-gray-600">
-                This is your chance to motivate sponsors and helpers to get involved. Tell them why your project matters and what impact their help could have.
-              </p>
-            </div>
-            <textarea
-              value={wishlistData.additionalNotes}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setWishlistData(prev => ({ ...prev, additionalNotes: newValue }));
-                validateField('additionalNotes', newValue, 'notes');
-              }}
-              onBlur={(e) => {
-                validateField('additionalNotes', e.target.value, 'notes');
-              }}
-              rows={4}
-              placeholder="Describe your project, its impact, and why this help would matter..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-            />
-            {validationResults.additionalNotes && (
-              <ValidationFeedback
-                label="Project Description"
-                value={wishlistData.additionalNotes}
-                isValid={validationResults.additionalNotes.isValid}
-                validationResult={validationResults.additionalNotes}
-                helpText={`${wishlistData.additionalNotes.length}/1000`}
-              />
-            )}
-          </div>
-
+          {/* ========== SUBMIT SECTION ========== */}
           {/* Submit */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            {/* FUNDING.yml PR Checkbox */}
-            <div className={`mb-6 p-4 rounded-lg border ${manualRepoData || fundingYmlProcessed ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200'}`}>
-              <label className={`flex items-start space-x-3 ${manualRepoData || fundingYmlProcessed ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
-                <input
-                  type="checkbox"
-                  checked={createFundingPR && !manualRepoData && !fundingYmlProcessed}
-                  onChange={(e) => setCreateFundingPR(e.target.checked)}
-                  disabled={!!manualRepoData || fundingYmlProcessed}
-                  className="mt-0.5 h-5 w-5 text-gray-900 border-gray-300 rounded focus:ring-gray-500 disabled:cursor-not-allowed"
-                />
-                <div className="flex-1">
-                  <span className="text-gray-900 font-medium text-sm">Create a PR to add FUNDING.yml to this repository</span>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {fundingYmlProcessed 
-                      ? 'FUNDING.yml PR has already been created for this repository'
-                      : manualRepoData 
-                        ? 'Only available for GitHub repositories selected from your account' 
-                        : 'Automatically submit a pull request to add GitHub Sponsors funding information to your repo'
-                    }
-                  </p>
-                </div>
-              </label>
-            </div>
             
             {/* Wishlist maintenance reminder acknowledgment */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
@@ -2093,6 +2067,7 @@ ${wishlistData.additionalNotes || 'None provided'}
                   wishlistData.selectedServices.length === 0 ||
                   wishlistData.selectedServices.length > MAX_WISHES ||
                   !wishlistData.projectTitle.trim() ||
+                  (!isEditingExisting && !wishlistData.maintainerEmail.trim()) ||
                   !acknowledgeReminders
                 }
                 className="flex-1 px-8 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2 order-1 sm:order-2"

@@ -19,6 +19,14 @@ export interface WishlistMetadata {
   urgency?: string;
   projectSize?: string;
   additionalNotes?: string;
+  openToSponsorship?: boolean;
+  preferredPractitioner?: string;
+  organizationType?: string;
+  organizationName?: string;
+  otherOrganizationType?: string;
+  nomineeName?: string;
+  nomineeEmail?: string;
+  nomineeGithub?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +50,14 @@ resources: ${JSON.stringify(data.resources)}
 ${data.urgency ? `urgency: "${data.urgency}"` : ''}
 ${data.projectSize ? `projectSize: "${data.projectSize}"` : ''}
 ${data.additionalNotes ? `additionalNotes: "${data.additionalNotes.replace(/"/g, '\\"')}"` : ''}
+${data.openToSponsorship !== undefined ? `openToSponsorship: ${data.openToSponsorship}` : ''}
+${data.preferredPractitioner ? `preferredPractitioner: "${data.preferredPractitioner}"` : ''}
+${data.organizationType ? `organizationType: "${data.organizationType}"` : ''}
+${data.organizationName ? `organizationName: "${data.organizationName}"` : ''}
+${data.otherOrganizationType ? `otherOrganizationType: "${data.otherOrganizationType}"` : ''}
+${data.nomineeName ? `nomineeName: "${data.nomineeName}"` : ''}
+${data.nomineeEmail ? `nomineeEmail: "${data.nomineeEmail}"` : ''}
+${data.nomineeGithub ? `nomineeGithub: "${data.nomineeGithub}"` : ''}
 createdAt: "${data.createdAt}"
 updatedAt: "${data.updatedAt}"
 ---

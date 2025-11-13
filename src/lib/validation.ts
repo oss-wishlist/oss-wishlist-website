@@ -81,7 +81,10 @@ export const wishlistFormDataSchema = z.object({
   // Project ownership structure
   organizationType: z.enum(['single-maintainer', 'community-team', 'company-team', 'foundation-team', 'other']).optional(),
   organizationName: createOptionalModeratedString(),
-  otherOrganizationType: createOptionalModeratedString()
+  otherOrganizationType: createOptionalModeratedString(),
+  
+  // Maintainer email (for internal coordination, not saved to public markdown/GitHub)
+  maintainerEmail: z.string().email('Invalid email address').optional().or(z.literal(''))
 });
 
 // Wishlist submission schema

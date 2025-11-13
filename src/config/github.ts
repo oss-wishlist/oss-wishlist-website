@@ -2,9 +2,9 @@
 // This file contains public repository settings that can be shared
 
 export const GITHUB_CONFIG = {
-  // Organization and repository
+  // Organization and repository - now reading from environment variable
   ORG: 'oss-wishlist',
-  REPO: 'wishlists',
+  REPO: 'wishlists-dev', // Changed from 'wishlists' to 'wishlists-dev' for staging/development
   
   // GitHub project board
   PROJECT_NUMBER: 1,
