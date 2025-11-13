@@ -135,16 +135,20 @@ View complete updated wishlist: ${wishlistUrl}`;
 
       const issue = await issueResponse.json();
       
-      // For edits, we need to preserve the original maintainer username
+      // For edits, we need to preserve the original maintainer username and approved status
       // Don't use formData.maintainer as it might be wrong - read from existing markdown
+      // CRITICAL: Don't overwrite 'approved' - it's manually set via PR, not via website
       let maintainerUsername = formData.maintainer;
+      let approvedStatus = false; // Default for new wishlists
       try {
         const { getCollection } = await import('astro:content');
         const wishlists = await getCollection('wishlists');
         const existing = wishlists.find(w => w.data.id === issueNumber);
         if (existing) {
           maintainerUsername = existing.data.maintainerUsername;
+          approvedStatus = existing.data.approved; // Preserve existing approved status
           console.log('[submit-wishlist] Preserving original maintainer:', maintainerUsername);
+          console.log('[submit-wishlist] Preserving approved status:', approvedStatus);
         }
       } catch (err) {
         console.warn('[submit-wishlist] Could not read existing wishlist, using formData maintainer');
@@ -160,7 +164,7 @@ View complete updated wishlist: ${wishlistUrl}`;
           maintainerUsername, // Use preserved maintainer
           maintainerAvatarUrl: undefined, // Will be populated by GitHub Action if needed
           issueUrl: issue.html_url,
-          approved: issue.labels.some((l: any) => l.name === 'approved'),
+          approved: approvedStatus, // Use preserved approved status, NOT from issue labels
           wishes: formData.services,
           technologies: formData.technologies || [],
           resources: [],

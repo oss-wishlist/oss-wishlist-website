@@ -8,21 +8,10 @@ const basePath = getBasePath();
 // Get success data from URL params
 const issueNumber = Astro.url.searchParams.get('id');
 const isUpdate = Astro.url.searchParams.get('update') === 'true';
+const wishlistTitle = Astro.url.searchParams.get('title'); // Get fresh title from form
 
 if (!issueNumber) {
   return Astro.redirect(`${basePath}maintainers`);
-}
-
-// Get the wishlist title from content collections (most up-to-date)
-let wishlistTitle = null;
-try {
-  const wishlists = await getCollection('wishlists');
-  const wishlist = wishlists.find(w => w.data.id === parseInt(issueNumber));
-  if (wishlist) {
-    wishlistTitle = wishlist.data.projectName;
-  }
-} catch (error) {
-  console.error('Error fetching wishlist from content collections:', error);
 }
 
 const pageTitle = isUpdate ? 'Wishlist Updated Successfully' : 'Wishlist Created Successfully';

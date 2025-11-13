@@ -41,19 +41,15 @@ export default function YourWishlistsGrid({ user }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [basePath, setBasePath] = useState('');
-  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    // Get base path
-    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-    setBasePath(base);
+    // Get base path with trailing slash
+    const base = import.meta.env.BASE_URL || '/';
+    const basePath = base.endsWith('/') ? base : `${base}/`;
+    setBasePath(basePath);
 
-    // Only fetch wishlists if NOT in edit mode
-    if (!isEditMode) {
-      fetchUserWishlists(base);
-    } else {
-      setLoading(false);
-    }
+    // Fetch wishlists
+    fetchUserWishlists(basePath);
 
     // Listen for new wishlist events from WishlistForm
     const handleNewWishlist = async (event: Event) => {
@@ -64,10 +60,6 @@ export default function YourWishlistsGrid({ user }: Props) {
         
         // Immediately add to UI (don't wait for API)
         setWishlists(prev => [newWishlist, ...prev]);
-        
-        // Exit edit mode so the grid shows the cards again
-        setIsEditMode(false);
-        console.log('[YourWishlistsGrid] Exited edit mode with new wishlist in UI');
       }
     };
 
@@ -89,10 +81,6 @@ export default function YourWishlistsGrid({ user }: Props) {
           return w;
         });
         setWishlists(updated);
-        
-        // Exit edit mode so the grid shows the cards again
-        setIsEditMode(false);
-        console.log('[YourWishlistsGrid] Exited edit mode with updated UI');
       }
     };
 
@@ -106,7 +94,7 @@ export default function YourWishlistsGrid({ user }: Props) {
         window.removeEventListener('wishlist-updated', handleUpdatedWishlist);
       };
     }
-  }, [isEditMode]);
+  }, []);
 
   const fetchUserWishlists = async (base: string) => {
     try {
@@ -115,7 +103,7 @@ export default function YourWishlistsGrid({ user }: Props) {
 
       // Add cache busting timestamp to force fresh data
       const cacheBuster = Date.now();
-      const response = await fetch(`${base}/api/user-wishlists?username=${user?.username}&_=${cacheBuster}`, {
+      const response = await fetch(`${base}api/user-wishlists?username=${user?.username}&_=${cacheBuster}`, {
         cache: 'no-store', // Prevent browser caching
         headers: {
           'Cache-Control': 'no-cache'
@@ -128,8 +116,15 @@ export default function YourWishlistsGrid({ user }: Props) {
       const data = await response.json();
       const allWishlists = Array.isArray(data.wishlists) ? data.wishlists : data;
 
+      // Sort by updatedAt date (newest first)
+      const sortedWishlists = allWishlists.sort((a: Wishlist, b: Wishlist) => {
+        const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return dateB - dateA; // Descending order (newest first)
+      });
+
       // For user's own dashboard, show both approved AND pending wishlists
-      setWishlists(allWishlists);
+      setWishlists(sortedWishlists);
       
       console.log('[YourWishlistsGrid] Loaded wishlists:', allWishlists.length);
     } catch (err) {
@@ -141,8 +136,8 @@ export default function YourWishlistsGrid({ user }: Props) {
   };
 
   const handleEdit = (issueNumber: number) => {
-    // Navigate to maintainers page - form will need to fetch wishlist data
-    window.location.href = `${basePath}/maintainers?edit=${issueNumber}`;
+    // Navigate to edit-wishlist page with edit parameter
+    window.location.href = `${basePath}edit-wishlist?edit=${issueNumber}`;
   };
 
   const handleDelete = async (issueNumber: number) => {
@@ -151,7 +146,7 @@ export default function YourWishlistsGrid({ user }: Props) {
 
     try {
       setLoading(true);
-      const response = await fetch(`${basePath}/api/close-wishlist`, {
+      const response = await fetch(`${basePath}api/close-wishlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ issueNumber })
@@ -178,20 +173,6 @@ export default function YourWishlistsGrid({ user }: Props) {
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-600 mx-auto mb-3"></div>
         <p className="text-sm text-gray-600">Loading your wishlists...</p>
       </div>
-    );
-  }
-
-  // If in edit mode, show back link instead of cards - CHECK THIS FIRST before empty state!
-  if (isEditMode) {
-    return (
-      <button
-        onClick={() => {
-          window.location.reload();
-        }}
-        className="text-sm text-gray-600 hover:text-gray-900 underline"
-      >
-        ← Back to Your Wishlists
-      </button>
     );
   }
 
@@ -330,7 +311,7 @@ function WishlistCard({
       {/* Actions */}
       <div className="flex items-center gap-2 flex-wrap">
         <a
-          href={`${basePath}/wishlist/${wishlist.id}`}
+          href={`${basePath}wishlist/${wishlist.id}`}
           className="btn-primary inline-flex items-center text-sm px-4 py-2"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

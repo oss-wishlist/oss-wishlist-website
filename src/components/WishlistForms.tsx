@@ -188,10 +188,16 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     username: string;
   } | null>(null);
   
-  // Step management
-  const [currentStep, setCurrentStep] = useState<'auth' | 'repo' | 'wishlist'>('auth');
-  const [isEditingExisting, setIsEditingExisting] = useState(false);
-  const [existingIssueNumber, setExistingIssueNumber] = useState<number | null>(null);
+  // Check for edit mode from URL immediately
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const editParam = urlParams?.get('edit');
+  const initialEditMode = editParam ? !isNaN(parseInt(editParam, 10)) : false;
+  const initialIssueNumber = editParam ? parseInt(editParam, 10) : null;
+  
+  // Step management - start at wishlist step if in edit mode
+  const [currentStep, setCurrentStep] = useState<'auth' | 'repo' | 'wishlist'>(initialEditMode ? 'wishlist' : 'auth');
+  const [isEditingExisting, setIsEditingExisting] = useState(initialEditMode);
+  const [existingIssueNumber, setExistingIssueNumber] = useState<number | null>(initialIssueNumber);
   const [originalServices, setOriginalServices] = useState<string[]>([]);
   
   // Wishlist form state
@@ -250,15 +256,10 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     const authStatus = urlParams.get('auth');
     const error = urlParams.get('error');
     
-    // Check for edit mode via URL query param
-    const editParam = urlParams.get('edit');
-    if (editParam) {
-      const issueNumber = parseInt(editParam, 10);
-      if (!isNaN(issueNumber)) {
-        setExistingIssueNumber(issueNumber);
-        setSelectedAction('edit');
-        setIsEditingExisting(true);
-      }
+    // Edit mode already handled in initial state
+    // Just load the data if we're in edit mode
+    if (isEditingExisting && existingIssueNumber) {
+      loadExistingWishlistData(existingIssueNumber);
     } else if (authStatus === 'success' || authStatus === 'already_authenticated') {
       // Clear the URL params
       {
@@ -276,31 +277,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       checkUserSession();
     }
   }, []);
-
-  // Update page title when editing mode changes
-  useEffect(() => {
-    const verbElement = document.getElementById('title-action-verb');
-    const nounElement = document.getElementById('title-action-noun');
-    if (verbElement) {
-      verbElement.textContent = isEditingExisting ? 'Edit your' : 'Create';
-    }
-    if (nounElement) {
-      nounElement.textContent = isEditingExisting ? ' Wishlist' : ' a New Wishlist';
-    }
-  }, [isEditingExisting]);
-
-  // Load existing wishlist data when entering edit mode
-  useEffect(() => {
-    if (isEditingExisting && existingIssueNumber) {
-      loadExistingWishlistData(existingIssueNumber).then(success => {
-        if (success) {
-          setCurrentStep('wishlist');
-        } else {
-          setError('Failed to load wishlist data. Please try again.');
-        }
-      });
-    }
-  }, [isEditingExisting, existingIssueNumber]);
 
   // Removed auto-close success message - let user decide when to leave
   // The success page now stays visible until user clicks a button
@@ -860,11 +836,12 @@ ${wishlistData.additionalNotes || 'None provided'}
       // Success! Store the result (data is now nested under result.data)
       const issueData = result.data;
       
-      // Redirect to success page
+      // Redirect to success page with the updated project title
       const basePath = getBasePath();
       const successUrl = new URL(`${basePath}wishlist-success`, window.location.origin);
       successUrl.searchParams.set('id', issueData.issue.number.toString());
       successUrl.searchParams.set('update', isEditingExisting.toString());
+      successUrl.searchParams.set('title', wishlistData.projectTitle);
       
       window.location.href = successUrl.toString();
       
