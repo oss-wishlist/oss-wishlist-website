@@ -60,7 +60,10 @@ export const wishlistFormDataSchema = z.object({
   // Nominee details (optional). Maintainer can nominate a practitioner from their community.
   nomineeName: createOptionalModeratedString(),
   nomineeEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
-  nomineeGithub: createOptionalModeratedString(),
+  nomineeGithub: z.string()
+    .regex(/^https:\/\/github\.com\/[a-zA-Z0-9-]+$/, 'Must be a valid GitHub profile URL (e.g., https://github.com/username)')
+    .optional()
+    .or(z.literal('')),
   
   repositories: z.array(z.object({
     name: z.string(),
@@ -78,7 +81,10 @@ export const wishlistFormDataSchema = z.object({
   // Project ownership structure
   organizationType: z.enum(['single-maintainer', 'community-team', 'company-team', 'foundation-team', 'other']).optional(),
   organizationName: createOptionalModeratedString(),
-  otherOrganizationType: createOptionalModeratedString()
+  otherOrganizationType: createOptionalModeratedString(),
+  
+  // Maintainer email (for internal coordination, not saved to public markdown/GitHub)
+  maintainerEmail: z.string().email('Invalid email address').optional().or(z.literal(''))
 });
 
 // Wishlist submission schema

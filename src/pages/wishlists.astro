@@ -1,5 +1,6 @@
 ---
 import { getBasePath } from '../lib/paths';
+import { SUPPORTED_ECOSYSTEMS } from '../lib/ecosystems';
 import Layout from '../components/Layout.astro';
 
 // Check authentication
@@ -32,11 +33,11 @@ const urgencyColors = {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">
-          Project Wishlists
+        <h1 class="text-5xl font-bold text-gray-900 mb-4">
+          Project <span class="text-accent">Wishlists</span>
         </h1>
         <p class="text-xl text-gray-600 max-w-2xl">
-          Browse open source maintainers seeking support. <a href={`${basePath}/maintainers`} class="text-gray-700 underline hover:text-gray-900">Create your wishlist</a>
+          Browse open source maintainers seeking support. <a href={`${basePath}create-wishlist`} class="text-gray-700 underline hover:text-gray-900">Create your wishlist</a>
         </p>
       </div>
       
@@ -57,11 +58,12 @@ const urgencyColors = {
           </div>
         </div>
         
-        <!-- Sort Dropdown -->
+        <!-- Ecosystem Filter -->
         <div class="md:col-span-3">
-          <select id="sortSelect" class="w-full px-3 py-2 text-sm bg-white border rounded-lg">
-            <option value="recent">Sort: Recent</option>
-            <option value="oldest">Sort: Oldest</option>
+          <div class="text-xs font-semibold text-gray-700 mb-1">Filter by Ecosystem</div>
+          <select id="ecosystem-filter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
+            <option value="">All Ecosystems</option>
+            <!-- Options will be populated by JavaScript -->
           </select>
         </div>
       </div>
@@ -81,13 +83,13 @@ const urgencyColors = {
   <!-- Wishlists Grid -->
   <section class="py-8 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- No Results Message -->
+      <!-- No Results Message (for filtered results) -->
       <div id="noResults" class="text-center py-12 hidden">
         <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-        <p class="text-gray-600">Try adjusting your search terms</p>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No matching wishlists</h3>
+        <p class="text-gray-600">Try adjusting your filters or search terms</p>
       </div>
 
       <div id="wishlistsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-base-path={basePath}>
@@ -108,11 +110,8 @@ const urgencyColors = {
       <h2 class="text-3xl font-bold text-white mb-4">Have a Project That Needs Support?</h2>
       <p class="text-xl text-gray-200 mb-8">Create your wishlist and connect with supporters who want to help</p>
       <div class="flex justify-center space-x-4">
-        <a href={`${basePath}/maintainers`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+        <a href={`${basePath}create-wishlist`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
           Create Your Wishlist
-        </a>
-        <a href={`${basePath}/maintainers`} class="border border-gray-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
-          Learn More
         </a>
       </div>
     </div>
@@ -120,6 +119,7 @@ const urgencyColors = {
   
 
 <script>
+  console.log('[wishlists page] Script tag is executing!');
   // Wishlist data
   let allWishlists = [];
   let basePath = '';
@@ -147,14 +147,17 @@ const urgencyColors = {
 
   // Fetch wishlists from GitHub
   async function fetchWishlists() {
+    console.log('[wishlists page] fetchWishlists() called');
     try {
       const grid = document.getElementById('wishlistsGrid');
       basePath = grid?.dataset.basePath || '';
       // Remove trailing slash if present to avoid double slashes
       const cleanBasePath = basePath.replace(/\/$/, '');
       const apiUrl = `${cleanBasePath}/api/wishlists`;
+      console.log('[wishlists page] Fetching from:', apiUrl);
       
       const response = await fetch(apiUrl);
+      console.log('[wishlists page] Response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -162,27 +165,63 @@ const urgencyColors = {
       }
       
       const data = await response.json();
-      allWishlists = data;
+      allWishlists = Array.isArray(data.wishlists) ? data.wishlists : data;
       
       // Update stats
       const wishlistCountEl = document.getElementById('wishlist-count');
       if (wishlistCountEl) wishlistCountEl.textContent = allWishlists.length;
+      
+      // Populate ecosystem filter
+      if (data.ecosystems) {
+        populateEcosystemFilter(data.ecosystems);
+      } else {
+        const extracted = extractEcosystems(allWishlists);
+        populateEcosystemFilter(extracted);
+      }
       
       // Render initial list
       applyFilters();
       
     } catch (error) {
       console.error('[fetchWishlists] Error:', error);
-      document.getElementById('loading').innerHTML = `
-        <div class="text-center py-12">
-          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Error loading wishlists</h3>
-          <p class="text-gray-600">Unable to fetch data from GitHub. Please try again later.</p>
-          <p class="text-sm text-gray-500 mt-2">${error instanceof Error ? error.message : String(error)}</p>
-        </div>
-      `;
+      const loading = document.getElementById('loading');
+      if (loading) {
+        // Safe: Clear and rebuild with DOM methods
+        loading.textContent = '';
+        
+        const container = document.createElement('div');
+        container.className = 'text-center py-12';
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'mx-auto h-12 w-12 text-gray-400 mb-4');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('d', 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z');
+        svg.appendChild(path);
+        
+        const heading = document.createElement('h3');
+        heading.className = 'text-lg font-medium text-gray-900 mb-2';
+        heading.textContent = 'Error loading wishlists';
+        
+        const msg = document.createElement('p');
+        msg.className = 'text-gray-600';
+        msg.textContent = 'Unable to fetch data from GitHub. Please try again later.';
+        
+        const detail = document.createElement('p');
+        detail.className = 'text-sm text-gray-500 mt-2';
+        detail.textContent = error instanceof Error ? error.message : String(error);
+        
+        container.appendChild(svg);
+        container.appendChild(heading);
+        container.appendChild(msg);
+        container.appendChild(detail);
+        loading.appendChild(container);
+      }
     }
   }
 
@@ -196,29 +235,114 @@ const urgencyColors = {
     }
     
     if (wishlists.length === 0) {
-      grid.innerHTML = `
-        <div class="col-span-full text-center py-12">
-          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5.291A7.962 7.962 0 0112 20a7.962 7.962 0 01-5-1.709M15 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No wishlists found</h3>
-          <p class="text-gray-600">No wishlist issues found on GitHub.</p>
-        </div>
-      `;
+      // Safe: Clear and rebuild with DOM methods
+      grid.textContent = '';
+      
+      const container = document.createElement('div');
+      container.className = 'col-span-full text-center py-12';
+      
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'mx-auto h-12 w-12 text-gray-400 mb-4');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('d', 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4');
+      svg.appendChild(path);
+      
+      const heading = document.createElement('h3');
+      heading.className = 'text-lg font-medium text-gray-900 mb-2';
+      heading.textContent = 'No wishlists yet';
+      
+      const msg = document.createElement('p');
+      msg.className = 'text-gray-600 mb-4';
+      msg.textContent = 'Be the first to create a wishlist for your open source project!';
+      
+      const link = document.createElement('a');
+      link.href = `${cleanBasePath}/create-wishlist`;
+      link.className = 'btn-primary inline-block';
+      link.textContent = 'Create Your Wishlist';
+      
+      container.appendChild(svg);
+      container.appendChild(heading);
+      container.appendChild(msg);
+      container.appendChild(link);
+      grid.appendChild(container);
       return;
     }
     
     try {
+      // Note: createWishlistCard returns HTML string - this is safe as it's template-generated
       grid.innerHTML = wishlists.map(wishlist => createWishlistCard(wishlist)).join('');
     } catch (error) {
       console.error('[displayWishlists] Error creating cards:', error);
-      grid.innerHTML = `
-        <div class="col-span-full text-center py-12">
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Error displaying wishlists</h3>
-          <p class="text-gray-600 text-sm">${error.message}</p>
-        </div>
-      `;
+      // Safe: Clear and rebuild with DOM methods
+      grid.textContent = '';
+      
+      const container = document.createElement('div');
+      container.className = 'col-span-full text-center py-12';
+      
+      const heading = document.createElement('h3');
+      heading.className = 'text-lg font-medium text-gray-900 mb-2';
+      heading.textContent = 'Error displaying wishlists';
+      
+      const msg = document.createElement('p');
+      msg.className = 'text-gray-600 text-sm';
+      msg.textContent = error.message;
+      
+      container.appendChild(heading);
+      container.appendChild(msg);
+      grid.appendChild(container);
     }
+  }
+
+  // Extract and count ecosystems from wishlists
+  function extractEcosystems(wishlists) {
+    const ecosystemStats = {};
+    wishlists.forEach(wishlist => {
+      if (wishlist.technologies && Array.isArray(wishlist.technologies)) {
+        wishlist.technologies.forEach(tech => {
+          if (!ecosystemStats[tech]) {
+            ecosystemStats[tech] = { count: 0, wishlists: [] };
+          }
+          ecosystemStats[tech].count++;
+          ecosystemStats[tech].wishlists.push(wishlist.id);
+        });
+      }
+    });
+    return ecosystemStats;
+  }
+
+  // Populate ecosystem filter dropdown with actual data
+  function populateEcosystemFilter(ecosystemStats) {
+    const select = document.getElementById('ecosystem-filter');
+    if (!select) return;
+
+    // Sort ecosystems by count (highest first)
+    const sortedEcosystems = Object.entries(ecosystemStats)
+      .sort(([, a], [, b]) => (b.count || 0) - (a.count || 0));
+
+    // Clear all options
+    while (select.options.length > 0) {
+      select.remove(0);
+    }
+
+    // Add "All Ecosystems" option
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = 'All Ecosystems';
+    select.appendChild(allOption);
+
+    // Add options for each ecosystem with count
+    sortedEcosystems.forEach(([ecosystem, stats]) => {
+      const option = document.createElement('option');
+      option.value = ecosystem;
+      option.textContent = `${ecosystem} (${stats.count || 0})`;
+      select.appendChild(option);
+    });
   }
 
   // Populate technologies dropdown dynamically
@@ -234,6 +358,15 @@ const urgencyColors = {
 
   function applyFilters() {
     let filtered = allWishlists;
+
+    // Ecosystem filter - apply first
+    const ecosystemFilter = document.getElementById('ecosystem-filter');
+    const selectedEcosystem = ecosystemFilter?.value;
+    if (selectedEcosystem) {
+      filtered = filtered.filter(w => 
+        w.technologies && w.technologies.includes(selectedEcosystem)
+      );
+    }
 
     // Search filter - only search project name, maintainer username, and repo URL
     const q = (searchQuery || '').toLowerCase().trim();
@@ -272,9 +405,26 @@ const urgencyColors = {
   // Create wishlist card HTML
   function createWishlistCard(wishlist) {
     const statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';
+    const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';
     const maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`;
     
-    // API already filters for approved wishlists only
+    // Format services list
+    const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0 
+      ? wishlist.wishes.slice(0, 3).map(service => `
+          <span class="inline-block badge-pending px-2 py-1 text-xs rounded">${service}</span>
+        `).join('')
+      : '<span class="text-sm text-gray-500 italic">No services specified</span>';
+    
+    const moreServices = wishlist.wishes && wishlist.wishes.length > 3 
+      ? `<span class="text-xs text-gray-600">+${wishlist.wishes.length - 3} more</span>` 
+      : '';
+    
+    // Truncate project notes
+    const projectNotes = wishlist.additionalNotes 
+      ? (wishlist.additionalNotes.length > 100 
+          ? wishlist.additionalNotes.substring(0, 100) + '...' 
+          : wishlist.additionalNotes)
+      : '';
     
     return `
       <div class="wishlist-card bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow p-6" data-project="${(wishlist.projectName || '').toLowerCase()}" data-maintainer="${(wishlist.maintainerUsername || '').toLowerCase()}">
@@ -284,34 +434,75 @@ const urgencyColors = {
             <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
               <img src="${maintainerAvatar}" alt="${wishlist.maintainerUsername}" class="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors" />
             </a>
-            <div>
+            <div class="flex-1">
               <h3 class="text-lg font-semibold text-gray-900">${wishlist.projectName}</h3>
               <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-gray-900">@${wishlist.maintainerUsername}</a>
             </div>
           </div>
-          <div class="flex flex-col space-y-1">
+          <div class="flex flex-col items-end space-y-1">
             ${wishlist.status && wishlist.status !== 'Open' ? `
               <span class="px-2 py-1 text-xs rounded-full ${statusColorClass}">
                 ${wishlist.status}
               </span>
             ` : ''}
+            ${wishlist.urgency && wishlist.urgency !== 'medium' ? `
+              <span class="badge-pending px-2 py-1 text-xs rounded-full">
+                ${wishlist.urgency}
+              </span>
+            ` : ''}
           </div>
         </div>
 
+        <!-- Project Details -->
+        ${projectNotes ? `
+          <div class="mb-4">
+            <p class="text-sm text-gray-600">${projectNotes}</p>
+          </div>
+        ` : ''}
+
+        <!-- Services Needed -->
+        <div class="mb-4">
+          <h4 class="text-xs font-semibold text-gray-700 mb-2">Services Needed:</h4>
+          <div class="flex flex-wrap gap-2 items-center">
+            ${servicesHtml}
+            ${moreServices}
+          </div>
+        </div>
+
+        <!-- Project Metadata -->
+        <div class="flex items-center gap-4 text-xs text-gray-500 mb-4 pb-4 border-b">
+          ${wishlist.projectSize ? `
+            <span class="capitalize">${wishlist.projectSize} project</span>
+          ` : ''}
+          ${wishlist.repositoryUrl ? `
+            <a href="${wishlist.repositoryUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 underline">
+              View repository
+            </a>
+          ` : ''}
+        </div>
+
         <!-- Actions -->
-        <div class="flex items-center justify-between pt-4 border-t">
+        <div class="flex items-center justify-between">
           <div class="flex space-x-2">
             <a 
               href="${wishlist.wishlistUrl}"
               class="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
             >
-              View full wish details
+              View details
             </a>
             <a 
               href="${basePath}fulfill?issue=${wishlist.id}"
-              class="bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors"
+              class="btn-sparkle"
             >
-              Fulfill this wish
+              <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+              <span class="btn-sparkle-text">Fulfill wish</span>
+              <span class="btn-sparkle-particles">
+                <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
+                <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
+                <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
+              </span>
             </a>
           </div>
         </div>
@@ -326,9 +517,23 @@ const urgencyColors = {
     applyFilters();
   }
 
+  // Initialize ecosystem filter with supported ecosystems
+  function initializeEcosystemFilter() {
+    const select = document.getElementById('ecosystem-filter');
+    if (!select) return;
+
+    // Add event listener for filter changes
+    select.addEventListener('change', () => applyFilters());
+  }
+
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('[wishlists page] DOMContentLoaded event fired');
+    // Initialize ecosystem filter dropdown
+    initializeEcosystemFilter();
+    
     // Fetch wishlists
+    console.log('[wishlists page] About to call fetchWishlists()');
     fetchWishlists();
     
     // Set up search
@@ -341,14 +546,6 @@ const urgencyColors = {
         searchTimeout = setTimeout(performSearch, 300);
       });
     }
-
-    // Filters
-    const sortSelect = document.getElementById('sortSelect');
-
-    sortSelect?.addEventListener('change', function(e) {
-      sortBy = (e.target?.value || 'recent');
-      applyFilters();
-    });
   });
 </script>
 </Layout>

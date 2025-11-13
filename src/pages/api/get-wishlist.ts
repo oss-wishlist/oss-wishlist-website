@@ -41,14 +41,72 @@ export const GET: APIRoute = async ({ url, request }) => {
         };
         if (token) headers['Authorization'] = `token ${token}`;
 
-        const resp = await fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`, { headers });
-        if (!resp.ok) {
+        // Fetch issue to get labels and metadata
+        const issueResp = await fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`, { headers });
+
+        if (!issueResp.ok) {
+          console.log(`[get-wishlist] GitHub issue fetch failed with status ${issueResp.status}`);
           return null;
         }
-        const issue = await resp.json();
-        const parsed = parseIssueForm(issue.body || '');
 
-        // Map to the structure expected by WishlistForms.loadExistingWishlistData
+        const issue = await issueResp.json();
+        
+        console.log(`[get-wishlist] Issue #${issueNumber} fetched from GitHub`);
+        
+        // Extract labels from the issue
+        const labels = Array.isArray(issue.labels) 
+          ? issue.labels.map((l: any) => typeof l === 'string' ? l : l.name).filter(Boolean)
+          : [];
+
+        // Try to read from content collections first (source of truth)
+        let wishlistData = null;
+        try {
+          const { getCollection } = await import('astro:content');
+          const wishlists = await getCollection('wishlists');
+          const wishlist = wishlists.find(w => w.data.id === parseInt(issueNumber, 10));
+          
+          if (wishlist) {
+            console.log(`[get-wishlist] Found wishlist in content collections`);
+            wishlistData = {
+              id: wishlist.data.id,
+              number: wishlist.data.id,
+              projectTitle: wishlist.data.projectName,
+              wishes: wishlist.data.wishes || [],
+              urgency: wishlist.data.urgency || 'medium',
+              projectSize: wishlist.data.projectSize || 'medium',
+              additionalNotes: wishlist.data.additionalNotes || '',
+              technologies: wishlist.data.technologies || [],
+              repositoryUrl: wishlist.data.repositoryUrl,
+              maintainer: wishlist.data.maintainerUsername,
+              labels: labels,
+              wantsFundingYml: labels.includes('funding-yml-requested'),
+              fundingYmlProcessed: labels.includes('funding-yml-processed'),
+              // Fields we don't have in markdown but need for form
+              timeline: '',
+              organizationType: 'single-maintainer',
+              organizationName: '',
+              otherOrganizationType: '',
+              openToSponsorship: false,
+              preferredPractitioner: '',
+              nomineeName: '',
+              nomineeEmail: '',
+              nomineeGithub: '',
+            };
+          }
+        } catch (err) {
+          console.warn('[get-wishlist] Could not read from content collections:', err);
+        }
+
+        // If we have markdown data, use it
+        if (wishlistData) {
+          console.log(`[get-wishlist] Returning data from content collections - wishes: ${JSON.stringify(wishlistData.wishes)}`);
+          return wishlistData;
+        }
+
+        // Fallback: parse issue body (for old format or if markdown doesn't exist)
+        const parsed = parseIssueForm(issue.body || '');
+        console.log(`[get-wishlist] Fallback: parsed body - project: "${parsed.project}", services: ${JSON.stringify(parsed.services)}`);
+
         const payload = {
           id: issue.number,
           number: issue.number,
@@ -68,8 +126,13 @@ export const GET: APIRoute = async ({ url, request }) => {
           preferredPractitioner: parsed.preferredPractitioner || '',
           nomineeName: parsed.nomineeName || '',
           nomineeEmail: parsed.nomineeEmail || '',
-          nomineeGithub: parsed.nomineeGithub || ''
+          nomineeGithub: parsed.nomineeGithub || '',
+          labels: labels,
+          wantsFundingYml: labels.includes('funding-yml-requested'),
+          fundingYmlProcessed: labels.includes('funding-yml-processed')
         };
+        
+        console.log(`[get-wishlist] Final payload - wishes: ${JSON.stringify(payload.wishes)}`);
 
         return payload;
       } catch {
@@ -77,31 +140,52 @@ export const GET: APIRoute = async ({ url, request }) => {
       }
     };
 
-    // Try to read from master cache first
-    let wishlist = await loadFromMaster();
-    if (!wishlist) {
-      // Force-refresh the cache via main API, then retry
-      try {
-        const origin = new URL(request.url).origin;
-        const basePath = import.meta.env.PUBLIC_BASE_PATH || '/oss-wishlist-website';
-        await fetch(`${origin}${basePath}/api/wishlists?refresh=true`).catch(() => {});
-        wishlist = await loadFromMaster();
-      } catch {}
-    }
-
-    // If cache exists but doesn't contain detailed fields, fetch from GitHub
-    // Detailed fields include 'wishes' (services), 'projectTitle', etc.
-    let detailed: any | null = null;
-    if (!wishlist || !Array.isArray(wishlist.wishes)) {
-      detailed = await fetchFromGitHub();
-    }
-
-    if (detailed) {
-      return new Response(JSON.stringify(detailed), {
+    // Always fetch from GitHub for edit operations to ensure we have full data
+    const githubData = await fetchFromGitHub();
+    if (githubData) {
+      console.log(`[get-wishlist] Returning GitHub data for issue #${issueNumber}`);
+      return new Response(JSON.stringify(githubData), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    // If GitHub fetch fails, try master cache as fallback
+    console.log(`[get-wishlist] GitHub fetch failed, trying cache fallback for issue #${issueNumber}`);
+    const wishlist = await loadFromMaster();
+    if (!wishlist) {
+      return new Response(JSON.stringify({ error: 'Wishlist not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Ensure minimum required fields are present in cache data
+    const payload = {
+      id: wishlist.id || wishlist.number,
+      number: wishlist.number || wishlist.id,
+      projectTitle: wishlist.projectTitle || wishlist.project || wishlist.title || '',
+      wishes: wishlist.wishes || [],
+      technologies: wishlist.technologies || [],
+      urgency: wishlist.urgency || 'medium',
+      projectSize: wishlist.projectSize || 'medium',
+      timeline: wishlist.timeline || '',
+      organizationType: wishlist.organizationType || 'single-maintainer',
+      organizationName: wishlist.organizationName || '',
+      otherOrganizationType: wishlist.otherOrganizationType || '',
+      additionalNotes: wishlist.additionalNotes || '',
+      openToSponsorship: wishlist.openToSponsorship || false,
+      repositoryUrl: wishlist.repositoryUrl || wishlist.repository || '',
+      maintainer: wishlist.maintainer || '',
+      labels: wishlist.labels || [],
+      wantsFundingYml: wishlist.labels?.includes('funding-yml-requested') || false,
+      fundingYmlProcessed: wishlist.labels?.includes('funding-yml-processed') || false
+    };
+
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (!wishlist) {
       return new Response(JSON.stringify({ error: 'Wishlist not found' }), {

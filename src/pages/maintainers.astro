@@ -1,55 +1,21 @@
 ---
 import Layout from '../components/Layout.astro';
 import ServiceCard from '../components/ServiceCard.astro';
-import WishlistForm from '../components/WishlistForms.tsx';
+import YourWishlistsGrid from '../components/YourWishlistsGrid.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
-import { fetchUserRepositories } from '../lib/github-oauth';
 
 const services = await getCollection('services');
-const practitioners = await getCollection('practitioners');
 const maintainerServices = services.filter(service => 
   service.data.target_audience === 'maintainer' || service.data.target_audience === 'both'
 );
 
-// Build a quick lookup of practitioner counts per service slug (informational only)
-const practitionerCounts = services.reduce((acc, s) => {
-  const slug = s.slug;
-  const count = practitioners.filter(p => Array.isArray(p.data.services) && p.data.services.includes(slug)).length;
-  acc[slug] = count;
-  return acc;
-}, {} as Record<string, number>);
-
-// Prepare services data for the form component
-// Availability is driven solely by service frontmatter (do not infer from practitioner counts)
-const servicesData = services.map(service => {
-  const slug = service.slug;
-  const declaredAvailable = service.data.available ?? true;
-  const count = practitionerCounts[slug] ?? 0;
-  return {
-    id: slug,
-    title: service.data.title,
-    description: service.data.description,
-    slug,
-    available: declaredAvailable,
-    practitionerCount: count,
-    unavailableReason: service.data.unavailable_reason ?? undefined,
-  };
-});
-
-// Prepare compact practitioners list for preference selection
-const practitionersData = practitioners.map(p => ({
-  slug: p.slug,
-  name: p.data.name,
-  github: p.data.github || '',
-}));
-
 // Get user from middleware
 const user = Astro.locals.user;
+const basePath = getBasePath();
 
 // Handle authentication redirect server-side to prevent flash
 if (!user) {
-  const basePath = getBasePath();
   const currentPath = Astro.url.pathname;
   const searchParams = Astro.url.search;
   
@@ -71,15 +37,6 @@ if (!user) {
   const returnTo = encodeURIComponent(fullReturnPath);
   return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
 }
-
-// Fetch user's repositories server-side to eliminate client-side loading
-let userRepositories = [];
-try {
-  userRepositories = await fetchUserRepositories(user.login);
-} catch (error) {
-  console.error('Error fetching repositories:', error);
-  // Continue with empty array - component will handle gracefully
-}
 ---
 
 <Layout title="Services for Open Source Maintainers - OSS Wishlist" description="Practitioner services to help open source maintainers scale projects, build communities, and create sustainable funding.">
@@ -88,23 +45,49 @@ try {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-4xl mx-auto text-center">
         <h1 class="text-5xl font-bold text-gray-900 mb-4" id="page-title">
-          Create and Manage <span class="text-gray-600">Wishlists</span>
+          My <span class="text-accent">Wishlists</span>
         </h1>
         <p class="text-gray-600 text-base" id="page-description">
-          Choose from the provided list of GitHub repositories associated with your account or provide a different project URL. You may only create one wishlist per project.
-          This will create a public issue in the <a href="https://github.com/oss-wishlist/wishlists/issues" target="_new">GitHub wishlists repository</a>. Private wishes are not yet available.
-          <br />
-          <strong>Note:</strong> New wishes remain in a <em>pending</em> state until verified (to prevent spam). Once verified, they’ll appear publicly and be eligible for fulfillment.
+          Manage your open source project wishlists. View, edit, or create new wishes below.
         </p>
       </div>
     </div>
   </section>
 
-  <!-- Wishlist Form Section -->
-  <section id="wishlist-form-section" class="py-4 bg-white">
+  <!-- Your Wishlists Grid Section -->
+  <section id="your-wishlists-section" class="py-12 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Wishlist Form Component (user already authenticated, repos fetched server-side) -->
-  <WishlistForm client:load services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <YourWishlistsGrid client:load user={user} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Create New Wishlist CTA Section -->
+  <section id="create-wishlist-cta" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">
+          Create a New Wishlist
+        </h2>
+        <p class="text-gray-600 text-base mb-8">
+          Need help with your open source project? Create a wishlist to connect with practitioners who can help.
+        </p>
+        <a 
+          href={`${basePath}create-wishlist`}
+          class="btn-sparkle inline-flex items-center"
+        >
+          <svg class="btn-sparkle-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          <span class="btn-sparkle-text">Create Your Wishlist</span>
+          <div class="btn-sparkle-particles">
+            <span class="btn-sparkle-particle"></span>
+            <span class="btn-sparkle-particle"></span>
+            <span class="btn-sparkle-particle"></span>
+          </div>
+        </a>
+      </div>
     </div>
   </section>
 

@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { verifySession } from '../../lib/github-oauth';
 import { GITHUB_CONFIG } from '../../config/github';
+import { deleteWishlistMarkdown } from '../../lib/wishlist-markdown';
+import { generateWishlistSlug } from '../../lib/slugify';
 
 export const prerender = false;
 
@@ -132,15 +134,51 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     const closedIssue = await closeResponse.json();
 
-    // Refresh the cache after closing
+    // STEP 1: Update local cache file to reflect the closed wishlist
     const origin = new URL(request.url).origin;
     const basePath = import.meta.env.BASE_URL || '';
     
-    // Remove the individual wishlist cache (it's now closed)
-    fetch(`${origin}${basePath}/api/cache-wishlist?issueNumber=${issueNumber}`).catch(() => {});
+    try {
+      await fetch(`${origin}${basePath}/api/cache-wishlist?issueNumber=${issueNumber}`, {
+        method: 'GET'
+      });
+      console.log('[close-wishlist] Local cache updated after closing');
+    } catch (err) {
+      console.warn('[close-wishlist] Failed to update local cache:', err);
+    }
     
-    // Refresh the main cache
-    fetch(`${origin}${basePath}/api/wishlists?refresh=true`).catch(() => {});
+    // STEP 2: Invalidate in-memory cache
+    try {
+      await fetch(`${origin}${basePath}/api/cache-invalidate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cacheKey: 'wishlists_full_cache' })
+      });
+      console.log('[close-wishlist] In-memory cache invalidated');
+    } catch (err) {
+      console.warn('[close-wishlist] Failed to invalidate cache:', err);
+    }
+
+    // Delete markdown file for closed wishlist
+    // Extract repository URL from issue body to generate correct slug
+    try {
+      // Parse issue body to get repository URL (try both old and new formats)
+      const repoMatch = closedIssue.body?.match(/### (?:Project Repository|Repository)\s+(.+)/) || 
+                       closedIssue.body?.match(/\*\*Project Repository\*\*\s+(.+)/);
+      const repositoryUrl = repoMatch ? repoMatch[1].trim() : null;
+      
+      if (!repositoryUrl) {
+        throw new Error('Could not extract repository URL from issue body');
+      }
+      
+      const slug = generateWishlistSlug(repositoryUrl, issueNumber);
+      
+      await deleteWishlistMarkdown(slug);
+      console.log('[close-wishlist] ✓ Deleted markdown file for wishlist #' + issueNumber + ' (slug: ' + slug + ')');
+    } catch (mdError) {
+      console.error('[close-wishlist] ✗ Failed to delete markdown file:', mdError);
+      // Don't fail the request if markdown deletion fails
+    }
 
     return new Response(JSON.stringify({
       success: true,

@@ -1,0 +1,102 @@
+---
+import Layout from '../components/Layout.astro';
+import WishlistForm from '../components/WishlistForms.tsx';
+import { getCollection } from 'astro:content';
+import { getBasePath } from '../lib/paths';
+import { fetchUserRepositories } from '../lib/github-oauth';
+
+const services = await getCollection('services');
+const practitioners = await getCollection('practitioners');
+
+const practitionerCounts = services.reduce((acc, s) => {
+  const slug = s.slug;
+  const count = practitioners.filter(p => Array.isArray(p.data.services) && p.data.services.includes(slug)).length;
+  acc[slug] = count;
+  return acc;
+}, {} as Record<string, number>);
+
+const servicesData = services.map(service => {
+  const slug = service.slug;
+  const declaredAvailable = service.data.available ?? true;
+  const count = practitionerCounts[slug] ?? 0;
+  return {
+    id: slug,
+    title: service.data.title,
+    description: service.data.description,
+    slug,
+    available: declaredAvailable,
+    practitionerCount: count,
+    unavailableReason: service.data.unavailable_reason ?? undefined,
+  };
+});
+
+const practitionersData = practitioners.map(p => ({
+  slug: p.slug,
+  name: p.data.name,
+  github: p.data.github || '',
+}));
+
+const user = Astro.locals.user;
+const basePath = getBasePath();
+
+// Handle authentication redirect server-side
+if (!user) {
+  const currentPath = Astro.url.pathname;
+  const searchParams = Astro.url.search;
+  
+  // Strip the base path if it exists to get the relative path
+  let relativePath = currentPath.startsWith(basePath.slice(0, -1)) 
+    ? currentPath.slice(basePath.slice(0, -1).length)
+    : currentPath;
+  
+  // Ensure relativePath starts with /
+  if (relativePath && !relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath;
+  }
+  if (!relativePath) {
+    relativePath = '/';
+  }
+  
+  // Redirect to login page with return URL
+  const fullReturnPath = relativePath + searchParams;
+  const returnTo = encodeURIComponent(fullReturnPath);
+  return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
+}
+
+// Fetch user's repositories server-side
+let userRepositories = [];
+try {
+  userRepositories = await fetchUserRepositories(user.login);
+} catch (error) {
+  console.error('Error fetching repositories:', error);
+}
+---
+
+<Layout title="Create a Wishlist - OSS Wishlist" description="Create a new wishlist for your open source project.">
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <h1 class="text-5xl font-bold text-gray-900 mb-4">
+          <span class="text-accent">Create</span> a New Wishlist
+        </h1>
+        <p class="text-gray-600 text-base mb-8">
+          Choose from the provided list of GitHub repositories associated with your account or provide a different project URL. You may only create one wishlist per project.
+          This will create a public issue in the <a href="https://github.com/oss-wishlist/wishlists/issues" target="_blank" class="underline hover:text-gray-900">GitHub wishlists repository</a>. Private wishes are not yet available.
+          <br />
+          <strong>Note:</strong> New wishes remain in a <em>pending</em> state until verified (to prevent spam). Once verified, they'll appear publicly and be eligible for fulfillment.
+        </p>
+        <WishlistForm client:load services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
+      </div>
+    </div>
+  </section>
+
+  <script define:vars={{ basePath }}>
+    // Listen for successful wishlist creation
+    window.addEventListener('wishlist-created', () => {
+      console.log('[create-wishlist] Wishlist created - redirecting to maintainers page');
+      setTimeout(() => {
+        window.location.href = basePath + 'maintainers';
+      }, 2000);
+    });
+  </script>
+</Layout>

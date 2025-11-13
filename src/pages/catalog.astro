@@ -29,32 +29,36 @@ function getPlaybookForService(serviceSlug: string) {
   <section class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">Catalogue of Services & Resources</h1>
+        <h1 class="text-5xl font-bold text-gray-900 mb-4">Catalogue of <span class="text-accent">Services</span> & Resources</h1>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
           Each <b>service</b> addresses a critical risk to project sustainability and which require expertise and time. Each <b>resource</b> is meant as a 'capture' for those things projects need, which require dollars (like infrastructure, tokens etc).
         </p>
       </div>
 
-      <!-- Type Filter -->
-      <div class="mb-8 text-center">
-        <div class="flex flex-wrap justify-center gap-2">
-          <button class="type-filter-btn active px-6 py-3 rounded-lg text-sm font-medium bg-gray-600 text-white" 
-                  data-type="all">
-            All
-          </button>
-          <button class="type-filter-btn px-6 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border hover:bg-gray-50" 
-                  data-type="service">
-            Services
-          </button>
-          <button class="type-filter-btn px-6 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border hover:bg-gray-50" 
-                  data-type="resource">
-            Resources
-          </button>
-          <button class="type-filter-btn px-6 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border hover:bg-gray-50" 
-                  data-type="funding-campaign">
-            Funding Campaigns
-          </button>
+      <!-- Type and Ecosystem Filters -->
+      <div class="mb-8 space-y-4">
+        <!-- Type Filter -->
+        <div class="text-center">
+          <div class="flex flex-wrap justify-center gap-2">
+            <button class="type-filter-btn active badge-pending px-6 py-3 rounded-lg text-sm font-medium" 
+                    data-type="all">
+              All
+            </button>
+            <button class="type-filter-btn px-6 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" 
+                    data-type="service">
+              Services
+            </button>
+            <button class="type-filter-btn px-6 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" 
+                    data-type="resource">
+              Resources
+            </button>
+            <button class="type-filter-btn px-6 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" 
+                    data-type="funding-campaign">
+              Funding Campaigns
+            </button>
+          </div>
         </div>
+
       </div>
 
   <!-- Services & Generic Funding Campaign Card Grid -->
@@ -101,7 +105,7 @@ function getPlaybookForService(serviceSlug: string) {
 
             <div class="pt-4 border-t flex gap-3 items-center">
               <a href={`${basePath}services/${service.slug}`} 
-                 class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
+                 class="inline-flex items-center gap-1 badge-pending px-4 py-2 rounded-lg font-medium hover:opacity-80 transition-opacity text-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -119,6 +123,8 @@ function getPlaybookForService(serviceSlug: string) {
             </div>
           </div>
         )})}
+
+
 
         <!-- Generic Funding Campaign card (directory of external efforts) -->
         <div class="service-card bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow" 
@@ -143,7 +149,7 @@ function getPlaybookForService(serviceSlug: string) {
 
           <div class="pt-4 border-t flex gap-3 items-center">
             <a href={`${basePath}campaigns`} 
-               class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
+               class="inline-flex items-center gap-1 badge-pending px-4 py-2 rounded-lg font-medium hover:opacity-80 transition-opacity text-sm">
               View campaigns
             </a>
           </div>
@@ -159,7 +165,7 @@ function getPlaybookForService(serviceSlug: string) {
           <p class="text-gray-600 mb-6">
             Create a wishlist with the services you need and share it with your community
           </p>
-          <a href={`${basePath}/maintainers`} 
+          <a href={`${basePath}create-wishlist`} 
              class="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
             Create Your Wishlist
           </a>
@@ -197,11 +203,11 @@ function getPlaybookForService(serviceSlug: string) {
         
         // Update active button
         typeFilterButtons.forEach(btn => {
-          btn.classList.remove('active', 'bg-gray-600', 'text-white');
-          btn.classList.add('bg-white', 'text-gray-700');
+          btn.classList.remove('active', 'badge-pending');
+          btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
         });
-        button.classList.add('active', 'bg-gray-600', 'text-white');
-        button.classList.remove('bg-white', 'text-gray-700');
+        button.classList.add('active', 'badge-pending');
+        button.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
         
         filterCards();
       });

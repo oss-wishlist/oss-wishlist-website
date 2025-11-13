@@ -6,6 +6,7 @@ import { getCollection } from 'astro:content';
 
 const allPractitioners = await getCollection('practitioners');
 const allServices = await getCollection('services');
+const filteredServices = allServices.filter(s => s.data.type === 'service');
 
 export const prerender = false;
 
@@ -28,7 +29,7 @@ if (wishlistSlug) {
       {selectedWishlist ? (
         <>
           <h1 class="text-5xl font-bold text-gray-900 mb-6">
-            Practitioners for <span class="text-gray-700">{projectName || selectedWishlist.data.project_name}</span>
+            <span class="text-accent">Practitioners</span> for {projectName || selectedWishlist.data.project_name}
           </h1>
           <p class="text-xl text-gray-600 max-w-3xl mx-auto">
             Choose a practitioner to hire for the "{projectName || selectedWishlist.data.project_name}" project. 
@@ -37,7 +38,7 @@ if (wishlistSlug) {
         </>
       ) : (
         <>
-          <h1 class="text-5xl font-bold text-gray-900 mb-6">Open Source <span class="text-gray-700">Practitioners</span></h1>
+          <h1 class="text-5xl font-bold text-gray-900 mb-6">Open Source <span class="text-accent">Practitioners</span></h1>
           <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
            Open source practitioners are experienced subject matter experts in sustainability-critical areas.
           </p>
@@ -69,10 +70,17 @@ if (wishlistSlug) {
           id="serviceFilter"
         >
           <option value="" selected>All Services</option>
-          {allServices.map(svc => (
+          {filteredServices.map(svc => (
             <option value={(svc as any).slug}>{svc.data.title}</option>
           ))}
         </select>
+      </div>
+
+      <!-- Pricing Information Note -->
+      <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <p class="text-sm text-gray-700">
+          <span class="font-semibold">How practitioners are compensated:</span> Practitioners are paid a flat rate depending on the service type and project size. Some hours may be offered pro bono depending on the individual practitioner. <a href={`${basePath}pricing`} class="text-gray-900 underline hover:text-gray-700 font-medium">Learn more about pricing</a>.
+        </p>
       </div>
 
       <!-- Practitioners Grid -->
@@ -90,6 +98,7 @@ if (wishlistSlug) {
                   src={practitioner.data.avatar_url} 
                   alt={practitioner.data.name}
                   class="w-12 h-12 rounded-full object-cover"
+                  loading="lazy"
                 />
               )}
               <div class="flex-1">

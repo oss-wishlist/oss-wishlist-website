@@ -92,7 +92,7 @@ const { Content } = await service.render();
 
       <!-- Service Header -->
       <div class="bg-white p-8 rounded-lg shadow-sm border mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{service.data.title}</h1>
+        <h1 class="text-3xl font-bold text-accent mb-2">{service.data.title}</h1>
         <p class="text-xl text-gray-600 mb-4">{service.data.description}</p>
         {service.data.impact && (
           <div class="mb-6 p-4 rounded-lg border bg-gray-50">
@@ -105,7 +105,7 @@ const { Content } = await service.render();
             Pricing
           </a>
           {/* Playbook link removed */}
-          <a href={`${basePath}maintainers`} class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+          <a href={`${basePath}create-wishlist`} class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
             Need this service?
           </a>
         </div>

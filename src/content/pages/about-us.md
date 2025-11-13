@@ -4,23 +4,32 @@ description: About the OSS Wishlist initiative
 date: 2025-10-27
 ---
 
-# About Us
+# <span class="text-accent">About</span> <span class="text-accent">Us</span>
 
-`Open Source Wishlist`  *is* an open source, open content, community project created by Emma Irwin, in partnership open source collaborator Christos Bacharakis and with feedback from many of our peers, maintainers and potential funders . 
+`Open Source Wishlist`  *is* an open source, open content, community project created by [Emma Irwin](https://github.com/emmairwin) with help from long-time open source collaborator [Christos Bacharakis](https://github.com/bacharakis) and with feedback from many of our peers, maintainers and potential funders . 
 
-# About Open Source Wishlist
+This is an unfunded volunteer project intended to push the conversation about how we fund and improve open source sustainability. Please keep all feedback constructive, and kind.
 
-Open source projects cannot be sustainable without help. Direct funding helps in some ways (and we should keep doing that!), but it also leaves additional work for the maintainers to use that money in ways that make their project actually sustainable.
+## About Open Source Wishlist
 
-Sponsors often fund projects, but have a hard time describing how those funds had impact on sustainability.
+`Open Source Wishlist` seeks to break down the silos of isolation between maintainers and funders by standardizing the way in which projects can express and receive meaningful support.  
 
-# Practitioners
+**From isolation to connection**: Instead of pleading into the void, maintainers can articulate need aligned with known sustainability risk and identify either fund community contribution, get matched with a pracitioner, or recieve corperate contribution (via designated employee time).
 
-**Practitioners** We are open source practitioners, but one of MANY open source practitioners with availability, skill, and empathy who can easily step in to help open source projects repair, uplevel, and build a more sustainable future. Guided by industry standards, we've all helped write, build, and improve — our time can really make a difference — and yet that connection is missing. 
+**From burden to support**: Instead of shouldering sustainability work alone, maintainers can access paid open source practitioners with proven experience and expertise.
 
-We believe that by creating this connection, we can really make a huge difference for open source sustainability. 
+**From guesswork to insight**: Instead of relying on quantitative metrics alone, companies and funders can gain firsthand, qualitative understanding of sustainability risks and take immediate action to address them.
 
-**We expect to learn along the way and appreciate all report-backs**.
+**From hope to evidence**: Instead of hoping for help and impact, both maintainers and funders can track real outcomes and demonstrate tangible results.  The ecosystem gets healthier!
+
+## Look for the Helpers
+
+> "When I was a boy and I would see scary things in the news, my mother would say to me, 'Look for the helpers. You will always find people who are helping.'" — Fred Rogers
+
+At `Open Source Wishlist`, we're bringing together a community of helpers: practitioners, sponsors, and other contributors who are ready to make a real difference for open source sustainability using tools, resources,  metrics and standards that already exist.
+
+**[Meet the Helpers →](/oss-wishlist-website/helpers)**
+
 ---
 
 **Want to learn more or chat?**

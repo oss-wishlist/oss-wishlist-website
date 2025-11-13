@@ -44,7 +44,7 @@ const { Content } = await practitioner.render();
       Astro.locals.session.user.login.toLowerCase() === practitioner.data.github.toLowerCase())
   ) && (
     <div class="max-w-4xl mx-auto px-4 py-4">
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-center text-blue-900">
+      <div class="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-6 text-center text-gray-900">
         <strong>To update or delete your profile, email <a href="mailto:info@oss-wishlist" class="underline">info@oss-wishlist</a> or <a href="https://github.com/oss-wishlist/wishlists/tree/main/src/content/practitioners" target="_blank" class="underline">create a pull request</a> to your profile file in the repository.</strong>
       </div>
     </div>
@@ -58,6 +58,7 @@ const { Content } = await practitioner.render();
             src={practitioner.data.avatar_url} 
             alt={practitioner.data.name}
             class="w-32 h-32 rounded-full object-cover mx-auto md:mx-0"
+            loading="lazy"
           />
         )}
         
@@ -119,7 +120,7 @@ const { Content } = await practitioner.render();
             <ul class="space-y-3">
               {practitioner.data.notable_experience.map((experience: string) => (
                 <li key={experience} class="text-gray-700 flex items-start">
-                  <span class="text-blue-600 mr-3 mt-1">•</span>
+                  <span class="text-gray-600 mr-3 mt-1">•</span>
                   <span>{experience}</span>
                 </li>
               ))}
@@ -184,7 +185,7 @@ const { Content } = await practitioner.render();
                 <a 
                   href={`${basePath}services/${service.slug}`}
                   key={service.slug} 
-                  class="block bg-blue-50 hover:bg-blue-100 text-gray-800 px-3 py-2 rounded text-sm transition-colors"
+                  class="block bg-gray-50 hover:bg-gray-100 text-gray-800 px-3 py-2 rounded text-sm transition-colors border border-gray-200"
                 >
                   {service.title}
                 </a>
@@ -224,13 +225,13 @@ const { Content } = await practitioner.render();
     </div>
 
     <!-- CTA -->
-    <div class="bg-blue-50 rounded-lg p-6 mt-8 text-center">
+    <div class="bg-gray-50 rounded-lg p-6 mt-8 text-center border border-gray-200">
       <h3 class="text-lg font-bold text-gray-900 mb-2">Ready to work with {practitioner.data.name.split(' ')[0]}?</h3>
       <p class="text-gray-600 mb-4">Create a wishlist for your project. When a sponsor chooses to fulfill it, we'll match you with the right practitioners.</p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <a 
-          href={`${basePath}maintainers`}
-          class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700"
+          href={`${basePath}create-wishlist`}
+          class="bg-gray-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800"
         >
           Create Wishlist
         </a>

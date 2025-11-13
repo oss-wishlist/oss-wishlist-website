@@ -32,7 +32,47 @@ let projectSize: 'small' | 'medium' | 'large' | null = null;
 // Check for issue parameter (GitHub issue number)
 issueNumber = url.searchParams.get('issue');
 
-if (issueNumber && GITHUB_TOKEN) {
+if (issueNumber) {
+  // First, try to get from content collections (most up-to-date)
+  try {
+    const wishlists = await getCollection('wishlists');
+    const wishlist = wishlists.find(w => w.data.id === parseInt(issueNumber));
+    
+    if (wishlist) {
+      // Found in content collections - use this data
+      const projectName = wishlist.data.projectName;
+      projectSize = wishlist.data.projectSize as 'small' | 'medium' | 'large';
+      
+      wishlistData = {
+        projectName,
+        repositoryUrl: wishlist.data.repositoryUrl,
+        maintainer: wishlist.data.maintainerUsername,
+        wishes: wishlist.data.wishes || [],
+        services: wishlist.data.wishes || [],
+        urgency: wishlist.data.urgency,
+        technologies: wishlist.data.technologies || [],
+        projectSize: wishlist.data.projectSize,
+        additionalNotes: wishlist.data.additionalNotes,
+      };
+      
+      // Also set githubIssue for compatibility
+      githubIssue = {
+        number: wishlist.data.id,
+        title: `Wishlist: ${projectName}`,
+        html_url: wishlist.data.issueUrl,
+        user: {
+          login: wishlist.data.maintainerUsername,
+          avatar_url: `https://github.com/${wishlist.data.maintainerUsername}.png`,
+        },
+      };
+    }
+  } catch (error) {
+    console.log('Could not find in content collections, falling back to GitHub API:', error);
+  }
+}
+
+// If not found in content collections, fetch from GitHub API (fallback)
+if (issueNumber && !wishlistData && GITHUB_TOKEN) {
   try {
     // Fetch the GitHub issue data
     const response = await fetch(
@@ -59,6 +99,13 @@ if (issueNumber && GITHUB_TOKEN) {
         projectSize = parsed.projectSize;
       }
       
+      console.log('=== FULFILL PAGE DEBUG ===');
+      console.log('Issue Number:', issueNumber);
+      console.log('Parsed services:', parsed.services);
+      if (parsed.services && parsed.services.length === 0) {
+        console.log('NOTE: No services found - this is okay, the wishlist may not have specified services');
+      }
+      
       wishlistData = {
         issueNumber: githubIssue.number,
         projectName: projectName,
@@ -71,6 +118,8 @@ if (issueNumber && GITHUB_TOKEN) {
         nomineeEmail: parsed.nomineeEmail || null,
         nomineeGithub: parsed.nomineeGithub || null
       };
+      
+      console.log('WishlistData wishes:', wishlistData.wishes);
     }
   } catch (error) {
     console.error('Error fetching GitHub issue:', error);
@@ -85,7 +134,7 @@ if (issueNumber && GITHUB_TOKEN) {
       <!-- Header -->
       <div class="text-center mb-12">
         <h1 class="text-5xl font-bold text-gray-900 mb-6">
-          Fulfill an <span class="text-gray-600">Open Source Wishlist</span>
+          <span class="text-accent">Fulfill</span> an Open Source Wishlist
         </h1>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
           Thank you for your interest in supporting open source projects. Please fill out this form to begin the fulfillment process for a wishlist.
@@ -107,7 +156,7 @@ if (issueNumber && GITHUB_TOKEN) {
                   id="wishlist" 
                   name="wishlist-display" 
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-50"
-                  value={`${wishlistData.projectName} (Issue #${wishlistData.issueNumber})`}
+                  value={wishlistData.projectName}
                   readonly
                 />
                 <input type="hidden" name="issue-number" value={wishlistData.issueNumber} />
@@ -117,25 +166,21 @@ if (issueNumber && GITHUB_TOKEN) {
                 <input type="hidden" name="project-size" value={(projectSize || 'medium')} />
               </>
             ) : (
-              <div class="bg-red-50 border border-red-200 rounded-md p-4">
-                <div class="flex">
-                  <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                  <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">
+              <div class="alert-error">
+                <div class="flex items-start gap-3">
+                  <svg class="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 class="font-semibold mb-2">
                       Invalid Access
                     </h3>
-                    <div class="mt-2 text-sm text-red-700">
-                      <p>This page can only be accessed by clicking "Fulfill This Wish" from a specific wishlist.</p>
-                      <p class="mt-2">
-                        <a href={`${basePath}wishlists`} class="font-medium underline hover:text-red-600">
-                          Go to Wishlists page to select a wishlist to fulfill
-                        </a>
-                      </p>
-                    </div>
+                    <p class="mb-2">This page can only be accessed by clicking "Fulfill This Wish" from a specific wishlist.</p>
+                    <p>
+                      <a href={`${basePath}wishlists`} class="font-medium underline hover:opacity-80">
+                        Go to Wishlists page to select a wishlist to fulfill
+                      </a>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -144,24 +189,24 @@ if (issueNumber && GITHUB_TOKEN) {
 
           <!-- Maintainer's Practitioner Preferences (if any) -->
           {wishlistData && (wishlistData.preferredPractitioner || wishlistData.nomineeName) && (
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 class="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+            <div class="alert-info">
+              <h3 class="font-semibold mb-2 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Maintainer's Practitioner Preferences
               </h3>
-              <p class="text-sm text-blue-800 mb-3">
+              <p class="mb-3">
                 The maintainer has expressed the following preferences. These will be considered alongside your selection when finalizing the match.{' '}
-                <a href={`${basePath}faq#practitioner-matching-preferences`} target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-900">
+                <a href={`${basePath}faq#practitioner-matching-preferences`} target="_blank" rel="noopener noreferrer" class="underline hover:opacity-80">
                   Learn more
                 </a>
               </p>
               
               {wishlistData.preferredPractitioner && (
                 <div class="mb-3">
-                  <p class="text-xs font-medium text-blue-900 mb-1">Preferred Practitioner:</p>
-                  <p class="text-sm text-blue-800">
+                  <p class="text-xs font-medium mb-1">Preferred Practitioner:</p>
+                  <p class="text-sm">
                     {(() => {
                       // Try to find the practitioner in our collection
                       const practitioner = practitioners.find(p => p.slug === wishlistData.preferredPractitioner);
@@ -181,18 +226,18 @@ if (issueNumber && GITHUB_TOKEN) {
               
               {wishlistData.nomineeName && (
                 <div>
-                  <p class="text-xs font-medium text-blue-900 mb-1">Nominated Practitioner:</p>
-                  <p class="text-sm text-blue-800">
+                  <p class="text-xs font-medium mb-1">Nominated Practitioner:</p>
+                  <p class="text-sm">
                     <strong>{wishlistData.nomineeName}</strong>
                   </p>
                   {(wishlistData.nomineeEmail || wishlistData.nomineeGithub) && (
-                    <p class="text-xs text-blue-800 mt-1">
+                    <p class="text-xs mt-1">
                       {wishlistData.nomineeEmail && `Email: ${wishlistData.nomineeEmail}`}
                       {wishlistData.nomineeEmail && wishlistData.nomineeGithub && ' • '}
                       {wishlistData.nomineeGithub && `GitHub: ${wishlistData.nomineeGithub}`}
                     </p>
                   )}
-                  <p class="text-xs text-blue-700 mt-1 italic">
+                  <p class="text-xs mt-1 italic opacity-75">
                     Note: Nominees must be vetted and approved before they can fulfill wishes.
                   </p>
                 </div>
@@ -204,7 +249,7 @@ if (issueNumber && GITHUB_TOKEN) {
           {wishlistData && wishlistData.wishes && wishlistData.wishes.length > 0 && (
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">
-                Which services would you like to fund? <span class="text-red-600">*</span>
+                Which services would you like to fund? <span class="field-required">*</span>
               </label>
               <p class="text-xs text-gray-500 mb-4">Select the services you want to sponsor and choose a practitioner for each (or let us select the best match).</p>
               <div class="space-y-4">
@@ -232,12 +277,12 @@ if (issueNumber && GITHUB_TOKEN) {
                           value={serviceName}
                           data-service-slug={serviceSlug}
                           class="mt-1 mr-3 h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded funded-service-checkbox"
+                          checked
                         />
                         <input 
                           type="hidden"
                           name="funded-slugs"
                           value={serviceSlug}
-                          disabled
                           class="funded-service-slug"
                           data-service={serviceSlug}
                         />
@@ -334,7 +379,53 @@ if (issueNumber && GITHUB_TOKEN) {
                 })}
               </div>
             </div>
-          )}          <!-- Additional Items -->
+          )}
+          
+          {wishlistData && (!wishlistData.wishes || wishlistData.wishes.length === 0) && (
+            <div class="alert-info">
+              <p class="mb-2"><strong>No Services Specified in Wishlist</strong></p>
+              <p class="text-sm mb-3">
+                This wishlist didn't include specific services when it was created. This is okay! You can still help the maintainer by selecting services you'd like to support below, or skip to the contact information section.
+              </p>
+              <details class="text-xs cursor-pointer">
+                <summary class="font-semibold hover:opacity-80">Debug Info</summary>
+                <div class="mt-2 bg-gray-50 p-2 rounded font-mono text-xs">
+                  Issue Number: {wishlistData.issueNumber}<br/>
+                  Wishes array: {JSON.stringify(wishlistData.wishes)}<br/>
+                  Wishes length: {wishlistData.wishes?.length || 0}
+                </div>
+              </details>
+            </div>
+          )}
+
+          <!-- Optional Services Section (when no services specified in wishlist) -->
+          {wishlistData && (!wishlistData.wishes || wishlistData.wishes.length === 0) && (
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Optional: Select Services to Support <span class="text-gray-500 text-xs">(Optional)</span>
+              </label>
+              <p class="text-xs text-gray-500 mb-4">Since no specific services were requested, you can optionally select any of our services you'd like to support for this project.</p>
+              <div class="space-y-2">
+                {services.map(service => (
+                  <label key={service.slug} class="flex items-start gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input 
+                      type="checkbox" 
+                      name="optional-services"
+                      value={service.data.title}
+                      data-service-slug={service.slug}
+                      class="mt-1 h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded optional-service-checkbox"
+                    />
+                    <div class="flex-1">
+                      <div class="text-sm font-medium text-gray-900">{service.data.title}</div>
+                      <div class="text-xs text-gray-600">{service.data.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Additional Items -->
           <div>
             <label for="additional-items" class="block text-sm font-medium text-gray-600 mb-2">
               Additional items or notes (optional):
@@ -349,7 +440,7 @@ if (issueNumber && GITHUB_TOKEN) {
           </div>
 
           <!-- Process Agreement for custom practitioners -->
-          <div class="bg-blue-50 border border-blue-200 p-4 rounded-md" id="custom-practitioner-agreement" style="display: none;">
+          <div class="bg-gray-50 border border-gray-300 p-4 rounded-md" id="custom-practitioner-agreement" style="display: none;">
             <div class="flex items-start">
               <input 
                 type="checkbox" 
@@ -379,14 +470,14 @@ if (issueNumber && GITHUB_TOKEN) {
 
           <!-- Optional Honorarium (only show if maintainer opted in) -->
           {wishlistData && wishlistData.openToSponsorship && (
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div class="alert-info">
               <div class="flex items-start">
                 <input 
                   type="checkbox" 
                   id="include-sponsorship" 
                   name="include-sponsorship"
                   value="yes"
-                  class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  class="mt-1 h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
                 />
                 <div class="ml-3">
                   <label for="include-sponsorship" class="block text-sm font-medium text-gray-900">
@@ -404,7 +495,7 @@ if (issueNumber && GITHUB_TOKEN) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label for="contact-person" class="block text-sm font-medium text-gray-700 mb-2">
-                Contact Person <span class="text-red-600">*</span>
+                Contact Person <span class="field-required">*</span>
               </label>
               <input 
                 type="text" 
@@ -417,7 +508,7 @@ if (issueNumber && GITHUB_TOKEN) {
             
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                Email Address <span class="text-red-600">*</span>
+                Email Address <span class="field-required">*</span>
               </label>
               <input 
                 type="email" 
@@ -432,7 +523,7 @@ if (issueNumber && GITHUB_TOKEN) {
           <!-- Company -->
           <div>
             <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
-              Company/Organization <span class="text-red-600">*</span>
+              Company/Organization <span class="field-required">*</span>
             </label>
             <input 
               type="text" 
@@ -446,7 +537,7 @@ if (issueNumber && GITHUB_TOKEN) {
           <!-- Reason for Fulfillment -->
           <div>
             <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-              Reason for Fulfillment <span class="text-red-600">*</span>
+              Reason for Fulfillment <span class="field-required">*</span>
             </label>
             <textarea 
               id="reason" 
@@ -463,9 +554,17 @@ if (issueNumber && GITHUB_TOKEN) {
             <div class="pt-6">
               <button 
                 type="submit" 
-                class="w-full bg-gray-600 text-white px-6 py-3 rounded-md font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                class="btn-sparkle w-full"
               >
-                Submit Fulfillment Request
+                <svg class="btn-sparkle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m0 0l-2-1m2 1v2.5M14 4l-2 1m0 0l-2-1m2 1v2.5" />
+                </svg>
+                <span class="btn-sparkle-text">Submit Fulfillment Request</span>
+                <div class="btn-sparkle-particles">
+                  <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
+                  <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
+                  <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
+                </div>
               </button>
             </div>
           )}
@@ -492,7 +591,18 @@ if (issueNumber && GITHUB_TOKEN) {
     const customPractitionerAgreement = document.getElementById('custom-practitioner-agreement');
     const processAgreementCheckbox = document.getElementById('process-agreement');
     const useEmployeeCheckboxes = document.querySelectorAll('.use-employee-checkbox');
-  const fundedServiceCheckboxes = document.querySelectorAll('.funded-service-checkbox');
+    const fundedServiceCheckboxes = document.querySelectorAll('.funded-service-checkbox');
+    
+    // Keep hidden funded service slug inputs in sync with checkboxes
+    fundedServiceCheckboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        const slug = this.getAttribute('data-service-slug');
+        if (!slug) return;
+        const hidden = document.querySelector(`input.funded-service-slug[data-service="${slug}"]`) as HTMLInputElement | null;
+        if (!hidden) return;
+        hidden.disabled = !this.checked;
+      });
+    });
     
     // Show/hide custom practitioner input based on selection
     practitionerSelects.forEach(select => {
@@ -528,24 +638,13 @@ if (issueNumber && GITHUB_TOKEN) {
       }
     }
 
-    // Keep hidden funded service slug inputs in sync with checkboxes
-    fundedServiceCheckboxes.forEach(cb => {
-      cb.addEventListener('change', function() {
-        const slug = this.getAttribute('data-service-slug');
-        if (!slug) return;
-        const hidden = document.querySelector(`input.funded-service-slug[data-service="${slug}"]`) as HTMLInputElement | null;
-        if (!hidden) return;
-        hidden.disabled = !this.checked;
-      });
-    });
-
     // Field validation helpers
     const fieldErrors = {};
     
     function clearFieldError(fieldName) {
       const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
       if (field) {
-        field.classList.remove('border-red-500', 'border-2');
+        field.classList.remove('border-gray-700', 'border-2');
         field.classList.add('border-gray-300');
       }
       const errorMsg = field?.parentElement?.querySelector('.field-error-message');
@@ -557,12 +656,12 @@ if (issueNumber && GITHUB_TOKEN) {
       const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
       if (field) {
         field.classList.remove('border-gray-300');
-        field.classList.add('border-red-500', 'border-2');
+        field.classList.add('border-gray-700', 'border-2');
         
         const parent = field.parentElement;
         if (parent && !parent.querySelector('.field-error-message')) {
           const errorMsg = document.createElement('p');
-          errorMsg.className = 'field-error-message text-red-600 text-sm mt-1';
+          errorMsg.className = 'field-error-message text-gray-700 text-sm mt-1';
           errorMsg.textContent = message;
           parent.appendChild(errorMsg);
         }
@@ -601,6 +700,51 @@ if (issueNumber && GITHUB_TOKEN) {
     // Form validation to ensure at least one service is selected (if checkboxes are present)
     const form = document.querySelector('form');
     form.addEventListener('submit', function(e) {
+      // Add loading state to submit button
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        
+        // Safe: Create loading state with DOM methods
+        submitButton.textContent = '';
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'btn-sparkle-icon animate-spin');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('class', 'opacity-25');
+        circle.setAttribute('cx', '12');
+        circle.setAttribute('cy', '12');
+        circle.setAttribute('r', '10');
+        circle.setAttribute('stroke', 'currentColor');
+        circle.setAttribute('stroke-width', '4');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'opacity-75');
+        path.setAttribute('fill', 'currentColor');
+        path.setAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z');
+        svg.appendChild(circle);
+        svg.appendChild(path);
+        
+        const loadingText = document.createElement('span');
+        loadingText.className = 'btn-sparkle-text';
+        loadingText.textContent = 'Submitting...';
+        
+        submitButton.appendChild(svg);
+        submitButton.appendChild(loadingText);
+        
+        // Re-enable button after 5 seconds if form validation fails
+        setTimeout(() => {
+          if (!form.classList.contains('submitting')) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+          }
+        }, 5000);
+      }
+      
       // Clear previous errors
       Object.keys(fieldErrors).forEach(clearFieldError);
       let hasErrors = false;
@@ -634,7 +778,7 @@ if (issueNumber && GITHUB_TOKEN) {
       if (hasErrors) {
         e.preventDefault();
         // Scroll to first error
-        const firstError = document.querySelector('.border-red-500');
+        const firstError = document.querySelector('.border-gray-700');
         if (firstError) {
           firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setTimeout(() => firstError.focus(), 500);

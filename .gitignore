@@ -9,6 +9,9 @@ pnpm-debug.log*
 dist/
 .astro/
 
+# Backup files
+*.bak
+
 # Environment variables
 .env
 .env.local

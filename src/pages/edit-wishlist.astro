@@ -1,0 +1,119 @@
+---
+import Layout from '../components/Layout.astro';
+import WishlistForm from '../components/WishlistForms.tsx';
+import { getCollection } from 'astro:content';
+import { getBasePath } from '../lib/paths';
+import { fetchUserRepositories } from '../lib/github-oauth';
+
+const services = await getCollection('services');
+const practitioners = await getCollection('practitioners');
+
+const practitionerCounts = services.reduce((acc, s) => {
+  const slug = s.slug;
+  const count = practitioners.filter(p => Array.isArray(p.data.services) && p.data.services.includes(slug)).length;
+  acc[slug] = count;
+  return acc;
+}, {} as Record<string, number>);
+
+const servicesData = services.map(service => {
+  const slug = service.slug;
+  const declaredAvailable = service.data.available ?? true;
+  const count = practitionerCounts[slug] ?? 0;
+  return {
+    id: slug,
+    title: service.data.title,
+    description: service.data.description,
+    slug,
+    available: declaredAvailable,
+    practitionerCount: count,
+    unavailableReason: service.data.unavailable_reason ?? undefined,
+  };
+});
+
+const practitionersData = practitioners.map(p => ({
+  slug: p.slug,
+  name: p.data.name,
+  github: p.data.github || '',
+}));
+
+const user = Astro.locals.user;
+const basePath = getBasePath();
+
+// Handle authentication redirect server-side
+if (!user) {
+  const currentPath = Astro.url.pathname;
+  const searchParams = Astro.url.search;
+  
+  // Strip the base path if it exists to get the relative path
+  let relativePath = currentPath.startsWith(basePath.slice(0, -1)) 
+    ? currentPath.slice(basePath.slice(0, -1).length)
+    : currentPath;
+  
+  // Ensure relativePath starts with /
+  if (relativePath && !relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath;
+  }
+  if (!relativePath) {
+    relativePath = '/';
+  }
+  
+  // Redirect to login page with return URL
+  const fullReturnPath = relativePath + searchParams;
+  const returnTo = encodeURIComponent(fullReturnPath);
+  return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
+}
+
+// Get the issue number from URL - required for edit page
+const editIssueNumber = Astro.url.searchParams.get('edit');
+if (!editIssueNumber) {
+  // No issue number provided, redirect to create page
+  return Astro.redirect(`${basePath}create-wishlist`);
+}
+
+// Fetch user's repositories server-side
+let userRepositories = [];
+try {
+  userRepositories = await fetchUserRepositories(user.login);
+} catch (error) {
+  console.error('Error fetching repositories:', error);
+}
+---
+
+<Layout title="Edit Wishlist - OSS Wishlist" description="Edit your wishlist for your open source project.">
+  <!-- Back to Your Wishlists Link -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <a 
+      href={`${basePath}maintainers`}
+      class="text-sm text-gray-600 hover:text-gray-900 inline-flex items-center"
+    >
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      Back to Your Wishlists
+    </a>
+  </div>
+
+  <section class="py-12 pb-24 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <h1 class="text-5xl font-bold text-gray-900 mb-4">
+          <span class="text-accent">Edit</span> Your Wishlist
+        </h2>
+        <p class="text-gray-600 text-base mb-8">
+          Update your wishlist details below. Changes will be reflected in the public wishlist repository.
+        </p>
+        <WishlistForm client:only="react" services={servicesData} practitioners={practitionersData} user={user} initialRepositories={userRepositories} />
+      </div>
+    </div>
+  </section>
+
+  <script define:vars={{ basePath }}>
+    // Listen for successful wishlist update
+    window.addEventListener('wishlist-updated', () => {
+      console.log('[edit-wishlist] Wishlist updated - redirecting to maintainers page');
+      setTimeout(() => {
+        window.location.href = basePath + 'maintainers';
+      }, 2000);
+    });
+  </script>
+</Layout>
