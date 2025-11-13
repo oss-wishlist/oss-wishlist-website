@@ -1036,7 +1036,7 @@ ${repositories[0].url}
                 onClick={() => {
                   // Navigate to wishlist detail page
                   const slug = success.issueUrl ? success.issueUrl.split('/').pop() : success.issueNumber;
-                  window.location.href = `${getBasePath()}/wishlist/${success.issueNumber}`;
+                  window.location.href = `${getBasePath()}wishlist/${success.issueNumber}`;
                 }}
                 className="btn-sparkle inline-flex items-center justify-center px-6 py-3"
               >
