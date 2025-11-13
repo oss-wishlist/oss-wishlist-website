@@ -265,13 +265,19 @@ Thank you for being part of the OSS Wishlist community!`;
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  console.log('[submit-wishlist] ========== API ENDPOINT CALLED ==========');
+  console.log('[submit-wishlist] Request URL:', request.url);
+  console.log('[submit-wishlist] Request method:', request.method);
+  
   try {
     // Parse request body
     let body;
     try {
       body = await request.json();
+      console.log('[submit-wishlist] Request body parsed successfully');
+      console.log('[submit-wishlist] Body keys:', Object.keys(body));
     } catch (parseError) {
-      console.error('JSON parse error:', parseError);
+      console.error('[submit-wishlist] JSON parse error:', parseError);
       return ApiErrors.invalidJson();
     }
     
@@ -658,7 +664,9 @@ ${formData.projectUrl}
     });
 
   } catch (error) {
-    console.error('Error creating wishlist issue:', error);
+    console.error('[submit-wishlist] ========== ERROR CAUGHT ==========');
+    console.error('[submit-wishlist] Error creating wishlist issue:', error);
+    console.error('[submit-wishlist] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return ApiErrors.serverError(
       error instanceof Error ? error.message : 'An unexpected error occurred'
     );
