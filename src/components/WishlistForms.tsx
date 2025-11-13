@@ -794,15 +794,35 @@ ${repositories[0].url}
 
       console.log('[WishlistForm] Fetch completed, status:', response.status);
       
+      // Clone the response so we can read it multiple times if needed
+      const responseClone = response.clone();
+      
       if (!response.ok) {
-        const errorText = await response.text();
+        let errorText = 'Unknown error';
+        try {
+          errorText = await response.text();
+        } catch (e) {
+          console.error('[WishlistForm] Failed to read error response:', e);
+        }
         console.error('[WishlistForm] API error response:', errorText);
-        throw new Error(`API error (${response.status}): ${errorText}`);
+        throw new Error(`API error (${response.status}): ${errorText.substring(0, 200)}`);
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error('[WishlistForm] Failed to parse JSON response');
+        try {
+          const responseText = await responseClone.text();
+          console.error('[WishlistForm] Response text:', responseText.substring(0, 500));
+        } catch (e) {
+          console.error('[WishlistForm] Could not read response text');
+        }
+        throw new Error('Server returned invalid response. Please try again or contact support.');
+      }
 
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         // Handle validation errors with field information
         if (result.field) {
           // Convert technical field names to user-friendly labels

@@ -21,7 +21,7 @@ organizationType: "single-maintainer"
 
 
 createdAt: "2025-11-13T21:03:48Z"
-updatedAt: "2025-11-13T21:56:24.689Z"
+updatedAt: "2025-11-13T22:31:34.506Z"
 ---
 
 # Nanaimo
