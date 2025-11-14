@@ -36,16 +36,19 @@ if (!DATABASE_URL) {
 
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
 
+// SSL configuration for Digital Ocean managed PostgreSQL
+// Bypasses certificate validation to avoid "self-signed certificate in chain" errors
+const sslConfig = (DATABASE_URL?.includes('sslmode=require') || PGSSLMODE === 'require') 
+  ? {
+      rejectUnauthorized: false,
+      checkServerIdentity: () => undefined,
+    }
+  : false;
+
 // Connection pool configuration
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: DATABASE_URL?.includes('sslmode=require') || PGSSLMODE === 'require' 
-    ? { 
-        rejectUnauthorized: false,
-        // Accept self-signed certificates from Digital Ocean
-        checkServerIdentity: () => undefined
-      } 
-    : false,
+  ssl: sslConfig,
   // Connection pool settings
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds

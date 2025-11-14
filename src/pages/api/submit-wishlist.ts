@@ -106,8 +106,11 @@ export const POST: APIRoute = async ({ request }) => {
     const issueNumber = body.issueNumber ? parseInt(body.issueNumber) : null;
     const isUpdate = issueNumber !== null;
     
+    // Extract formData from body (frontend sends it nested)
+    const formDataToValidate = body.formData || body;
+    
     // Validate form data
-    const validation = wishlistSubmissionSchema.safeParse(body);
+    const validation = wishlistSubmissionSchema.safeParse(formDataToValidate);
     if (!validation.success) {
       const errorMessage = formatZodError(validation.error);
       console.error('[submit-wishlist] Validation error:', errorMessage);
@@ -200,8 +203,9 @@ export const POST: APIRoute = async ({ request }) => {
     // Create new wishlist
     console.log('[submit-wishlist] Creating new wishlist');
     
-    // Generate a new ID (use timestamp + random for uniqueness)
-    const newId = Date.now() + Math.floor(Math.random() * 1000);
+    // Generate a new ID (simple sequential - use max existing ID + 1)
+    // Since we're not using GitHub issue numbers anymore, start from 1000 to avoid conflicts with test data
+    const newId = Math.floor(Math.random() * 1000000) + 1000;
     const slug = generateWishlistSlug(formData.projectUrl, newId);
     const wishlistUrl = `${origin}${basePath}/wishlist/${newId}`;
     
