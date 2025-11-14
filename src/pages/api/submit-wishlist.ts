@@ -192,6 +192,11 @@ export const POST: APIRoute = async ({ request }) => {
       
       return jsonSuccess({
         updated: true,
+        issue: {
+          number: issueNumber,
+          title: formData.projectTitle,
+          url: wishlistUrl,
+        },
         wishlist: {
           id: issueNumber,
           projectName: formData.projectTitle,
@@ -271,6 +276,11 @@ export const POST: APIRoute = async ({ request }) => {
     }
     
     return jsonSuccess({
+      issue: {
+        number: newId,
+        title: formData.projectTitle,
+        url: wishlistUrl,
+      },
       wishlist: {
         id: newId,
         projectName: formData.projectTitle,
