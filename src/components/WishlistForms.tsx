@@ -1592,7 +1592,7 @@ ${repositories[0].url}
                   className="mt-1 h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">
-                  I am open to receiving an honorarium as part of wish fulfillment
+                  I/we are open to receiving an honorarium as part of wish fulfillment
                   <span className="block text-xs text-gray-500 mt-1">
                     Organizations fulfilling your wish may offer an optional honorarium to recognize your time and collaboration (not payment for services or obligation)
                   </span>

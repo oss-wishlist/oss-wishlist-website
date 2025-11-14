@@ -2,8 +2,7 @@
 import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
 import { getCollection } from 'astro:content';
-import fs from 'fs';
-import path from 'path';
+import { getWishlistById } from '../../lib/db.js';
 
 const basePath = getBasePath();
 
@@ -20,84 +19,36 @@ if (!id) {
   return Astro.redirect('/404');
 }
 
-// First, try to find in content collections (most up-to-date after edits)
+// Fetch from database
 let wishlistData = null;
 
 try {
-  const wishlists = await getCollection('wishlists');
-  const wishlist = wishlists.find(w => w.data.id === parseInt(id));
+  const wishlist = await getWishlistById(parseInt(id));
   
   if (wishlist) {
-    // Found in content collections - use this (freshest data)
-    wishlistData = {
-      id: wishlist.data.id,
-      title: wishlist.data.projectName,
-      projectName: wishlist.data.projectName,
-      repositoryUrl: wishlist.data.repositoryUrl,
-      maintainer: wishlist.data.maintainerUsername,
-      maintainerAvatar: `https://github.com/${wishlist.data.maintainerUsername}.png`,
-      services: wishlist.data.wishes || [],
-      resources: wishlist.data.resources || [],
-      technologies: wishlist.data.technologies || [],
-      urgency: wishlist.data.urgency?.toLowerCase() || 'medium',
-      projectSize: wishlist.data.projectSize,
-      additionalNotes: wishlist.data.additionalNotes,
-      additionalContext: wishlist.data.additionalContext,
-      status: wishlist.data.status,
-      approved: wishlist.data.approved,
-      created_at: wishlist.data.createdAt,
-      updated_at: wishlist.data.updatedAt,
-    };
-  }
-} catch (error) {
-  console.log('Could not find in content collections, falling back to cache:', error);
-}
-
-// If not found in content collections, fetch from GitHub cache (fallback)
-if (!wishlistData) {
-  try {
-    const cacheUrl = 'https://raw.githubusercontent.com/oss-wishlist/wishlists/main/all-wishlists.json';
-    const response = await fetch(cacheUrl);
-    
-    if (!response.ok) {
-      console.error(`Failed to fetch cache: ${response.status}`);
-      return Astro.redirect('/404');
-    }
-    
-    const cacheData = await response.json();
-    
-    // Find the wishlist by ID
-    const wishlist = cacheData.wishlists?.find((w: any) => w.id === parseInt(id));
-    
-    if (!wishlist) {
-      console.error(`Wishlist ${id} not found in cache`);
-      return Astro.redirect('/404');
-    }
-    
-    // Map cache structure to page data structure
+    // Map database columns to page data structure
     wishlistData = {
       id: wishlist.id,
-      title: wishlist.projectName,
-      projectName: wishlist.projectName,
-      repositoryUrl: wishlist.repositoryUrl,
-      maintainer: wishlist.maintainerUsername,
-      maintainerAvatar: wishlist.maintainerAvatarUrl,
+      title: wishlist.project_name,
+      projectName: wishlist.project_name,
+      repositoryUrl: wishlist.repository_url,
+      maintainer: wishlist.maintainer_username,
+      maintainerAvatar: wishlist.maintainer_avatar_url || `https://github.com/${wishlist.maintainer_username}.png`,
       services: wishlist.wishes || [],
       resources: wishlist.resources || [],
       technologies: wishlist.technologies || [],
       urgency: wishlist.urgency?.toLowerCase() || 'medium',
-      projectSize: wishlist.projectSize,
-      additionalNotes: wishlist.additionalNotes,
-      additionalContext: wishlist.additionalContext,
+      projectSize: wishlist.project_size,
+      additionalNotes: wishlist.additional_notes,
+      additionalContext: wishlist.additional_context,
       status: wishlist.status,
       approved: wishlist.approved,
-      created_at: wishlist.createdAt,
-      updated_at: wishlist.updatedAt,
+      created_at: wishlist.created_at.toISOString(),
+      updated_at: wishlist.updated_at.toISOString(),
     };
-  } catch (error) {
-    console.error('Error reading wishlist from GitHub cache:', error);
-    return Astro.redirect('/404');
   }
+} catch (error) {
+  console.error('Error fetching wishlist from database:', error);
 }
 
 if (!wishlistData) {

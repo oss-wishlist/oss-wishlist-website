@@ -1,12 +1,12 @@
 /**
  * API endpoint to delete a wishlist
- * Closes the GitHub issue and removes from cache
+ * Closes the GitHub issue and removes markdown file
  */
 
 import type { APIRoute } from 'astro';
 import { GITHUB_CONFIG } from '../../config/github.js';
 import { jsonSuccess, jsonError } from '../../lib/api-response.js';
-import { removeWishlistFromCache, fetchCacheFromGitHub } from '../../lib/cache-updater.js';
+import { deleteWishlist } from '../../lib/db.js';
 
 export const prerender = false;
 
@@ -46,29 +46,17 @@ export const DELETE: APIRoute = async ({ request }) => {
       return jsonError('Failed to close issue', 'GitHub API error', 500);
     }
 
-    // STEP 1: Update local cache file to reflect the deleted wishlist
-    const origin = new URL(request.url).origin;
-    const basePath = import.meta.env.BASE_URL || '';
-
+    // Delete from database
     try {
-      await fetch(`${origin}${basePath}/api/cache-wishlist?issueNumber=${issueNumber}`, {
-        method: 'GET'
-      });
-      console.log('[delete-wishlist] Local cache updated after deletion');
-    } catch (err) {
-      console.warn('[delete-wishlist] Failed to update local cache:', err);
-    }
-
-    // STEP 2: Invalidate in-memory cache
-    try {
-      await fetch(`${origin}${basePath}/api/cache-invalidate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cacheKey: 'wishlists_full_cache' })
-      });
-      console.log('[delete-wishlist] In-memory cache invalidated');
-    } catch (err) {
-      console.warn('[delete-wishlist] Failed to invalidate cache:', err);
+      const deleted = await deleteWishlist(issueNumber);
+      if (deleted) {
+        console.log(`[delete-wishlist] ✓ Deleted wishlist #${issueNumber} from database`);
+      } else {
+        console.warn(`[delete-wishlist] Wishlist #${issueNumber} not found in database`);
+      }
+    } catch (error) {
+      console.error(`[delete-wishlist] ✗ Failed to delete from database:`, error);
+      // Continue anyway - GitHub issue is already closed
     }
 
     return jsonSuccess({

@@ -1,0 +1,61 @@
+name: Sync Wishlist Markdown Files
+
+on:
+  # Run when wishlists are created, edited, or closed
+  issues:
+    types: [opened, edited, closed, reopened]
+
+permissions:
+  contents: write  # Need to commit markdown files
+  issues: read     # Need to read issue data
+
+jobs:
+  sync-markdown:
+    # Only run for issues in the wishlists repo with wishlist label
+    if: github.repository == 'oss-wishlist/wishlists-dev' || github.repository == 'oss-wishlist/wishlists'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout website repository
+        uses: actions/checkout@v4
+        with:
+          repository: oss-wishlist/oss-wishlist-website
+          ref: staging  # Change to 'main' for production
+          token: ${{ secrets.WISHLIST_SYNC_TOKEN }}  # Personal access token with repo scope
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Parse issue and generate markdown
+        id: generate
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_STATE: ${{ github.event.issue.state }}
+          ISSUE_LABELS: ${{ toJSON(github.event.issue.labels) }}
+        run: |
+          node .github/scripts/sync-wishlist-markdown.js
+          
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [[ -n $(git status --porcelain) ]]; then
+            git add src/content/wishlists/
+            git commit -m "Sync wishlist markdown for issue #${{ github.event.issue.number }}"
+            git push
+            echo "✓ Committed wishlist markdown changes"
+          else
+            echo "✓ No changes to commit"
+          fi
+          
+      - name: Trigger Digital Ocean deploy
+        if: success()
+        run: |
+          curl -X POST "${{ secrets.DIGITALOCEAN_DEPLOY_HOOK }}"
+          echo "✓ Triggered Digital Ocean deployment"
