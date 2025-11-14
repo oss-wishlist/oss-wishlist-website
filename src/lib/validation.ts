@@ -89,16 +89,15 @@ export const wishlistFormDataSchema = z.object({
 
 // Wishlist submission schema
 export const wishlistSubmissionSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  
-  body: z.string().min(1, 'Body is required'),
-  
+  // GitHub issue fields (legacy, now optional since we removed GitHub integration)
+  title: z.string().optional(),
+  body: z.string().optional(),
   labels: z.array(z.string()).optional(),
   
+  // Actual form data
   formData: wishlistFormDataSchema,
   
   isUpdate: z.boolean().optional(),
-  
   issueNumber: z.number().int().positive().optional()
 }).superRefine((data, ctx) => {
   // If isUpdate is true, issueNumber must be provided
