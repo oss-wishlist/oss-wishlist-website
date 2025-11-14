@@ -2,7 +2,7 @@
 // Stores directly to PostgreSQL database, no GitHub issues
 //
 import type { APIRoute } from 'astro';
-import { wishlistSubmissionSchema, formatZodError } from '../../lib/validation.js';
+import { wishlistFormDataSchema, formatZodError } from '../../lib/validation.js';
 import { jsonSuccess, jsonError, ApiErrors } from '../../lib/api-response.js';
 import { createWishlist, updateWishlist, getWishlistById } from '../../lib/db.js';
 import { generateWishlistSlug } from '../../lib/slugify.js';
@@ -109,8 +109,8 @@ export const POST: APIRoute = async ({ request }) => {
     // Extract formData from body (frontend sends it nested)
     const formDataToValidate = body.formData || body;
     
-    // Validate form data
-    const validation = wishlistSubmissionSchema.safeParse(formDataToValidate);
+    // Validate form data directly (not the full submission schema)
+    const validation = wishlistFormDataSchema.safeParse(formDataToValidate);
     if (!validation.success) {
       const errorMessage = formatZodError(validation.error);
       console.error('[submit-wishlist] Validation error:', errorMessage);
