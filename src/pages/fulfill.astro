@@ -33,45 +33,59 @@ let projectSize: 'small' | 'medium' | 'large' | null = null;
 issueNumber = url.searchParams.get('issue');
 
 if (issueNumber) {
-  // First, try to get from content collections (most up-to-date)
+  // Fetch wishlist from database API
   try {
-    const wishlists = await getCollection('wishlists');
-    const wishlist = wishlists.find(w => w.data.id === parseInt(issueNumber));
+    const apiUrl = new URL(`${basePath}api/wishlist`, url.origin);
+    apiUrl.searchParams.set('id', issueNumber);
     
-    if (wishlist) {
-      // Found in content collections - use this data
-      const projectName = wishlist.data.projectName;
-      projectSize = wishlist.data.projectSize as 'small' | 'medium' | 'large';
+    const response = await fetch(apiUrl.toString());
+    
+    if (response.ok) {
+      const data = await response.json();
+      const wishlist = data.wishlist;
       
-      wishlistData = {
-        projectName,
-        repositoryUrl: wishlist.data.repositoryUrl,
-        maintainer: wishlist.data.maintainerUsername,
-        wishes: wishlist.data.wishes || [],
-        services: wishlist.data.wishes || [],
-        urgency: wishlist.data.urgency,
-        technologies: wishlist.data.technologies || [],
-        projectSize: wishlist.data.projectSize,
-        additionalNotes: wishlist.data.additionalNotes,
-      };
-      
-      // Also set githubIssue for compatibility
-      githubIssue = {
-        number: wishlist.data.id,
-        title: `Wishlist: ${projectName}`,
-        html_url: wishlist.data.issueUrl,
-        user: {
-          login: wishlist.data.maintainerUsername,
-          avatar_url: `https://github.com/${wishlist.data.maintainerUsername}.png`,
-        },
-      };
+      if (wishlist) {
+        // Found in database - use this data
+        const projectName = wishlist.projectName;
+        projectSize = wishlist.projectSize as 'small' | 'medium' | 'large';
+        
+        wishlistData = {
+          issueNumber: wishlist.id,
+          projectName,
+          repositoryUrl: wishlist.repositoryUrl,
+          maintainer: wishlist.maintainerUsername,
+          wishes: wishlist.wishes || [],
+          services: wishlist.wishes || [],
+          urgency: wishlist.urgency,
+          technologies: wishlist.technologies || [],
+          projectSize: wishlist.projectSize,
+          additionalNotes: wishlist.additionalNotes,
+          url: wishlist.wishlistUrl,
+          openToSponsorship: wishlist.openToSponsorship,
+          preferredPractitioner: wishlist.preferredPractitioner || null,
+          nomineeName: wishlist.nomineeName || null,
+          nomineeEmail: wishlist.nomineeEmail || null,
+          nomineeGithub: wishlist.nomineeGithub || null
+        };
+        
+        // Also set githubIssue for compatibility
+        githubIssue = {
+          number: wishlist.id,
+          title: `Wishlist: ${projectName}`,
+          html_url: wishlist.wishlistUrl,
+          user: {
+            login: wishlist.maintainerUsername,
+            avatar_url: wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`,
+          },
+        };
+      }
     }
   } catch (error) {
-    console.log('Could not find in content collections, falling back to GitHub API:', error);
+    console.log('[fulfill] Error fetching from database API:', error);
   }
 }
 
-// If not found in content collections, fetch from GitHub API (fallback)
+// Fallback to GitHub API if database lookup failed (shouldn't normally happen)
 if (issueNumber && !wishlistData && GITHUB_TOKEN) {
   try {
     // Fetch the GitHub issue data
