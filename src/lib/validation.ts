@@ -87,13 +87,8 @@ export const wishlistFormDataSchema = z.object({
   maintainerEmail: z.string().email('Invalid email address').optional().or(z.literal(''))
 });
 
-// Wishlist submission schema
+// Wishlist submission schema (database-driven, no GitHub Issues)
 export const wishlistSubmissionSchema = z.object({
-  // GitHub issue fields (legacy, now optional since we removed GitHub integration)
-  title: z.string().optional(),
-  body: z.string().optional(),
-  labels: z.array(z.string()).optional(),
-  
   // Actual form data
   formData: wishlistFormDataSchema,
   

@@ -264,9 +264,6 @@ describe('Validation Schemas', () => {
 
     it('accepts valid wishlist submission', () => {
       const validSubmission: WishlistSubmission = {
-        title: 'Wishlist: Valid Title',
-        body: 'Detailed description of the wishlist',
-        labels: ['wishlist', 'high-priority'],
         formData: validFormData,
       };
 
@@ -274,38 +271,8 @@ describe('Validation Schemas', () => {
       expect(result.success).toBe(true);
     });
 
-    it('rejects submission with empty title', () => {
-      const invalidSubmission = {
-        title: '',
-        body: 'Detailed description',
-        formData: validFormData,
-      };
-
-      const result = wishlistSubmissionSchema.safeParse(invalidSubmission);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues.some(e => e.path.includes('title'))).toBe(true);
-      }
-    });
-
-    it('rejects submission with empty body', () => {
-      const invalidSubmission = {
-        title: 'Valid Title',
-        body: '',
-        formData: validFormData,
-      };
-
-      const result = wishlistSubmissionSchema.safeParse(invalidSubmission);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues.some(e => e.path.includes('body'))).toBe(true);
-      }
-    });
-
     it('requires issueNumber when isUpdate is true', () => {
       const invalidSubmission = {
-        title: 'Valid Title',
-        body: 'Detailed description',
         formData: validFormData,
         isUpdate: true,
         // issueNumber is missing
@@ -320,8 +287,6 @@ describe('Validation Schemas', () => {
 
     it('allows isUpdate without issueNumber when isUpdate is false', () => {
       const validSubmission: WishlistSubmission = {
-        title: 'Valid Title',
-        body: 'Detailed description',
         formData: validFormData,
         isUpdate: false,
       };
@@ -332,8 +297,6 @@ describe('Validation Schemas', () => {
 
     it('accepts valid update with issueNumber', () => {
       const validSubmission: WishlistSubmission = {
-        title: 'Valid Title',
-        body: 'Detailed description',
         formData: validFormData,
         isUpdate: true,
         issueNumber: 123,
@@ -345,8 +308,6 @@ describe('Validation Schemas', () => {
 
     it('rejects negative issueNumber', () => {
       const invalidSubmission = {
-        title: 'Valid Title',
-        body: 'Detailed description',
         formData: validFormData,
         isUpdate: true,
         issueNumber: -1,
@@ -361,8 +322,6 @@ describe('Validation Schemas', () => {
 
     it('rejects non-integer issueNumber', () => {
       const invalidSubmission = {
-        title: 'Valid Title',
-        body: 'Detailed description',
         formData: validFormData,
         isUpdate: true,
         issueNumber: 123.45,
