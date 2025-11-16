@@ -1,82 +1,91 @@
 // API endpoint to fetch approved wishlists from database
 import type { APIRoute } from 'astro';
 import { getApprovedWishlists } from '../../lib/db.js';
-import { getBasePath } from '../../lib/paths.js';
 
-interface MinimalWishlist {
-  id: string;
+interface Wishlist {
+  id: number;
+  projectName: string;
   repositoryUrl: string;
-  wishlistUrl: string;
+  projectDescription: string;
+  maintainerUsername: string;
+  maintainerEmail: string;
+  maintainerAvatarUrl: string;
+  approved: boolean;
+  status: string;
+  issueState: string;
+  created_at: string;
+  updated_at: string;
+  wishes: string[];
+  technologies: string[];
+  urgency: string;
+  projectSize?: string;
+  additionalNotes?: string;
+  organizationType?: string;
+  organizationName?: string;
 }
 
 export const prerender = false;
 
-/**
- * Extract repository name from GitHub URL
- * e.g., "https://github.com/emma/awesomelibrary" -> "awesomelibrary"
- */
-function extractRepoName(repoUrl: string): string {
-  try {
-    const url = new URL(repoUrl);
-    const parts = url.pathname.split('/').filter(p => p);
-    // Get last part (repo name)
-    return parts[parts.length - 1] || 'unknown';
-  } catch {
-    return 'unknown';
-  }
-}
-
-async function fetchWishlistsFromDatabase(): Promise<MinimalWishlist[]> {
+async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
   try {
     console.log('[wishlists] Fetching from database');
     
     // Load approved wishlists from database
     const dbWishlists = await getApprovedWishlists();
     
-    const basePath = getBasePath();
-    const baseUrl = process.env.PUBLIC_URL || 'https://oss-wishlist.org';
+    // Map to API format with full data for wishlists page
+    const approvedWishlists = dbWishlists.map((wishlist) => ({
+      id: wishlist.id,
+      projectName: wishlist.project_name,
+      repositoryUrl: wishlist.repository_url,
+      projectDescription: wishlist.project_description,
+      maintainerUsername: wishlist.maintainer_username,
+      maintainerEmail: wishlist.maintainer_email,
+      maintainerAvatarUrl: wishlist.maintainer_avatar_url || `https://github.com/${wishlist.maintainer_username}.png`,
+      approved: wishlist.approved,
+      status: wishlist.status,
+      issueState: wishlist.issue_state,
+      created_at: wishlist.created_at.toISOString(),
+      updated_at: wishlist.updated_at.toISOString(),
+      wishes: wishlist.wishes || [],
+      technologies: wishlist.technologies || [],
+      urgency: wishlist.urgency || 'medium',
+      projectSize: wishlist.project_size,
+      additionalNotes: wishlist.additional_notes,
+      organizationType: wishlist.organization_type,
+      organizationName: wishlist.organization_name,
+    }));
     
-    // Map to minimal format for public JSON feed
-    const minimalWishlists = dbWishlists.map((wishlist) => {
-      const repoName = extractRepoName(wishlist.repository_url);
-      const id = `${wishlist.id}-${repoName}`;
-      const wishlistUrl = `${baseUrl}${basePath}fulfill?issue=${wishlist.id}`;
-      
-      return {
-        id,
-        repositoryUrl: wishlist.repository_url,
-        wishlistUrl
-      };
-    });
-    
-    console.log(`[wishlists] Loaded ${minimalWishlists.length} approved wishlists from database`);
-    return minimalWishlists;
+    console.log(`[wishlists] Loaded ${approvedWishlists.length} approved wishlists from database`);
+    return approvedWishlists;
   } catch (error) {
     console.error('[wishlists] Error fetching from database:', error);
     return [];
   }
 }
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async () => {
   try {
-    // Fetch approved wishlists from database
-    const minimalWishlists = await fetchWishlistsFromDatabase();
+    // Fetch approved wishlists from database with full data
+    const approvedWishlists = await fetchWishlistsFromDatabase();
     
-    console.log(`[wishlists] Returning ${minimalWishlists.length} approved wishlists`);
+    console.log(`[wishlists] Returning ${approvedWishlists.length} approved wishlists`);
 
-    // Build minimal response object
+    // Build response object with full data
     const response = {
-      wishlists: minimalWishlists,
+      wishlists: approvedWishlists,
       metadata: {
-        total: minimalWishlists.length
+        total: approvedWishlists.length,
+        approved: approvedWishlists.length,
+        source: 'database',
       }
     };
 
-    return new Response(JSON.stringify(response, null, 2), {
+    return new Response(JSON.stringify(response), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': 'public, max-age=60',
       },
     });
   } catch (error) {
