@@ -98,6 +98,20 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
           </div>
         </div>
 
+        <!-- Languages -->
+        <div>
+          <label for="languages" class="block text-sm font-medium text-gray-700 mb-2">Languages Spoken * <span class="text-xs text-gray-500 font-normal">(comma-separated)</span></label>
+          <input 
+            type="text" 
+            id="languages" 
+            name="languages" 
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+            placeholder="English, Spanish, French"
+          />
+          <p class="text-xs text-gray-500 mt-1">List all languages you can work in, separated by commas</p>
+        </div>
+
         <!-- Experience -->
         <div class="grid md:grid-cols-1 gap-6">
           <div>
@@ -422,6 +436,11 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
         .map(cb => cb.value);
       data.specialties = specialties;
       
+      // Parse languages from comma-separated string
+      const languages = data.languages 
+        ? data.languages.split(',').map(lang => lang.trim()).filter(lang => lang.length > 0)
+        : ['English']; // Default to English if not provided
+      
       try {
         // Clear previous errors
         const errorBox = document.getElementById('formError');
@@ -438,6 +457,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
           title: data.title,
           company: data.company,
           location: data.location,
+          languages: languages,
           experience: data.experience,
           specialties: specialties,
           otherSpecialties: data.otherSpecialties,
