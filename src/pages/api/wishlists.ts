@@ -1,83 +1,82 @@
 // API endpoint to fetch approved wishlists from database
 import type { APIRoute } from 'astro';
 import { getApprovedWishlists } from '../../lib/db.js';
+import { getBasePath } from '../../lib/paths.js';
 
-interface Wishlist {
-  id: number;
-  projectName: string;
+interface MinimalWishlist {
+  id: string;
   repositoryUrl: string;
   wishlistUrl: string;
-  maintainerUsername: string;
-  maintainerAvatarUrl: string;
-  approved: boolean;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  wishes: string[];
-  urgency: string;
-  projectSize?: string;
-  additionalNotes?: string;
-  technologies?: string[];
 }
 
 export const prerender = false;
 
-async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
+/**
+ * Extract repository name from GitHub URL
+ * e.g., "https://github.com/emma/awesomelibrary" -> "awesomelibrary"
+ */
+function extractRepoName(repoUrl: string): string {
+  try {
+    const url = new URL(repoUrl);
+    const parts = url.pathname.split('/').filter(p => p);
+    // Get last part (repo name)
+    return parts[parts.length - 1] || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+async function fetchWishlistsFromDatabase(): Promise<MinimalWishlist[]> {
   try {
     console.log('[wishlists] Fetching from database');
     
     // Load approved wishlists from database
     const dbWishlists = await getApprovedWishlists();
     
-    // Map to API format
-    const approvedWishlists = dbWishlists.map((wishlist) => ({
-      id: wishlist.id,
-      projectName: wishlist.project_name,
-      repositoryUrl: wishlist.repository_url,
-      wishlistUrl: wishlist.issue_url,
-      maintainerUsername: wishlist.maintainer_username,
-      maintainerAvatarUrl: wishlist.maintainer_avatar_url || `https://github.com/${wishlist.maintainer_username}.png`,
-      approved: wishlist.approved,
-      status: wishlist.status,
-      created_at: wishlist.created_at.toISOString(),
-      updated_at: wishlist.updated_at.toISOString(),
-      wishes: wishlist.wishes || [],
-      urgency: wishlist.urgency || 'medium',
-      projectSize: wishlist.project_size,
-      additionalNotes: wishlist.additional_notes,
-      technologies: wishlist.technologies || [],
-    }));
+    const basePath = getBasePath();
+    const baseUrl = process.env.PUBLIC_URL || 'https://oss-wishlist.org';
     
-    console.log(`[wishlists] Loaded ${approvedWishlists.length} approved wishlists from database`);
-    return approvedWishlists;
+    // Map to minimal format for public JSON feed
+    const minimalWishlists = dbWishlists.map((wishlist) => {
+      const repoName = extractRepoName(wishlist.repository_url);
+      const id = `${wishlist.id}-${repoName}`;
+      const wishlistUrl = `${baseUrl}${basePath}fulfill?issue=${wishlist.id}`;
+      
+      return {
+        id,
+        repositoryUrl: wishlist.repository_url,
+        wishlistUrl
+      };
+    });
+    
+    console.log(`[wishlists] Loaded ${minimalWishlists.length} approved wishlists from database`);
+    return minimalWishlists;
   } catch (error) {
     console.error('[wishlists] Error fetching from database:', error);
     return [];
   }
 }
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ url }) => {
   try {
     // Fetch approved wishlists from database
-    const approvedWishlists = await fetchWishlistsFromDatabase();
+    const minimalWishlists = await fetchWishlistsFromDatabase();
     
-    console.log(`[wishlists] Returning ${approvedWishlists.length} approved wishlists`);
+    console.log(`[wishlists] Returning ${minimalWishlists.length} approved wishlists`);
 
-    // Build response object
+    // Build minimal response object
     const response = {
-      wishlists: approvedWishlists,
+      wishlists: minimalWishlists,
       metadata: {
-        total: approvedWishlists.length,
-        approved: approvedWishlists.length,
-        source: 'database',
+        total: minimalWishlists.length
       }
     };
 
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify(response, null, 2), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store',
+        'Cache-Control': 'public, max-age=300',
       },
     });
   } catch (error) {

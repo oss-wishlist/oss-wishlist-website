@@ -28,7 +28,6 @@ if (!isAdmin) {
 export const prerender = false;
 
 // Fetch all wishlists and practitioners from database for admin review
-
 const allWishlists = await getAllWishlists();
 const allPractitioners = await getAllPractitioners();
 
@@ -150,5 +149,5 @@ const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending'
     </section>
   </div>
 
-  <script src="/js/admin.js"></script>
+  <script is:inline src="/js/admin.js"></script>
 </Layout>
