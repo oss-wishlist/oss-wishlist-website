@@ -95,7 +95,7 @@ export async function closePool() {
   console.log('[Database] Connection pool closed');
 }
 
-// Wishlist-specific query helpers
+// Type definitions
 
 export interface Wishlist {
   id: number;
@@ -127,6 +127,40 @@ export interface Wishlist {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface Practitioner {
+  id: number;
+  slug: string;
+  name: string;
+  title: string;
+  company?: string;
+  bio: string;
+  avatar_url?: string;
+  location?: string;
+  languages: string[];
+  email?: string;
+  website?: string;
+  github?: string;
+  github_sponsors?: string;
+  mastodon?: string;
+  linkedin?: string;
+  services: string[];
+  availability: 'available' | 'limited' | 'unavailable';
+  accepts_pro_bono: boolean;
+  pro_bono_criteria?: string;
+  pro_bono_hours_per_month?: number;
+  years_experience?: number;
+  notable_experience?: string[];
+  certifications?: string[];
+  approved: boolean;
+  status: 'pending' | 'approved' | 'rejected' | 'removed';
+  verified: boolean;
+  submitter_username: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Wishlist-specific query helpers
 
 /**
  * Get wishlist by GitHub issue number
@@ -287,6 +321,178 @@ export async function deleteWishlist(id: number): Promise<boolean> {
 export async function closeWishlist(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
     `UPDATE wishlists SET issue_state = 'closed', status = 'closed' WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
+// Practitioner-specific query helpers
+
+/**
+ * Get practitioner by ID
+ */
+export async function getPractitionerById(id: number): Promise<Practitioner | null> {
+  const result = await query<Practitioner>('SELECT * FROM practitioners WHERE id = $1', [id]);
+  return result.rows[0] || null;
+}
+
+/**
+ * Get practitioner by slug
+ */
+export async function getPractitionerBySlug(slug: string): Promise<Practitioner | null> {
+  const result = await query<Practitioner>('SELECT * FROM practitioners WHERE slug = $1', [slug]);
+  return result.rows[0] || null;
+}
+
+/**
+ * Get all approved practitioners
+ */
+export async function getApprovedPractitioners(): Promise<Practitioner[]> {
+  const result = await query<Practitioner>(
+    `SELECT * FROM practitioners WHERE approved = true AND status = 'approved' ORDER BY created_at DESC`
+  );
+  return result.rows;
+}
+
+/**
+ * Get practitioners by submitter username
+ */
+export async function getPractitionersBySubmitter(username: string): Promise<Practitioner[]> {
+  const result = await query<Practitioner>(
+    `SELECT * FROM practitioners WHERE submitter_username = $1 ORDER BY created_at DESC`,
+    [username]
+  );
+  return result.rows;
+}
+
+/**
+ * Create a new practitioner
+ */
+export async function createPractitioner(practitioner: Partial<Practitioner>): Promise<Practitioner> {
+  const result = await query<Practitioner>(
+    `INSERT INTO practitioners (
+      slug, name, title, company, bio, avatar_url, location, languages,
+      email, website, github, github_sponsors, mastodon, linkedin,
+      services, availability, accepts_pro_bono, pro_bono_criteria, pro_bono_hours_per_month,
+      years_experience, notable_experience, certifications,
+      approved, status, verified, submitter_username
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+    RETURNING *`,
+    [
+      practitioner.slug,
+      practitioner.name,
+      practitioner.title,
+      practitioner.company || null,
+      practitioner.bio,
+      practitioner.avatar_url || null,
+      practitioner.location || null,
+      practitioner.languages || [],
+      practitioner.email || null,
+      practitioner.website || null,
+      practitioner.github || null,
+      practitioner.github_sponsors || null,
+      practitioner.mastodon || null,
+      practitioner.linkedin || null,
+      practitioner.services || [],
+      practitioner.availability || 'available',
+      practitioner.accepts_pro_bono || false,
+      practitioner.pro_bono_criteria || null,
+      practitioner.pro_bono_hours_per_month || null,
+      practitioner.years_experience || null,
+      practitioner.notable_experience || [],
+      practitioner.certifications || [],
+      practitioner.approved || false,
+      practitioner.status || 'pending',
+      practitioner.verified || false,
+      practitioner.submitter_username
+    ]
+  );
+  return result.rows[0];
+}
+
+/**
+ * Update an existing practitioner
+ */
+export async function updatePractitioner(id: number, updates: Partial<Practitioner>): Promise<Practitioner | null> {
+  const result = await query<Practitioner>(
+    `UPDATE practitioners SET
+      name = COALESCE($1, name),
+      title = COALESCE($2, title),
+      company = COALESCE($3, company),
+      bio = COALESCE($4, bio),
+      avatar_url = COALESCE($5, avatar_url),
+      location = COALESCE($6, location),
+      languages = COALESCE($7, languages),
+      email = COALESCE($8, email),
+      website = COALESCE($9, website),
+      github = COALESCE($10, github),
+      github_sponsors = COALESCE($11, github_sponsors),
+      mastodon = COALESCE($12, mastodon),
+      linkedin = COALESCE($13, linkedin),
+      services = COALESCE($14, services),
+      availability = COALESCE($15, availability),
+      accepts_pro_bono = COALESCE($16, accepts_pro_bono),
+      pro_bono_criteria = COALESCE($17, pro_bono_criteria),
+      pro_bono_hours_per_month = COALESCE($18, pro_bono_hours_per_month),
+      years_experience = COALESCE($19, years_experience),
+      notable_experience = COALESCE($20, notable_experience),
+      certifications = COALESCE($21, certifications),
+      updated_at = NOW()
+    WHERE id = $22
+    RETURNING *`,
+    [
+      updates.name,
+      updates.title,
+      updates.company,
+      updates.bio,
+      updates.avatar_url,
+      updates.location,
+      updates.languages,
+      updates.email,
+      updates.website,
+      updates.github,
+      updates.github_sponsors,
+      updates.mastodon,
+      updates.linkedin,
+      updates.services,
+      updates.availability,
+      updates.accepts_pro_bono,
+      updates.pro_bono_criteria,
+      updates.pro_bono_hours_per_month,
+      updates.years_experience,
+      updates.notable_experience,
+      updates.certifications,
+      id
+    ]
+  );
+  return result.rows[0] || null;
+}
+
+/**
+ * Delete a practitioner (hard delete)
+ */
+export async function deletePractitioner(id: number): Promise<boolean> {
+  const result = await query('DELETE FROM practitioners WHERE id = $1', [id]);
+  return (result.rowCount ?? 0) > 0;
+}
+
+/**
+ * Approve a practitioner
+ */
+export async function approvePractitioner(id: number): Promise<Practitioner | null> {
+  const result = await query<Practitioner>(
+    `UPDATE practitioners SET approved = true, status = 'approved' WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
+/**
+ * Reject a practitioner
+ */
+export async function rejectPractitioner(id: number): Promise<Practitioner | null> {
+  const result = await query<Practitioner>(
+    `UPDATE practitioners SET approved = false, status = 'rejected' WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;

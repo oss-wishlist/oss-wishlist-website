@@ -1,10 +1,41 @@
 import type { APIRoute } from 'astro';
 import { sendAdminEmail, sendEmail, getEmailConfig } from '../../lib/mail';
+import { createPractitioner } from '../../lib/db';
+import { verifySession } from '../../lib/github-oauth';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
+    // Verify user is logged in
+    const sessionCookie = cookies.get('github_session');
+    if (!sessionCookie?.value) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'You must be logged in to submit a practitioner profile',
+        code: 'UNAUTHORIZED'
+      }), { 
+        status: 401, 
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
+    const session = verifySession(sessionCookie.value, sessionSecret);
+    
+    if (!session) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid session. Please log in again.',
+        code: 'UNAUTHORIZED'
+      }), { 
+        status: 401, 
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const username = session.user?.login || session.user?.name || 'unknown';
+
     let body;
     try {
       body = await request.json();
@@ -20,8 +51,6 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
     
-    // Submission received
-    
     // Basic required field validation
     const missing: string[] = [];
     if (!body.fullName) missing.push('fullName');
@@ -29,6 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!body.title) missing.push('title');
     if (!body.bio) missing.push('bio');
     if (!body.availability) missing.push('availability');
+    if (!body.languages || body.languages.length === 0) missing.push('languages');
     if (missing.length) {
       return new Response(JSON.stringify({
         success: false,
@@ -41,7 +71,39 @@ export const POST: APIRoute = async ({ request }) => {
     const proBonoHours = body.proBonoHours ?? body.proBonoCapacity ?? 0;
     
     // Generate slug from name (lowercase, replace spaces with hyphens)
-    const slug = body.fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = `${body.fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-practitioner`;
+
+    // Create practitioner in database
+    const practitioner = await createPractitioner({
+      slug,
+      name: body.fullName,
+      title: body.title,
+      company: body.company || '',
+      bio: body.bio,
+      avatar_url: body.github ? `https://github.com/${body.github}.png` : undefined,
+      location: body.location || '',
+      languages: body.languages || ['English'],
+      email: body.email,
+      website: body.website || undefined,
+      github: body.github || undefined,
+      github_sponsors: body.githubSponsors || undefined,
+      mastodon: body.mastodon || undefined,
+      linkedin: body.linkedin || undefined,
+      services: body.specialties || [],
+      availability: body.availability,
+      accepts_pro_bono: body.proBono === 'on' || body.proBono === true,
+      pro_bono_criteria: body.proBonoCriteriaText || undefined,
+      pro_bono_hours_per_month: proBonoHours > 0 ? proBonoHours : undefined,
+      years_experience: body.experience ? parseInt(body.experience) : undefined,
+      notable_experience: body.projects ? body.projects.split('\n').filter((p: string) => p.trim()) : [],
+      certifications: [],
+      approved: false,
+      status: 'pending',
+      verified: false,
+      submitter_username: username
+    });
+
+    console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
 
     // Email subject
     const subject = `New Practitioner Application: ${body.fullName}`;
@@ -50,12 +112,17 @@ export const POST: APIRoute = async ({ request }) => {
     const emailBody = `
 New practitioner application received from ${body.fullName}.
 
+**Database ID:** ${practitioner.id}
+**Slug:** ${slug}
+**Submitter:** @${username}
+
 ## Contact Information
 - **Name:** ${body.fullName}
 - **Email:** ${body.email}
 - **Title:** ${body.title}
 - **Company:** ${body.company || 'Not specified'}
 - **Location:** ${body.location || 'Not specified'}
+- **Languages:** ${body.languages.join(', ')}
 
 ## Professional Background
 - **Years of Experience:** ${body.experience || 'Not specified'}
@@ -83,8 +150,11 @@ ${body.projects || 'Not provided'}
 ${body.additionalInfo || 'None provided'}
 
 ---
-**Suggested filename (when approved):** ${slug}-practitioner.md
+**Database Record:** Practitioner #${practitioner.id}
+**Status:** Pending approval
 **Submitted:** ${new Date().toLocaleString()}
+
+To approve: Update status in database to 'approved' and set approved=true
 `;
 
     // Check email configuration first
@@ -142,12 +212,20 @@ This is an automated confirmation email.`;
       subject: confirmationSubject,
       text: confirmationBody
     });
-    // Optional: ignore confirmation failures
+
+    console.log(`[submit-practitioner] ✓ Admin notification email sent for practitioner #${practitioner.id}`);
+    if (confirmationResult.success) {
+      console.log(`[submit-practitioner] ✓ Confirmation email sent to ${body.email}`);
+    }
 
     return new Response(JSON.stringify({ 
       success: true,
       message: 'Application submitted successfully',
-      slug: slug,
+      practitioner: {
+        id: practitioner.id,
+        slug: slug,
+        name: body.fullName
+      },
       emailProvider: emailResult.provider,
       confirmationSent: confirmationResult.success
     }), { 
