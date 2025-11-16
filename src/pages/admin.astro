@@ -88,9 +88,9 @@ const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending'
                   <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
                   <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
                   <div class="flex gap-4 mt-3 text-sm text-gray-600">
-                    <span>📦 {wishlist.projectSize || 'medium'}</span>
-                    <span>⏰ {wishlist.urgency || 'medium'}</span>
-                    <span>🎯 {wishlist.wishes?.length || 0} wishes</span>
+                    <span>Size: {wishlist.projectSize || 'medium'}</span>
+                    <span>Urgency: {wishlist.urgency || 'medium'}</span>
+                    <span>{wishlist.wishes?.length || 0} wishes</span>
                   </div>
                 </div>
                 <div class="flex gap-2 ml-4">
@@ -133,9 +133,9 @@ const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending'
                   <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
                   <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
                   <div class="flex gap-4 mt-3 text-sm text-gray-600">
-                    <span>📦 {wishlist.projectSize || 'medium'}</span>
-                    <span>⏰ {wishlist.urgency || 'medium'}</span>
-                    <span>🎯 {wishlist.wishes?.length || 0} wishes</span>
+                    <span>Size: {wishlist.projectSize || 'medium'}</span>
+                    <span>Urgency: {wishlist.urgency || 'medium'}</span>
+                    <span>{wishlist.wishes?.length || 0} wishes</span>
                   </div>
                 </div>
                 <div class="flex gap-2 ml-4">
@@ -178,9 +178,9 @@ const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending'
                   <p class="text-sm text-gray-600 mt-1">{practitioner.title}</p>
                   <p class="text-sm text-gray-700 mt-2">{practitioner.bio?.substring(0, 200)}...</p>
                   <div class="flex gap-4 mt-3 text-sm text-gray-600">
-                    <span>📍 {practitioner.location || 'Not specified'}</span>
-                    <span>🗣️ {practitioner.languages?.join(', ')}</span>
-                    <span>⚙️ {practitioner.services?.length || 0} services</span>
+                    <span>Location: {practitioner.location || 'Not specified'}</span>
+                    <span>Languages: {practitioner.languages?.join(', ')}</span>
+                    <span>{practitioner.services?.length || 0} services</span>
                   </div>
                 </div>
                 <div class="flex gap-2 ml-4">
