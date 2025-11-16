@@ -330,7 +330,7 @@ export async function deleteWishlist(id: number): Promise<boolean> {
  */
 export async function closeWishlist(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
-    `UPDATE wishlists SET issue_state = 'closed', status = 'closed' WHERE id = $1 RETURNING *`,
+    `UPDATE wishlists SET issue_state = 'closed' WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;
@@ -341,7 +341,7 @@ export async function closeWishlist(id: number): Promise<Wishlist | null> {
  */
 export async function approveWishlist(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
-    `UPDATE wishlists SET approved = true, status = 'approved' WHERE id = $1 RETURNING *`,
+    `UPDATE wishlists SET approved = true WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;
@@ -352,7 +352,7 @@ export async function approveWishlist(id: number): Promise<Wishlist | null> {
  */
 export async function rejectWishlist(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
-    `UPDATE wishlists SET approved = false, status = 'rejected' WHERE id = $1 RETURNING *`,
+    `UPDATE wishlists SET approved = false WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;
@@ -363,7 +363,7 @@ export async function rejectWishlist(id: number): Promise<Wishlist | null> {
  */
 export async function moveToPending(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
-    `UPDATE wishlists SET approved = false, status = 'pending' WHERE id = $1 RETURNING *`,
+    `UPDATE wishlists SET approved = false WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;
@@ -392,7 +392,7 @@ export async function getPractitionerBySlug(slug: string): Promise<Practitioner 
  */
 export async function getApprovedPractitioners(): Promise<Practitioner[]> {
   const result = await query<Practitioner>(
-    `SELECT * FROM practitioners WHERE approved = true AND status = 'approved' ORDER BY created_at DESC`
+    `SELECT * FROM practitioners WHERE approved = true ORDER BY created_at DESC`
   );
   return result.rows;
 }
@@ -534,7 +534,7 @@ export async function deletePractitioner(id: number): Promise<boolean> {
  */
 export async function approvePractitioner(id: number): Promise<Practitioner | null> {
   const result = await query<Practitioner>(
-    `UPDATE practitioners SET approved = true, status = 'approved' WHERE id = $1 RETURNING *`,
+    `UPDATE practitioners SET approved = true WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;
@@ -545,7 +545,7 @@ export async function approvePractitioner(id: number): Promise<Practitioner | nu
  */
 export async function rejectPractitioner(id: number): Promise<Practitioner | null> {
   const result = await query<Practitioner>(
-    `UPDATE practitioners SET approved = false, status = 'rejected' WHERE id = $1 RETURNING *`,
+    `UPDATE practitioners SET approved = false WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;

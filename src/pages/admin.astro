@@ -31,7 +31,7 @@ export const prerender = false;
 const allWishlists = await getAllWishlists();
 const allPractitioners = await getAllPractitioners();
 
-const pendingWishlists = allWishlists.filter(w => w.status === 'pending').map(w => ({
+const pendingWishlists = allWishlists.filter(w => !w.approved).map(w => ({
   id: w.id,
   projectName: w.project_name,
   maintainerUsername: w.maintainer_username,
@@ -39,10 +39,10 @@ const pendingWishlists = allWishlists.filter(w => w.status === 'pending').map(w 
   projectSize: w.project_size,
   urgency: w.urgency,
   wishes: w.wishes,
-  status: w.status
+  approved: w.approved
 }));
 
-const approvedWishlists = allWishlists.filter(w => w.status === 'approved').map(w => ({
+const approvedWishlists = allWishlists.filter(w => w.approved).map(w => ({
   id: w.id,
   projectName: w.project_name,
   maintainerUsername: w.maintainer_username,
@@ -50,10 +50,10 @@ const approvedWishlists = allWishlists.filter(w => w.status === 'approved').map(
   projectSize: w.project_size,
   urgency: w.urgency,
   wishes: w.wishes,
-  status: w.status
+  approved: w.approved
 }));
 
-const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending').map(p => ({
+const pendingPractitioners = allPractitioners.filter(p => !p.approved).map(p => ({
   id: p.id,
   name: p.name,
   title: p.title,
@@ -61,7 +61,7 @@ const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending'
   location: p.location,
   languages: p.languages,
   services: p.services,
-  status: p.status
+  approved: p.approved
 }));
 ---
 

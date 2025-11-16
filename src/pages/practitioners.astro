@@ -90,30 +90,37 @@ if (wishlistSlug) {
   <div class="max-w-7xl mx-auto px-4 py-10">
     
     {userPractitioner && (
-      <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+      <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600">
-              You have a practitioner profile
-              {userPractitioner.status === 'approved' ? (
-                <span class="ml-2 text-green-600 font-medium">(Approved)</span>
-              ) : userPractitioner.status === 'pending' ? (
-                <span class="ml-2 text-yellow-600 font-medium">(Pending Approval)</span>
+            <p class="text-base text-gray-700 font-medium">
+              Your Practitioner Profile
+              {userPractitioner.approved ? (
+                <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  ✓ Approved
+                </span>
               ) : (
-                <span class="ml-2 text-gray-600 font-medium">(Status: {userPractitioner.status})</span>
+                <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  ⏳ Pending Approval
+                </span>
               )}
             </p>
           </div>
-          <div class="flex gap-3">
-            <a href={`${basePath}edit-practitioner`} class="text-sm text-purple-600 hover:text-purple-700 font-medium">
+          <div class="flex gap-3 items-center">
+            <a 
+              href={`${basePath}edit-practitioner`} 
+              class="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-violet-600 rounded-lg hover:from-purple-700 hover:to-violet-700 transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
               Edit Profile
             </a>
-            <span class="text-gray-300">|</span>
             <button 
               onclick="if(confirm('Are you sure you want to delete your practitioner profile? This action cannot be undone.')) { alert('Please contact info@oss-wishlist.com to request profile deletion.'); }"
-              class="text-sm text-red-600 hover:text-red-700 font-medium"
+              class="text-sm text-red-600 hover:text-red-700 font-medium underline"
             >
-              Delete Profile
+              Delete
             </button>
           </div>
         </div>
