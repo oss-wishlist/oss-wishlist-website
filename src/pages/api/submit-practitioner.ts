@@ -77,6 +77,19 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const existingPractitioners = await getPractitionersBySubmitter(username);
     const existingPractitioner = existingPractitioners.length > 0 ? existingPractitioners[0] : null;
 
+    // If profile exists, user should use the edit page instead
+    if (existingPractitioner) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'You already have a practitioner profile. Please use the edit page to update it.',
+        code: 'PROFILE_EXISTS',
+        editUrl: '/edit-practitioner'
+      }), { 
+        status: 400, 
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Check if email is already in use by another practitioner (different GitHub username)
     const allPractitioners = await getAllPractitioners();
     const emailTaken = allPractitioners.find(p => 
@@ -123,24 +136,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       submitter_username: username
     };
 
-    let practitioner;
-    let isUpdate = false;
-
-    if (existingPractitioner) {
-      // Update existing practitioner
-      practitioner = await updatePractitioner(existingPractitioner.id, practitionerData);
-      isUpdate = true;
-      console.log(`[submit-practitioner] ✓ Updated database record for practitioner #${practitioner.id} (${body.fullName})`);
-    } else {
-      // Create new practitioner
-      practitioner = await createPractitioner(practitionerData);
-      console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
-    }
+    // Create new practitioner (we already checked that none exists)
+    const practitioner = await createPractitioner(practitionerData);
+    console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
 
     // Email subject
-    const subject = isUpdate 
-      ? `Practitioner Profile Updated: ${body.fullName}`
-      : `New Practitioner Application: ${body.fullName}`;
+    const subject = `New Practitioner Application: ${body.fullName}`;
     
     // Create simple email body with application details
     const emailBody = `

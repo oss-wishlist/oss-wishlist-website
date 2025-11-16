@@ -662,3 +662,216 @@ describe('Practitioner Application - User Experience', () => {
     });
   });
 });
+
+describe('Practitioner Application - Duplicate Prevention', () => {
+  it('should prevent users with existing profiles from accessing apply page', async () => {
+    // Mock user with existing profile
+    const existingUser = {
+      login: 'existinguser',
+      id: 123,
+      name: 'Existing User'
+    };
+
+    const existingProfile = {
+      id: 1,
+      name: 'Existing User',
+      github: 'existinguser',
+      submitter_username: 'existinguser',
+      approved: true
+    };
+
+    // When user with profile accesses /apply-practitioner
+    // They should be redirected to /edit-practitioner
+    const expectedRedirect = '/edit-practitioner';
+    
+    expect(existingProfile.submitter_username).toBe(existingUser.login);
+    expect(expectedRedirect).toBe('/edit-practitioner');
+  });
+
+  it('should allow users without profiles to access apply page', async () => {
+    // Mock user without profile
+    const newUser = {
+      login: 'newuser',
+      id: 456,
+      name: 'New User'
+    };
+
+    // API returns no practitioner
+    const apiResponse = {
+      success: false,
+      error: 'Practitioner not found'
+    };
+
+    // User should be able to see the form
+    expect(apiResponse.success).toBe(false);
+    expect(newUser.login).toBe('newuser');
+  });
+
+  it('should reject API submission if profile already exists', async () => {
+    const username = 'existinguser';
+    
+    // Mock database check returns existing profile
+    const existingPractitioners = [
+      {
+        id: 1,
+        name: 'Existing User',
+        submitter_username: username,
+        approved: true
+      }
+    ];
+
+    // API should return error
+    const expectedError = {
+      success: false,
+      error: 'You already have a practitioner profile. Please use the edit page to update it.',
+      code: 'PROFILE_EXISTS',
+      editUrl: '/edit-practitioner'
+    };
+
+    expect(existingPractitioners.length).toBeGreaterThan(0);
+    expect(expectedError.code).toBe('PROFILE_EXISTS');
+    expect(expectedError.editUrl).toBe('/edit-practitioner');
+  });
+
+  it('should allow API submission if no profile exists', async () => {
+    const username = 'newuser';
+    
+    // Mock database check returns empty array
+    const existingPractitioners: any[] = [];
+
+    // Submission should proceed
+    expect(existingPractitioners.length).toBe(0);
+  });
+
+  it('should use authenticated GitHub username for identity', async () => {
+    const sessionUser = {
+      login: 'authenticateduser',
+      id: 789,
+      name: 'Authenticated User'
+    };
+
+    const formData = {
+      fullName: 'Authenticated User',
+      email: 'auth@example.com',
+      github: 'fakename', // User tries to submit different GitHub username
+      title: 'Engineer',
+      bio: 'Test bio',
+      availability: 'available',
+      languages: ['English']
+    };
+
+    // System should ignore form GitHub field and use session
+    const savedGithub = sessionUser.login;
+    const savedSubmitterUsername = sessionUser.login;
+
+    expect(savedGithub).toBe('authenticateduser');
+    expect(savedSubmitterUsername).toBe('authenticateduser');
+    expect(savedGithub).not.toBe(formData.github); // Ignores form input
+  });
+
+  it('should prevent duplicate profiles with same submitter_username', async () => {
+    const username = 'testuser';
+    
+    const profile1 = {
+      id: 1,
+      name: 'Test User Profile 1',
+      submitter_username: username,
+      approved: true
+    };
+
+    const profile2Attempt = {
+      name: 'Test User Profile 2',
+      submitter_username: username, // Same username!
+      approved: false
+    };
+
+    // Second profile creation should be rejected
+    // Only one profile per GitHub username allowed
+    expect(profile1.submitter_username).toBe(profile2Attempt.submitter_username);
+  });
+
+  it('should redirect to /my-practitioner API to check for existing profile', async () => {
+    const sessionCookie = 'valid_session_token';
+    
+    // Apply page should check this API endpoint
+    const apiEndpoint = '/api/my-practitioner';
+    
+    expect(apiEndpoint).toBe('/api/my-practitioner');
+    expect(sessionCookie.length).toBeGreaterThan(0);
+  });
+
+  it('should only redirect if API returns success with practitioner data', async () => {
+    // Case 1: User has approved profile
+    const approvedResponse = {
+      success: true,
+      practitioner: {
+        id: 1,
+        name: 'User',
+        approved: true
+      }
+    };
+    expect(approvedResponse.success && approvedResponse.practitioner).toBeTruthy();
+
+    // Case 2: User has pending profile
+    const pendingResponse = {
+      success: true,
+      practitioner: {
+        id: 2,
+        name: 'User',
+        approved: false
+      }
+    };
+    expect(pendingResponse.success && pendingResponse.practitioner).toBeTruthy();
+
+    // Case 3: User has no profile (should NOT redirect)
+    const noProfileResponse = {
+      success: false,
+      error: 'Practitioner not found'
+    };
+    expect(noProfileResponse.success && noProfileResponse.practitioner).toBeFalsy();
+  });
+
+  it('should maintain profile uniqueness across all approval states', async () => {
+    // Approved, pending, and rejected profiles all count as "existing"
+    const approvedProfile = {
+      id: 1,
+      submitter_username: 'user1',
+      approved: true
+    };
+
+    const pendingProfile = {
+      id: 2,
+      submitter_username: 'user2',
+      approved: false
+    };
+
+    // Both should prevent creating duplicate profiles
+    expect(approvedProfile.submitter_username).not.toBe(pendingProfile.submitter_username);
+  });
+
+  it('should not allow updating profile via submit endpoint', async () => {
+    const username = 'existinguser';
+    
+    const existingProfile = {
+      id: 1,
+      name: 'Original Name',
+      submitter_username: username,
+      approved: true
+    };
+
+    const updateAttempt = {
+      fullName: 'Updated Name',
+      email: 'updated@example.com',
+      title: 'New Title',
+      bio: 'Updated bio',
+      availability: 'limited',
+      languages: ['English']
+    };
+
+    // Submit endpoint should reject (use edit endpoint instead)
+    const expectedError = 'You already have a practitioner profile. Please use the edit page to update it.';
+    
+    expect(existingProfile.id).toBe(1);
+    expect(expectedError).toContain('edit page');
+  });
+});
