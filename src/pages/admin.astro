@@ -27,7 +27,7 @@ if (!isAdmin) {
 
 export const prerender = false;
 
-// Fetch pending wishlists and practitioners directly from database
+// Fetch all wishlists and practitioners from database for admin review
 
 const allWishlists = await getAllWishlists();
 const allPractitioners = await getAllPractitioners();
