@@ -12,9 +12,11 @@ description: "Transparent pricing for open source sustainability services. Fair 
   This ensures pricing is consistent across the platform (catalog, wishlist form, fulfill page).
 -->
 
+> NOTE: until we begin paying pracitioners this is an open conversation ()
+
 ## Focus on Community
 
-This is not a company. It's a collaborative space where maintainers, practitioners, and sponsors come together to strengthen open source sustainability. Our pricing tiers are a baseline proposal, and open to evolve with community input.  
+This is not a company. It's a collaborative space where maintainers, practitioners, sponsor and other helpers come together to strengthen open source sustainability. Our pricing tiers are a baseline proposal, and open to evolve with community input.  
 
 
 ### Understanding Our Pricing Tiers
