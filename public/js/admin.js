@@ -87,3 +87,47 @@ window.rejectPractitioner = async function(id) {
     alert('Error: ' + err.message);
   }
 };
+
+window.moveToPending = async function(id) {
+  if (!confirm('Move this wishlist back to pending status?')) return;
+  
+  try {
+    const basePath = window.location.pathname.includes('/oss-wishlist-website') ? '/oss-wishlist-website/' : '/';
+    const response = await fetch(`${basePath}api/admin/move-to-pending`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    
+    if (response.ok) {
+      alert('Wishlist moved to pending');
+      window.location.reload();
+    } else {
+      alert('Failed to move wishlist to pending');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+};
+
+window.deleteWishlist = async function(id) {
+  if (!confirm('Are you sure you want to DELETE this wishlist? This action CANNOT be undone.')) return;
+  
+  try {
+    const basePath = window.location.pathname.includes('/oss-wishlist-website') ? '/oss-wishlist-website/' : '/';
+    const response = await fetch(`${basePath}api/admin/delete-wishlist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    
+    if (response.ok) {
+      alert('Wishlist deleted');
+      window.location.reload();
+    } else {
+      alert('Failed to delete wishlist');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+};

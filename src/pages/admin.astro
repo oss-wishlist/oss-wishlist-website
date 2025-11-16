@@ -42,6 +42,17 @@ const pendingWishlists = allWishlists.filter(w => w.status === 'pending').map(w 
   status: w.status
 }));
 
+const approvedWishlists = allWishlists.filter(w => w.status === 'approved').map(w => ({
+  id: w.id,
+  projectName: w.project_name,
+  maintainerUsername: w.maintainer_username,
+  description: w.project_description,
+  projectSize: w.project_size,
+  urgency: w.urgency,
+  wishes: w.wishes,
+  status: w.status
+}));
+
 const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending').map(p => ({
   id: p.id,
   name: p.name,
@@ -94,6 +105,51 @@ const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending'
                     onclick={`rejectWishlist(${wishlist.id})`}
                   >
                     Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- Approved Wishlists Section -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">
+        Approved Wishlists 
+        <span class="text-sm font-normal text-gray-600">({approvedWishlists.length})</span>
+      </h2>
+      
+      {approvedWishlists.length === 0 ? (
+        <p class="text-gray-600">No approved wishlists</p>
+      ) : (
+        <div class="space-y-4">
+          {approvedWishlists.map((wishlist) => (
+            <div class="bg-white border rounded-lg p-6 shadow-sm" key={wishlist.id}>
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <h3 class="font-semibold text-lg text-gray-900">{wishlist.projectName}</h3>
+                  <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
+                  <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
+                  <div class="flex gap-4 mt-3 text-sm text-gray-600">
+                    <span>📦 {wishlist.projectSize || 'medium'}</span>
+                    <span>⏰ {wishlist.urgency || 'medium'}</span>
+                    <span>🎯 {wishlist.wishes?.length || 0} wishes</span>
+                  </div>
+                </div>
+                <div class="flex gap-2 ml-4">
+                  <button 
+                    class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+                    onclick={`moveToPending(${wishlist.id})`}
+                  >
+                    Move to Pending
+                  </button>
+                  <button 
+                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                    onclick={`deleteWishlist(${wishlist.id})`}
+                  >
+                    Delete
                   </button>
                 </div>
               </div>

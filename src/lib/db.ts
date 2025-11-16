@@ -358,6 +358,17 @@ export async function rejectWishlist(id: number): Promise<Wishlist | null> {
   return result.rows[0] || null;
 }
 
+/**
+ * Move a wishlist back to pending status
+ */
+export async function moveToPending(id: number): Promise<Wishlist | null> {
+  const result = await query<Wishlist>(
+    `UPDATE wishlists SET approved = false, status = 'pending' WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
 // Practitioner-specific query helpers
 
 /**
