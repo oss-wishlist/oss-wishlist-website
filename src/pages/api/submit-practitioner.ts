@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { sendAdminEmail, sendEmail, getEmailConfig } from '../../lib/mail';
-import { createPractitioner, updatePractitioner, getPractitionersBySubmitter } from '../../lib/db';
+import { createPractitioner, updatePractitioner, getPractitionersBySubmitter, getAllPractitioners } from '../../lib/db';
 import { verifySession } from '../../lib/github-oauth';
 
 export const prerender = false;
@@ -76,6 +76,23 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Check if practitioner profile already exists for this user
     const existingPractitioners = await getPractitionersBySubmitter(username);
     const existingPractitioner = existingPractitioners.length > 0 ? existingPractitioners[0] : null;
+
+    // Check if email is already in use by another practitioner (different GitHub username)
+    const allPractitioners = await getAllPractitioners();
+    const emailTaken = allPractitioners.find(p => 
+      p.email === body.email && 
+      p.submitter_username !== username
+    );
+    if (emailTaken) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'This email address is already registered by another practitioner. Please use a different email.',
+        code: 'EMAIL_ALREADY_EXISTS'
+      }), { 
+        status: 400, 
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     const practitionerData = {
       slug,
