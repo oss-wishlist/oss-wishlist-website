@@ -336,6 +336,28 @@ export async function closeWishlist(id: number): Promise<Wishlist | null> {
   return result.rows[0] || null;
 }
 
+/**
+ * Approve a wishlist
+ */
+export async function approveWishlist(id: number): Promise<Wishlist | null> {
+  const result = await query<Wishlist>(
+    `UPDATE wishlists SET approved = true, status = 'approved' WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
+/**
+ * Reject a wishlist
+ */
+export async function rejectWishlist(id: number): Promise<Wishlist | null> {
+  const result = await query<Wishlist>(
+    `UPDATE wishlists SET approved = false, status = 'rejected' WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
 // Practitioner-specific query helpers
 
 /**
