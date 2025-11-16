@@ -3,6 +3,33 @@ import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { verifySession } from '../lib/github-oauth';
+
+// Check if user is logged in
+const sessionCookie = Astro.cookies.get('github_session');
+const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
+let session = null;
+let userPractitioner = null;
+
+if (sessionCookie?.value) {
+  session = verifySession(sessionCookie.value, sessionSecret);
+  
+  // Check if logged-in user has a practitioner profile
+  if (session?.user?.login) {
+    const origin = Astro.url.origin;
+    const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
+      headers: {
+        'Cookie': `github_session=${sessionCookie.value}`
+      }
+    });
+    if (myPractitionerResponse.ok) {
+      const data = await myPractitionerResponse.json();
+      if (data.success) {
+        userPractitioner = data.practitioner;
+      }
+    }
+  }
+}
 
 // Fetch practitioners from database API
 const origin = Astro.url.origin;
@@ -61,6 +88,38 @@ if (wishlistSlug) {
 
 <Layout title="Open Source Practitioners" description="Connect with verified open source practitioners who can help with your project needs">
   <div class="max-w-7xl mx-auto px-4 py-10">
+    
+    {userPractitioner && (
+      <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">
+              You have a practitioner profile
+              {userPractitioner.status === 'approved' ? (
+                <span class="ml-2 text-green-600 font-medium">(Approved)</span>
+              ) : userPractitioner.status === 'pending' ? (
+                <span class="ml-2 text-yellow-600 font-medium">(Pending Approval)</span>
+              ) : (
+                <span class="ml-2 text-gray-600 font-medium">(Status: {userPractitioner.status})</span>
+              )}
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <a href={`${basePath}apply-practitioner`} class="text-sm text-purple-600 hover:text-purple-700 font-medium">
+              Edit Profile
+            </a>
+            <span class="text-gray-300">|</span>
+            <button 
+              onclick="if(confirm('Are you sure you want to delete your practitioner profile? This action cannot be undone.')) { alert('Please contact info@oss-wishlist.com to request profile deletion.'); }"
+              class="text-sm text-red-600 hover:text-red-700 font-medium"
+            >
+              Delete Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <!-- Header -->
     <div class="text-center mb-10">
       {selectedWishlist ? (

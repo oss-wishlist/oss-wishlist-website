@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { sendAdminEmail, sendEmail, getEmailConfig } from '../../lib/mail';
-import { createPractitioner } from '../../lib/db';
+import { createPractitioner, updatePractitioner, getPractitionersBySubmitter } from '../../lib/db';
 import { verifySession } from '../../lib/github-oauth';
 
 export const prerender = false;
@@ -73,8 +73,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Generate slug from name (lowercase, replace spaces with hyphens)
     const slug = `${body.fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-practitioner`;
 
-    // Create practitioner in database
-    const practitioner = await createPractitioner({
+    // Check if practitioner profile already exists for this user
+    const existingPractitioners = await getPractitionersBySubmitter(username);
+    const existingPractitioner = existingPractitioners.length > 0 ? existingPractitioners[0] : null;
+
+    const practitionerData = {
       slug,
       name: body.fullName,
       title: body.title,
@@ -101,12 +104,26 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       status: 'pending',
       verified: false,
       submitter_username: username
-    });
+    };
 
-    console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
+    let practitioner;
+    let isUpdate = false;
+
+    if (existingPractitioner) {
+      // Update existing practitioner
+      practitioner = await updatePractitioner(existingPractitioner.id, practitionerData);
+      isUpdate = true;
+      console.log(`[submit-practitioner] ✓ Updated database record for practitioner #${practitioner.id} (${body.fullName})`);
+    } else {
+      // Create new practitioner
+      practitioner = await createPractitioner(practitionerData);
+      console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
+    }
 
     // Email subject
-    const subject = `New Practitioner Application: ${body.fullName}`;
+    const subject = isUpdate 
+      ? `Practitioner Profile Updated: ${body.fullName}`
+      : `New Practitioner Application: ${body.fullName}`;
     
     // Create simple email body with application details
     const emailBody = `
@@ -220,12 +237,13 @@ This is an automated confirmation email.`;
 
     return new Response(JSON.stringify({ 
       success: true,
-      message: 'Application submitted successfully',
+      message: isUpdate ? 'Profile updated successfully' : 'Application submitted successfully',
       practitioner: {
         id: practitioner.id,
         slug: slug,
         name: body.fullName
       },
+      isUpdate,
       emailProvider: emailResult.provider,
       confirmationSent: confirmationResult.success
     }), { 
