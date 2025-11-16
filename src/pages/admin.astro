@@ -2,6 +2,7 @@
 import Layout from '../components/Layout.astro';
 import { getBasePath } from '../lib/paths';
 import { verifySession } from '../lib/github-oauth';
+import { getAllWishlists, getAllPractitioners } from '../lib/db';
 
 const basePath = getBasePath();
 
@@ -27,7 +28,6 @@ if (!isAdmin) {
 export const prerender = false;
 
 // Fetch pending wishlists and practitioners directly from database
-import { getAllWishlists, getAllPractitioners } from '../lib/db';
 
 const allWishlists = await getAllWishlists();
 const allPractitioners = await getAllPractitioners();
