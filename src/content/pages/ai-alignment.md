@@ -1,6 +1,7 @@
 ---
 title: 'AI Alignment'
 description: 'Pioneering AI benchmarks for open source sustainability, governance, and human values'
+date: 2025-11-16
 ---
 
 ## What is AI Alignment?
@@ -9,7 +10,7 @@ AI alignment is the effort to design Artificial Intelligence systems so their go
 
 ## OSS Wishlist & AI Alignment
 
-A potential of Open Source Wishlist is to pioneer how benchmarks are created for AI around sustainability topics like governance. By connecting maintainers with practitioners and capturing real-world needs, we're building a foundation for understanding what "good" looks like in open source sustainability.
+A potential of Open Source Wishlist is to pioneer how benchmarks are created for AI around sustainability topics like governance. By connecting maintainers with practitioners and capturing real-world needs, applying rubrics for success,  how might we buil a foundation for open source sustainability AI alignment?
 
 ## Get Involved
 
@@ -24,16 +25,4 @@ Join the conversation with the **CHAOSS AI Alignment Working Group** to help sha
   </a>
 </div>
 
-## Why This Matters
 
-Open source sustainability depends on understanding and measuring project health. As AI systems become more integrated into development workflows, ensuring they align with community values and needs becomes critical. OSS Wishlist contributes to this effort by:
-
-- **Capturing Real Needs**: Documenting what maintainers actually need helps train AI to recognize healthy project patterns
-- **Building Benchmarks**: Real-world wishlist data can inform governance and sustainability metrics
-- **Human-Centered Design**: Keeping human maintainers and practitioners at the center of AI development
-
-## Learn More
-
-- **CHAOSS Project**: [https://chaoss.community/](https://chaoss.community/)
-- **AI Alignment Working Group**: Join the Slack channel to participate in discussions
-- **OSS Wishlist Data**: Our wishlist patterns contribute to understanding open source health
