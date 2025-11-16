@@ -190,6 +190,16 @@ export async function getApprovedWishlists(): Promise<Wishlist[]> {
 }
 
 /**
+ * Get all wishlists (for admin)
+ */
+export async function getAllWishlists(): Promise<Wishlist[]> {
+  const result = await query<Wishlist>(
+    'SELECT * FROM wishlists ORDER BY created_at DESC'
+  );
+  return result.rows;
+}
+
+/**
  * Get wishlists by maintainer
  */
 export async function getWishlistsByMaintainer(username: string): Promise<Wishlist[]> {
@@ -350,6 +360,16 @@ export async function getPractitionerBySlug(slug: string): Promise<Practitioner 
 export async function getApprovedPractitioners(): Promise<Practitioner[]> {
   const result = await query<Practitioner>(
     `SELECT * FROM practitioners WHERE approved = true AND status = 'approved' ORDER BY created_at DESC`
+  );
+  return result.rows;
+}
+
+/**
+ * Get all practitioners (for admin)
+ */
+export async function getAllPractitioners(): Promise<Practitioner[]> {
+  const result = await query<Practitioner>(
+    `SELECT * FROM practitioners ORDER BY created_at DESC`
   );
   return result.rows;
 }

@@ -1,0 +1,238 @@
+---
+import Layout from '../components/Layout.astro';
+import { getBasePath } from '../lib/paths';
+import { verifySession } from '../lib/github-oauth';
+
+const basePath = getBasePath();
+
+// Check if user is logged in and is admin
+const sessionCookie = Astro.cookies.get('github_session');
+const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
+const ADMIN_USERNAMES = (import.meta.env.ADMIN_USERNAMES || 'emmairwin').split(',');
+
+let session = null;
+let isAdmin = false;
+
+if (sessionCookie?.value) {
+  session = verifySession(sessionCookie.value, sessionSecret);
+  if (session?.user?.login) {
+    isAdmin = ADMIN_USERNAMES.includes(session.user.login);
+  }
+}
+
+if (!isAdmin) {
+  return Astro.redirect(`${basePath}?error=unauthorized`);
+}
+
+export const prerender = false;
+
+// Fetch pending wishlists and practitioners directly from database
+import { getAllWishlists, getAllPractitioners } from '../lib/db';
+
+const allWishlists = await getAllWishlists();
+const allPractitioners = await getAllPractitioners();
+
+const pendingWishlists = allWishlists.filter(w => w.status === 'pending').map(w => ({
+  id: w.id,
+  projectName: w.project_name,
+  maintainerUsername: w.maintainer_username,
+  description: w.project_description,
+  projectSize: w.project_size,
+  urgency: w.urgency,
+  wishes: w.wishes,
+  status: w.status
+}));
+
+const pendingPractitioners = allPractitioners.filter(p => p.status === 'pending').map(p => ({
+  id: p.id,
+  name: p.name,
+  title: p.title,
+  bio: p.bio,
+  location: p.location,
+  languages: p.languages,
+  services: p.services,
+  status: p.status
+}));
+---
+
+<Layout title="Admin Dashboard" description="Manage wishlists and practitioners">
+  <div class="max-w-7xl mx-auto px-4 py-10">
+    <h1 class="text-4xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+
+    <!-- Wishlists Section -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">
+        Pending Wishlists 
+        <span class="text-sm font-normal text-gray-600">({pendingWishlists.length})</span>
+      </h2>
+      
+      {pendingWishlists.length === 0 ? (
+        <p class="text-gray-600">No pending wishlists</p>
+      ) : (
+        <div class="space-y-4">
+          {pendingWishlists.map((wishlist) => (
+            <div class="bg-white border rounded-lg p-6 shadow-sm" key={wishlist.id}>
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <h3 class="font-semibold text-lg text-gray-900">{wishlist.projectName}</h3>
+                  <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
+                  <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
+                  <div class="flex gap-4 mt-3 text-sm text-gray-600">
+                    <span>📦 {wishlist.projectSize || 'medium'}</span>
+                    <span>⏰ {wishlist.urgency || 'medium'}</span>
+                    <span>🎯 {wishlist.wishes?.length || 0} wishes</span>
+                  </div>
+                </div>
+                <div class="flex gap-2 ml-4">
+                  <button 
+                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                    onclick={`approveWishlist(${wishlist.id})`}
+                  >
+                    Approve
+                  </button>
+                  <button 
+                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                    onclick={`rejectWishlist(${wishlist.id})`}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- Practitioners Section -->
+    <section>
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">
+        Pending Practitioners 
+        <span class="text-sm font-normal text-gray-600">({pendingPractitioners.length})</span>
+      </h2>
+      
+      {pendingPractitioners.length === 0 ? (
+        <p class="text-gray-600">No pending practitioners</p>
+      ) : (
+        <div class="space-y-4">
+          {pendingPractitioners.map((practitioner) => (
+            <div class="bg-white border rounded-lg p-6 shadow-sm" key={practitioner.id}>
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <h3 class="font-semibold text-lg text-gray-900">{practitioner.name}</h3>
+                  <p class="text-sm text-gray-600 mt-1">{practitioner.title}</p>
+                  <p class="text-sm text-gray-700 mt-2">{practitioner.bio?.substring(0, 200)}...</p>
+                  <div class="flex gap-4 mt-3 text-sm text-gray-600">
+                    <span>📍 {practitioner.location || 'Not specified'}</span>
+                    <span>🗣️ {practitioner.languages?.join(', ')}</span>
+                    <span>⚙️ {practitioner.services?.length || 0} services</span>
+                  </div>
+                </div>
+                <div class="flex gap-2 ml-4">
+                  <button 
+                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                    onclick={`approvePractitioner(${practitioner.id})`}
+                  >
+                    Approve
+                  </button>
+                  <button 
+                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                    onclick={`rejectPractitioner(${practitioner.id})`}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  </div>
+
+  <script define:vars={{ basePath }}>
+    async function approveWishlist(id) {
+      if (!confirm('Approve this wishlist?')) return;
+      
+      try {
+        const response = await fetch(`${basePath}api/admin/approve-wishlist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        
+        if (response.ok) {
+          alert('Wishlist approved!');
+          window.location.reload();
+        } else {
+          alert('Failed to approve wishlist');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function rejectWishlist(id) {
+      if (!confirm('Reject this wishlist?')) return;
+      
+      try {
+        const response = await fetch(`${basePath}api/admin/reject-wishlist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        
+        if (response.ok) {
+          alert('Wishlist rejected');
+          window.location.reload();
+        } else {
+          alert('Failed to reject wishlist');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function approvePractitioner(id) {
+      if (!confirm('Approve this practitioner?')) return;
+      
+      try {
+        const response = await fetch(`${basePath}api/admin/approve-practitioner`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        
+        if (response.ok) {
+          alert('Practitioner approved!');
+          window.location.reload();
+        } else {
+          alert('Failed to approve practitioner');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function rejectPractitioner(id) {
+      if (!confirm('Reject this practitioner?')) return;
+      
+      try {
+        const response = await fetch(`${basePath}api/admin/reject-practitioner`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        
+        if (response.ok) {
+          alert('Practitioner rejected');
+          window.location.reload();
+        } else {
+          alert('Failed to reject practitioner');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+  </script>
+</Layout>
