@@ -35,50 +35,53 @@ issueNumber = url.searchParams.get('issue');
 if (issueNumber) {
   // Fetch wishlist from database API
   try {
-    const apiUrl = new URL(`${basePath}api/get-wishlist`, url.origin);
-    apiUrl.searchParams.set('issueNumber', issueNumber);
+    const apiUrl = new URL(`${basePath}api/wishlist`, url.origin);
+    apiUrl.searchParams.set('id', issueNumber);
+    
+    console.log('[fulfill] Fetching wishlist from:', apiUrl.toString());
     
     const response = await fetch(apiUrl.toString());
     
     if (response.ok) {
-      const wishlistFromDb = await response.json();
+      const data = await response.json();
+      const wishlist = data.wishlist;
       
-      if (wishlistFromDb) {
+      if (wishlist) {
         // Found in database - use this data
-        const projectName = wishlistFromDb.projectTitle;
-        projectSize = wishlistFromDb.projectSize as 'small' | 'medium' | 'large';
+        const projectName = wishlist.projectName;
+        projectSize = wishlist.projectSize as 'small' | 'medium' | 'large';
         
         wishlistData = {
-          issueNumber: wishlistFromDb.id,
+          issueNumber: wishlist.id,
           projectName,
-          repositoryUrl: wishlistFromDb.repositoryUrl,
-          maintainer: wishlistFromDb.maintainer,
-          wishes: wishlistFromDb.wishes || [],
-          services: wishlistFromDb.wishes || [],
-          urgency: wishlistFromDb.urgency,
-          technologies: wishlistFromDb.technologies || [],
-          projectSize: wishlistFromDb.projectSize,
-          additionalNotes: wishlistFromDb.additionalNotes,
-          url: wishlistFromDb.repositoryUrl, // Use repo URL as fallback
-          openToSponsorship: wishlistFromDb.openToSponsorship,
-          preferredPractitioner: wishlistFromDb.preferredPractitioner || null,
-          nomineeName: wishlistFromDb.nomineeName || null,
-          nomineeEmail: wishlistFromDb.nomineeEmail || null,
-          nomineeGithub: wishlistFromDb.nomineeGithub || null
+          repositoryUrl: wishlist.repositoryUrl,
+          maintainer: wishlist.maintainerUsername,
+          wishes: wishlist.wishes || [],
+          services: wishlist.wishes || [],
+          urgency: wishlist.urgency,
+          technologies: wishlist.technologies || [],
+          projectSize: wishlist.projectSize,
+          additionalNotes: wishlist.additionalNotes,
+          url: wishlist.wishlistUrl,
+          openToSponsorship: wishlist.openToSponsorship,
+          preferredPractitioner: wishlist.preferredPractitioner || null,
+          nomineeName: wishlist.nomineeName || null,
+          nomineeEmail: wishlist.nomineeEmail || null,
+          nomineeGithub: wishlist.nomineeGithub || null
         };
         
         // Also set githubIssue for compatibility
         githubIssue = {
-          number: wishlistFromDb.id,
+          number: wishlist.id,
           title: `Wishlist: ${projectName}`,
-          html_url: wishlistFromDb.repositoryUrl,
+          html_url: wishlist.wishlistUrl,
           user: {
-            login: wishlistFromDb.maintainer,
-            avatar_url: `https://github.com/${wishlistFromDb.maintainer}.png`,
+            login: wishlist.maintainerUsername,
+            avatar_url: wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`,
           },
         };
         
-        console.log('[fulfill] Loaded wishlist from database:', wishlistFromDb.id);
+        console.log('[fulfill] Loaded wishlist from database:', wishlist.id);
       }
     } else {
       console.log('[fulfill] API returned non-OK status:', response.status);
