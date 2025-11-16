@@ -1,7 +1,8 @@
-// API endpoint to delete wishlist (admin only)
+// API endpoint to delete a wishlist (admin only)
 import type { APIRoute } from 'astro';
 import { deleteWishlist } from '../../../lib/db';
 import { verifySession } from '../../../lib/github-oauth';
+import { triggerJsonUpdate } from '../../../lib/trigger-json-update';
 
 export const prerender = false;
 
@@ -40,6 +41,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Delete wishlist from database
     await deleteWishlist(id);
+
+    // Trigger JSON feed update
+    triggerJsonUpdate('deleted', id).catch(err => 
+      console.error('[admin] Failed to trigger JSON update:', err)
+    );
 
     return new Response(JSON.stringify({ 
       success: true,

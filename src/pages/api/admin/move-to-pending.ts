@@ -2,6 +2,7 @@
 import type { APIRoute } from 'astro';
 import { moveToPending } from '../../../lib/db';
 import { verifySession } from '../../../lib/github-oauth';
+import { triggerJsonUpdate } from '../../../lib/trigger-json-update';
 
 export const prerender = false;
 
@@ -42,6 +43,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Then we'll need to update to status='pending' instead
     // Actually, let's update the db function to handle this
     await moveToPending(id);
+
+    // Trigger JSON feed update
+    triggerJsonUpdate('moved-to-pending', id).catch(err => 
+      console.error('[admin] Failed to trigger JSON update:', err)
+    );
 
     return new Response(JSON.stringify({ 
       success: true,

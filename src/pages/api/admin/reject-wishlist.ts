@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { verifySession } from '../../../lib/github-oauth';
 import { rejectWishlist } from '../../../lib/db';
 import { jsonSuccess, jsonError } from '../../../lib/api-response';
+import { triggerJsonUpdate } from '../../../lib/trigger-json-update';
 
 export const prerender = false;
 
@@ -35,6 +36,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     console.log(`[admin] Rejected wishlist #${id} by @${session.user.login}`);
+
+    // Trigger JSON feed update
+    triggerJsonUpdate('rejected', id).catch(err => 
+      console.error('[admin] Failed to trigger JSON update:', err)
+    );
 
     return jsonSuccess({ 
       rejected: true, 
