@@ -155,11 +155,18 @@ The following information is **intentionally public** once approved:
 
 ### Public JSON Data Feed
 We provide a **public JSON data feed** of all approved wishlists at `/wishlist-cache/all-wishlists.json`. This feed contains **minimal information only**:
+- Unique wishlist ID (format: `{database_id}-{repository_name}`)
 - Repository URL
-- Maintainer GitHub username
 - Link to full wishlist page on our website
 
-**What is NOT included:** The JSON feed does NOT contain detailed wishlist information such as project descriptions, service needs, technologies, or any other details. Users must visit the full wishlist page on our website to view complete information.
+**What is NOT included:** The JSON feed does NOT contain:
+- Project descriptions, names, or details
+- Service needs or wishes
+- Technologies or resources
+- Maintainer email addresses or any personal information beyond what is publicly visible in the GitHub repository URL
+- Urgency, project size, or other metadata
+
+Users must visit the full wishlist page on our website to view complete information.
 
 **Purpose:** To enable third-party integrations and discovery tools while minimizing data exposure.
 
