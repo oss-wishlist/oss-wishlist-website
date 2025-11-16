@@ -12,7 +12,7 @@ description: "Transparent pricing for open source sustainability services. Fair 
   This ensures pricing is consistent across the platform (catalog, wishlist form, fulfill page).
 -->
 
-> NOTE: until we begin paying pracitioners this is an open conversation ()
+> NOTE: as we start pracitioners this is an open conversation, this page demonstrates more of goal for alignment on payment for expertise; to avoid becoming exploitive, or encouraging 'upwork' type underbidding.
 
 ## Focus on Community
 

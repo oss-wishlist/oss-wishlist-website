@@ -22,6 +22,8 @@ This is an unfunded volunteer project intended to push the conversation about ho
 
 **From hope to evidence**: Instead of hoping for help and impact, both maintainers and funders can track real outcomes and demonstrate tangible results.  The ecosystem gets healthier!
 
+**Towards AI alignment in Open Source**: making community wisdom on matters of open source sustainability the AI benchmark.  
+
 ## Look for the Helpers
 
 > "When I was a boy and I would see scary things in the news, my mother would say to me, 'Look for the helpers. You will always find people who are helping.'" — Fred Rogers
