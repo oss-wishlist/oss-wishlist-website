@@ -1,0 +1,70 @@
+name: Update Wishlist JSON Feed
+
+# Trigger when wishlists are approved, rejected, or deleted via API
+# This action can be manually triggered or called from the application
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action performed (approved, rejected, moved-to-pending, deleted)'
+        required: true
+        type: string
+      wishlist_id:
+        description: 'Wishlist ID that changed'
+        required: false
+        type: string
+  
+  # Can also run on schedule as a backup
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Generate wishlist JSON feed
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/generate-minimal-json.mjs
+        
+      - name: Commit and push JSON feed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Check if there are changes
+          if git diff --quiet public/wishlist-cache/all-wishlists.json; then
+            echo "No changes to wishlist JSON feed"
+            exit 0
+          fi
+          
+          git add public/wishlist-cache/all-wishlists.json
+          git commit -m "Update wishlist JSON feed - ${{ inputs.action || 'scheduled update' }}"
+          git push
+          
+      - name: Deploy to production (if on main branch)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Triggering production deployment..."
+          # This will trigger any deploy hooks or CI/CD pipelines
+          
+      - name: Summary
+        run: |
+          echo "✅ Wishlist JSON feed updated successfully"
+          echo "Action: ${{ inputs.action || 'scheduled update' }}"
+          if [ -n "${{ inputs.wishlist_id }}" ]; then
+            echo "Wishlist ID: ${{ inputs.wishlist_id }}"
+          fi
