@@ -13,7 +13,6 @@ OSS Wishlist uses a **database-driven architecture**:
 
 - **Database**: PostgreSQL (hosted on Digital Ocean) stores all wishlists, practitioners, and fulfillments
 - **Authentication**: GitHub OAuth for user login and identity
-- **Admin System**: Web-based admin panel at `/admin` for approving/rejecting content
 - **Public API**: JSON feed at `/wishlist-cache/all-wishlists.json` auto-updates via GitHub Actions
 - **Frontend**: Astro v5 with SSR, React components, and Tailwind CSS
 

@@ -196,14 +196,12 @@ if (wishlistSlug) {
             data-services={(practitioner.data.services || []).join(',')}
           >
             <div class="flex items-start space-x-4 mb-4">
-              {practitioner.data.avatar_url && (
-                <img 
-                  src={practitioner.data.avatar_url} 
-                  alt={practitioner.data.name}
-                  class="w-12 h-12 rounded-full object-cover"
-                  loading="lazy"
-                />
-              )}
+              <img 
+                src={practitioner.data.avatar_url || `${basePath}images/oss-wishlist-logo.jpg`} 
+                alt={practitioner.data.name}
+                class="w-12 h-12 rounded-full object-cover"
+                loading="lazy"
+              />
               <div class="flex-1">
                 <h3 class="font-semibold text-gray-900">{practitioner.data.name}</h3>
                 <p class="text-sm text-gray-600">{practitioner.data.title}</p>

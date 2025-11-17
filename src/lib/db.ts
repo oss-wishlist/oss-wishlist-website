@@ -183,8 +183,7 @@ export async function getWishlistBySlug(slug: string): Promise<Wishlist | null> 
  */
 export async function getApprovedWishlists(): Promise<Wishlist[]> {
   const result = await query<Wishlist>(
-    'SELECT * FROM wishlists WHERE approved = TRUE AND issue_state = $1 ORDER BY created_at DESC',
-    ['open']
+    'SELECT * FROM wishlists WHERE approved = TRUE ORDER BY created_at DESC'
   );
   return result.rows;
 }
@@ -326,11 +325,12 @@ export async function deleteWishlist(id: number): Promise<boolean> {
 }
 
 /**
- * Close a wishlist (soft delete - mark as closed)
+ * Close a wishlist (mark as closed)
+ * Note: We only use the approved boolean now, but keeping this for status field updates
  */
 export async function closeWishlist(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
-    `UPDATE wishlists SET issue_state = 'closed' WHERE id = $1 RETURNING *`,
+    `UPDATE wishlists SET status = 'closed' WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;

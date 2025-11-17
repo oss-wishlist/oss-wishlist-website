@@ -85,8 +85,7 @@ async function generateMinimalJSON() {
     
     // Query approved wishlists
     const result = await pool.query(
-      'SELECT id, repository_url FROM wishlists WHERE approved = TRUE AND issue_state = $1 ORDER BY created_at DESC',
-      ['open']
+      'SELECT id, repository_url FROM wishlists WHERE approved = TRUE ORDER BY created_at DESC'
     );
     
     const wishlists = result.rows;
