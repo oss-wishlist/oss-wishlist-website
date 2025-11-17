@@ -8,27 +8,8 @@ import { getCollection } from 'astro:content';
 // Get user from session
 const user = Astro.locals.user;
 
-// Check if user already has a practitioner profile
-if (user) {
-  const origin = Astro.url.origin;
-  const sessionCookie = Astro.cookies.get('github_session');
-  
-  if (sessionCookie?.value) {
-    const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
-      headers: {
-        'Cookie': `github_session=${sessionCookie.value}`
-      }
-    });
-    
-    if (myPractitionerResponse.ok) {
-      const data = await myPractitionerResponse.json();
-      if (data.success && data.practitioner) {
-        // User already has a profile, redirect to edit page
-        return Astro.redirect(`${basePath}edit-practitioner`);
-      }
-    }
-  }
-}
+// Note: We allow users to access this page even if they have a profile
+// The API will handle updates vs creates appropriately
 
 // Get all services from the catalog (exclude resources)
 const allServices = await getCollection('services');
