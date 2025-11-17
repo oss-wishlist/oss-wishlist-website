@@ -9,15 +9,6 @@ const user = Astro.locals.user;
 // We'll fetch wishlists client-side from our API endpoint
 const basePath = getBasePath();
 
-const statusColors = {
-  'Open': 'bg-gray-100 text-gray-800',
-  'In Progress': 'bg-gray-200 text-gray-900',
-  'Review': 'bg-gray-300 text-gray-900',
-  'Funded': 'bg-gray-400 text-white',
-  'Completed': 'bg-gray-700 text-white',
-  'On Hold': 'bg-gray-500 text-white',
-};
-
 const urgencyColors = {
   low: 'bg-gray-100 text-gray-700',
   medium: 'bg-gray-200 text-gray-800', 
@@ -124,16 +115,6 @@ const urgencyColors = {
   let allWishlists = [];
   let basePath = '';
   
-  // Status colors mapping
-  const statusColors = {
-    'Open': 'bg-gray-100 text-gray-800',
-    'In Progress': 'bg-gray-200 text-gray-900',
-    'Review': 'bg-gray-300 text-gray-900',
-    'Funded': 'bg-gray-400 text-white',
-    'Completed': 'bg-gray-700 text-white',
-    'On Hold': 'bg-gray-500 text-white',
-  };
-
   const urgencyColors = {
     low: 'bg-gray-100 text-gray-700',
     medium: 'bg-gray-200 text-gray-800', 
@@ -404,7 +385,6 @@ const urgencyColors = {
 
   // Create wishlist card HTML
   function createWishlistCard(wishlist) {
-    const statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';
     const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';
     const maintainerAvatar = wishlist.maintainerAvatarUrl 
       || `https://github.com/${wishlist.maintainerUsername}.png`
@@ -442,11 +422,6 @@ const urgencyColors = {
             </div>
           </div>
           <div class="flex flex-col items-end space-y-1">
-            ${wishlist.status && wishlist.status !== 'Open' ? `
-              <span class="px-2 py-1 text-xs rounded-full ${statusColorClass}">
-                ${wishlist.status}
-              </span>
-            ` : ''}
             ${wishlist.urgency && wishlist.urgency !== 'medium' ? `
               <span class="badge-pending px-2 py-1 text-xs rounded-full">
                 ${wishlist.urgency}

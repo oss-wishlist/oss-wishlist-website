@@ -118,7 +118,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       notable_experience: body.projects ? body.projects.split('\n').filter((p: string) => p.trim()) : [],
       certifications: [],
       approved: false,
-      status: 'pending',
       verified: false,
       submitter_username: username
     };

@@ -42,7 +42,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return jsonError('Forbidden', 'You can only close your own wishlists', 403);
     }
 
-    // Close the wishlist in database (updates issue_state and status to 'closed')
+    // Close the wishlist in database (updates issue_state to 'closed')
     const closedWishlist = await closeWishlist(issueNumber);
     
     if (!closedWishlist) {
@@ -57,7 +57,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       wishlist: {
         id: closedWishlist.id,
         projectName: closedWishlist.project_name,
-        status: closedWishlist.status,
         issueState: closedWishlist.issue_state
       }
     });

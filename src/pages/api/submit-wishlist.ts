@@ -228,7 +228,6 @@ export const POST: APIRoute = async ({ request }) => {
         issue_url: wishlistUrl, // Self-referential for now
         issue_state: 'open',
         approved: false, // New wishlists start unapproved
-        status: 'pending',
         wishes: formData.services,
         technologies: formData.technologies || [],
         resources: [],

@@ -41,7 +41,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       practitioner: {
         id: practitioner.id,
         name: practitioner.name,
-        status: practitioner.status,
         approved: practitioner.approved
       }
     });

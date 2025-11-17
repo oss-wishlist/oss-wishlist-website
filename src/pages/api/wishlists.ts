@@ -6,12 +6,11 @@ interface Wishlist {
   id: number;
   projectName: string;
   repositoryUrl: string;
-  projectDescription: string;
+  projectDescription?: string;
   maintainerUsername: string;
-  maintainerEmail: string;
+  maintainerEmail?: string;
   maintainerAvatarUrl: string;
   approved: boolean;
-  status: string;
   issueState: string;
   created_at: string;
   updated_at: string;
@@ -43,7 +42,6 @@ async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
       maintainerEmail: wishlist.maintainer_email,
       maintainerAvatarUrl: wishlist.maintainer_avatar_url || `https://github.com/${wishlist.maintainer_username}.png`,
       approved: wishlist.approved,
-      status: wishlist.status,
       issueState: wishlist.issue_state,
       created_at: wishlist.created_at.toISOString(),
       updated_at: wishlist.updated_at.toISOString(),

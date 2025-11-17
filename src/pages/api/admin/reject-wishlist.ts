@@ -47,7 +47,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       wishlist: {
         id: wishlist.id,
         projectName: wishlist.project_name,
-        status: wishlist.status,
         approved: wishlist.approved
       }
     });

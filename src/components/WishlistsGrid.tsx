@@ -24,7 +24,6 @@ interface Wishlist {
   additionalNotes?: string;
   approvalStatus?: 'approved' | 'pending';
   approved?: boolean;
-  status?: string;
   createdAt?: string;
   updatedAt?: string;
   wishlistUrl?: string;

@@ -71,7 +71,6 @@ export const GET: APIRoute = async ({ url }) => {
         notable_experience: practitioner.notable_experience || [],
         certifications: practitioner.certifications || [],
         approved: practitioner.approved,
-        status: practitioner.status,
         verified: practitioner.verified,
         submitter_username: practitioner.submitter_username,
         created_at: practitioner.created_at.toISOString(),

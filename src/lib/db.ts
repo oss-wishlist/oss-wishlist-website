@@ -106,10 +106,9 @@ export interface Wishlist {
   maintainer_username: string;
   maintainer_email?: string;
   maintainer_avatar_url?: string;
-  issue_url: string;
+  issue_url?: string;
   issue_state: string;
   approved: boolean;
-  status: string;
   wishes: string[];
   technologies: string[];
   resources: string[];
@@ -153,7 +152,6 @@ export interface Practitioner {
   notable_experience?: string[];
   certifications?: string[];
   approved: boolean;
-  status: 'pending' | 'approved' | 'rejected' | 'removed';
   verified: boolean;
   submitter_username: string;
   created_at: Date;
@@ -217,7 +215,7 @@ export async function createWishlist(wishlist: Partial<Wishlist>): Promise<Wishl
     `INSERT INTO wishlists (
       id, slug, project_name, repository_url, project_description,
       maintainer_username, maintainer_email, maintainer_avatar_url,
-      issue_url, issue_state, approved, status,
+      issue_url, issue_state, approved,
       wishes, technologies, resources,
       urgency, project_size, additional_notes,
       organization_type, organization_name, other_organization_type,
@@ -239,7 +237,6 @@ export async function createWishlist(wishlist: Partial<Wishlist>): Promise<Wishl
       wishlist.issue_url,
       wishlist.issue_state || 'open',
       wishlist.approved || false,
-      wishlist.status || 'pending',
       wishlist.wishes || [],
       wishlist.technologies || [],
       wishlist.resources || [],
@@ -284,8 +281,7 @@ export async function updateWishlist(id: number, updates: Partial<Wishlist>): Pr
       nominee_email = COALESCE($18, nominee_email),
       nominee_github = COALESCE($19, nominee_github),
       approved = COALESCE($20, approved),
-      status = COALESCE($21, status),
-      issue_state = COALESCE($22, issue_state)
+      issue_state = COALESCE($21, issue_state)
     WHERE id = $1
     RETURNING *`,
     [
@@ -309,7 +305,6 @@ export async function updateWishlist(id: number, updates: Partial<Wishlist>): Pr
       updates.nominee_email,
       updates.nominee_github,
       updates.approved,
-      updates.status,
       updates.issue_state,
     ]
   );
@@ -326,11 +321,11 @@ export async function deleteWishlist(id: number): Promise<boolean> {
 
 /**
  * Close a wishlist (mark as closed)
- * Note: We only use the approved boolean now, but keeping this for status field updates
+ * Note: We only use the approved boolean now
  */
 export async function closeWishlist(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
-    `UPDATE wishlists SET status = 'closed' WHERE id = $1 RETURNING *`,
+    `UPDATE wishlists SET issue_state = 'closed' WHERE id = $1 RETURNING *`,
     [id]
   );
   return result.rows[0] || null;
@@ -359,7 +354,7 @@ export async function rejectWishlist(id: number): Promise<Wishlist | null> {
 }
 
 /**
- * Move a wishlist back to pending status
+ * Move a wishlist back to pending
  */
 export async function moveToPending(id: number): Promise<Wishlist | null> {
   const result = await query<Wishlist>(
@@ -428,8 +423,8 @@ export async function createPractitioner(practitioner: Partial<Practitioner>): P
       email, website, github, github_sponsors, mastodon, linkedin,
       services, availability, accepts_pro_bono, pro_bono_criteria, pro_bono_hours_per_month,
       years_experience, notable_experience, certifications,
-      approved, status, verified, submitter_username
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+      approved, verified, submitter_username
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
     RETURNING *`,
     [
       practitioner.slug,
@@ -455,7 +450,6 @@ export async function createPractitioner(practitioner: Partial<Practitioner>): P
       practitioner.notable_experience || [],
       practitioner.certifications || [],
       practitioner.approved || false,
-      practitioner.status || 'pending',
       practitioner.verified || false,
       practitioner.submitter_username
     ]

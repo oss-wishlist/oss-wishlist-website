@@ -63,8 +63,7 @@ export const GET: APIRoute = async ({ url }) => {
         nomineeEmail: wishlist.nominee_email || null,
         nomineeGithub: wishlist.nominee_github || null,
         wishlistUrl: wishlist.issue_url,
-        approved: wishlist.approved,
-        status: wishlist.status
+        approved: wishlist.approved
       }
     };
 

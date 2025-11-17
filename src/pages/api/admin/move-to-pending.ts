@@ -39,9 +39,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    // Use rejectWishlist which sets approved=false, status='rejected'
-    // Then we'll need to update to status='pending' instead
-    // Actually, let's update the db function to handle this
+    // Move wishlist back to unapproved state (approved=false)
     await moveToPending(id);
 
     // Trigger JSON feed update
