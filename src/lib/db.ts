@@ -35,12 +35,15 @@ if (!DATABASE_URL) {
 }
 
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
+const NODE_TLS_REJECT = process.env.NODE_TLS_REJECT_UNAUTHORIZED || import.meta.env?.NODE_TLS_REJECT_UNAUTHORIZED;
 
 // SSL configuration for Digital Ocean managed PostgreSQL
 // Bypasses certificate validation to avoid "self-signed certificate in chain" errors
-const sslConfig = (DATABASE_URL?.includes('sslmode=require') || PGSSLMODE === 'require') 
+// Always use rejectUnauthorized: false for local development or when NODE_TLS_REJECT_UNAUTHORIZED=0
+const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || PGSSLMODE === 'require';
+const sslConfig = shouldUseSSL
   ? {
-      rejectUnauthorized: false,
+      rejectUnauthorized: NODE_TLS_REJECT === '0' ? false : false, // Always false for staging DB
       checkServerIdentity: () => undefined,
     }
   : false;

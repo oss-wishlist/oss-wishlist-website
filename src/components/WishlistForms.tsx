@@ -431,7 +431,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       const title = cachedData.projectTitle || cachedData.project || cachedData.title || '';
       
       const updatedData: any = {
-        maintainerEmail: '', // Email stored in database, not returned on edit for privacy
+        maintainerEmail: cachedData.maintainerEmail || '', // Email included for edit form, can be updated
         projectTitle: title,
         selectedServices: incomingWishes,
         urgency: cachedData.urgency || 'medium',

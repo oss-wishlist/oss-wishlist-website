@@ -3,6 +3,7 @@ import { verifySession } from '../../../lib/github-oauth';
 import { approveWishlist } from '../../../lib/db';
 import { jsonSuccess, jsonError } from '../../../lib/api-response';
 import { triggerJsonUpdate } from '../../../lib/trigger-json-update';
+import { triggerWishlistActions } from '../../../lib/trigger-wishlist-actions';
 
 export const prerender = false;
 
@@ -40,6 +41,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Trigger JSON feed update
     triggerJsonUpdate('approved', id).catch(err => 
       console.error('[admin] Failed to trigger JSON update:', err)
+    );
+
+    // Trigger wishlist actions workflow (FUNDING.yml, etc.)
+    triggerWishlistActions(id, wishlist).catch(err =>
+      console.error('[admin] Failed to trigger wishlist actions:', err)
     );
 
     return jsonSuccess({ 
