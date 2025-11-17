@@ -38,8 +38,6 @@ if (issueNumber) {
     const apiUrl = new URL(`${basePath}api/wishlist`, url.origin);
     apiUrl.searchParams.set('id', issueNumber);
     
-    console.log('[fulfill] Fetching wishlist from:', apiUrl.toString());
-    
     const response = await fetch(apiUrl.toString());
     
     if (response.ok) {
@@ -80,14 +78,10 @@ if (issueNumber) {
             avatar_url: wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`,
           },
         };
-        
-        console.log('[fulfill] Loaded wishlist from database:', wishlist.id);
       }
-    } else {
-      console.log('[fulfill] API returned non-OK status:', response.status);
     }
   } catch (error) {
-    console.log('[fulfill] Error fetching from database API:', error);
+    // Database fetch failed, will try GitHub fallback
   }
 }
 
@@ -119,13 +113,6 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
         projectSize = parsed.projectSize;
       }
       
-      console.log('=== FULFILL PAGE DEBUG ===');
-      console.log('Issue Number:', issueNumber);
-      console.log('Parsed services:', parsed.services);
-      if (parsed.services && parsed.services.length === 0) {
-        console.log('NOTE: No services found - this is okay, the wishlist may not have specified services');
-      }
-      
       wishlistData = {
         issueNumber: githubIssue.number,
         projectName: projectName,
@@ -138,8 +125,6 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
         nomineeEmail: parsed.nomineeEmail || null,
         nomineeGithub: parsed.nomineeGithub || null
       };
-      
-      console.log('WishlistData wishes:', wishlistData.wishes);
     }
   } catch (error) {
     console.error('Error fetching GitHub issue:', error);

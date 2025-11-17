@@ -110,10 +110,10 @@ const urgencyColors = {
   
 
 <script>
-  console.log('[wishlists page] Script tag is executing!');
   // Wishlist data
   let allWishlists = [];
   let basePath = '';
+  let cleanBasePath = '';
   
   const urgencyColors = {
     low: 'bg-gray-100 text-gray-700',
@@ -128,17 +128,14 @@ const urgencyColors = {
 
   // Fetch wishlists from GitHub
   async function fetchWishlists() {
-    console.log('[wishlists page] fetchWishlists() called');
     try {
       const grid = document.getElementById('wishlistsGrid');
       basePath = grid?.dataset.basePath || '';
       // Remove trailing slash if present to avoid double slashes
-      const cleanBasePath = basePath.replace(/\/$/, '');
+      cleanBasePath = basePath.replace(/\/$/, '');
       const apiUrl = `${cleanBasePath}/api/wishlists`;
-      console.log('[wishlists page] Fetching from:', apiUrl);
       
       const response = await fetch(apiUrl);
-      console.log('[wishlists page] Response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -505,12 +502,10 @@ const urgencyColors = {
 
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('[wishlists page] DOMContentLoaded event fired');
     // Initialize ecosystem filter dropdown
     initializeEcosystemFilter();
     
     // Fetch wishlists
-    console.log('[wishlists page] About to call fetchWishlists()');
     fetchWishlists();
     
     // Set up search
