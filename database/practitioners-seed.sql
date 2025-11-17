@@ -30,7 +30,6 @@ INSERT INTO practitioners (
   notable_experience,
   certifications,
   approved,
-  status,
   verified,
   submitter_username
 ) VALUES
@@ -59,7 +58,6 @@ INSERT INTO practitioners (
   ARRAY['Open Source Programs Office, Microsoft', 'Open Innovation Team, Mozilla', 'Drupal and Moodle developer, ImageX, Royal Roads Univesity'],
   ARRAY['Hugging Face MCP'],
   true,
-  'approved',
   true,
   'emmairwin'
 ),
@@ -88,7 +86,6 @@ INSERT INTO practitioners (
   ARRAY['Community Lead at Example Foundation', 'Open Source Strategist at Tech Corp'],
   ARRAY['TODO Governance Certified'],
   true,
-  'approved',
   true,
   'cbacharakis'
 );

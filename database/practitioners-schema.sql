@@ -37,9 +37,8 @@ CREATE TABLE IF NOT EXISTS practitioners (
   notable_experience TEXT[] DEFAULT '{}',
   certifications TEXT[] DEFAULT '{}',
   
-  -- Approval & Status
+  -- Approval & Verification
   approved BOOLEAN DEFAULT false,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'removed')),
   verified BOOLEAN DEFAULT false,
   
   -- GitHub username of submitter (for ownership verification)
@@ -51,7 +50,6 @@ CREATE TABLE IF NOT EXISTS practitioners (
 );
 
 -- Index for fast lookups
-CREATE INDEX IF NOT EXISTS idx_practitioners_status ON practitioners(status);
 CREATE INDEX IF NOT EXISTS idx_practitioners_approved ON practitioners(approved);
 CREATE INDEX IF NOT EXISTS idx_practitioners_submitter ON practitioners(submitter_username);
 CREATE INDEX IF NOT EXISTS idx_practitioners_availability ON practitioners(availability);

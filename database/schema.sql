@@ -21,9 +21,8 @@ CREATE TABLE IF NOT EXISTS wishlists (
   issue_url TEXT NOT NULL,
   issue_state VARCHAR(50) DEFAULT 'open',  -- 'open' or 'closed'
   
-  -- Approval and status
+  -- Approval
   approved BOOLEAN DEFAULT FALSE,
-  status VARCHAR(50) DEFAULT 'pending',  -- 'pending', 'approved', 'fulfilled', 'closed'
   
   -- Services and resources
   wishes TEXT[] DEFAULT '{}',  -- Array of service slugs requested
@@ -57,7 +56,6 @@ CREATE TABLE IF NOT EXISTS wishlists (
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_wishlists_maintainer ON wishlists(maintainer_username);
 CREATE INDEX IF NOT EXISTS idx_wishlists_approved ON wishlists(approved);
-CREATE INDEX IF NOT EXISTS idx_wishlists_status ON wishlists(status);
 CREATE INDEX IF NOT EXISTS idx_wishlists_created_at ON wishlists(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_wishlists_issue_state ON wishlists(issue_state);
 

@@ -7,7 +7,7 @@ DELETE FROM wishlists WHERE id >= 100 AND id <= 104;
 INSERT INTO wishlists (
   id, slug, project_name, repository_url, project_description,
   maintainer_username, maintainer_email, maintainer_avatar_url,
-  issue_url, issue_state, approved, status,
+  issue_url, issue_state, approved,
   wishes, technologies, resources,
   urgency, project_size, additional_notes,
   organization_type, organization_name,
@@ -27,7 +27,6 @@ INSERT INTO wishlists (
     'https://github.com/oss-wishlist/wishlists-dev/issues/100',
     'open',
     TRUE,
-    'approved',
     ARRAY['governance-setup', 'security-audit'],
     ARRAY['JavaScript', 'Node.js', 'PostgreSQL'],
     ARRAY[]::TEXT[],
@@ -55,7 +54,6 @@ INSERT INTO wishlists (
     'https://github.com/oss-wishlist/wishlists-dev/issues/101',
     'open',
     FALSE,
-    'pending',
     ARRAY['funding-strategy', 'community-building'],
     ARRAY['Python', 'TypeScript'],
     ARRAY[]::TEXT[],
@@ -83,7 +81,6 @@ INSERT INTO wishlists (
     'https://github.com/oss-wishlist/wishlists-dev/issues/102',
     'open',
     TRUE,
-    'approved',
     ARRAY['mentorship-program', 'contributor-onboarding', 'maintainer-task-contributor'],
     ARRAY['React', 'GraphQL', 'Docker'],
     ARRAY[]::TEXT[],
@@ -111,7 +108,6 @@ INSERT INTO wishlists (
     'https://github.com/oss-wishlist/wishlists-dev/issues/103',
     'open',
     TRUE,
-    'approved',
     ARRAY['governance-setup'],
     ARRAY['Go', 'Kubernetes'],
     ARRAY[]::TEXT[],
@@ -139,7 +135,6 @@ INSERT INTO wishlists (
     'https://github.com/oss-wishlist/wishlists-dev/issues/104',
     'open',
     FALSE,
-    'pending',
     ARRAY['funding-strategy'],
     ARRAY['Ruby', 'Rails'],
     ARRAY[]::TEXT[],
@@ -160,8 +155,7 @@ SELECT
   slug, 
   project_name, 
   maintainer_username, 
-  approved, 
-  status,
+  approved,
   array_length(wishes, 1) as num_services
 FROM wishlists
 ORDER BY id;
