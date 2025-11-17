@@ -67,7 +67,7 @@ export const GET: APIRoute = async ({ url }) => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store', // Don't cache - we want fresh data from markdown
+        'Cache-Control': 'no-store', // Don't cache - we want fresh data from database
       },
     });
   } catch (error) {

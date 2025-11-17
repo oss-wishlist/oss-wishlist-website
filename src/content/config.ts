@@ -200,7 +200,7 @@ const wishlists = defineCollection({
     // Sponsorship and practitioner preferences
     openToSponsorship: z.boolean().optional(),
     preferredPractitioner: z.string().optional(),
-    // Nominee information (not stored in GitHub issue, only in markdown for internal coordination)
+    // Nominee information (stored in database for internal coordination only)
     nomineeName: z.string().optional(),
     nomineeEmail: z.string().optional(),
     nomineeGithub: z.string().optional(),
