@@ -29,7 +29,7 @@ export async function loadWishlistCache(): Promise<WishlistCache | null> {
     // In production, this file should be at the root or in public/
     const response = await fetch('/all-wishlists.json');
     if (!response.ok) {
-      console.warn('Wishlist cache not found, using markdown approval status');
+      console.warn('Wishlist cache not found, using database approval status');
       return null;
     }
     const cache = await response.json();

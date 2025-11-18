@@ -31,7 +31,9 @@ if (!DATABASE_URL) {
 }
 
 if (!DATABASE_URL) {
-  console.error('[Database] DATABASE_URL not found in environment or .env file');
+  const errorMsg = '[Database] DATABASE_URL not found in environment or .env file. Database connection required.';
+  console.error(errorMsg);
+  throw new Error(errorMsg);
 }
 
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;

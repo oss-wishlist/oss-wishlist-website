@@ -7,6 +7,7 @@ import { jsonSuccess, jsonError, ApiErrors } from '../../lib/api-response.js';
 import { createWishlist, updateWishlist, getWishlistById } from '../../lib/db.js';
 import { generateWishlistSlug } from '../../lib/slugify.js';
 import { sendAdminEmail, sendEmail } from '../../lib/mail.js';
+import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit.js';
 
 export const prerender = false;
 
@@ -98,6 +99,13 @@ function formatMaintainerConfirmationEmail(formData: any, wishlistId: number, wi
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateCheck = checkRateLimit(clientId, RATE_LIMITS.SUBMIT);
+  if (rateCheck.limited) {
+    return createRateLimitResponse(rateCheck.resetTime);
+  }
+
   try {
     // Parse request body
     const body = await request.json();

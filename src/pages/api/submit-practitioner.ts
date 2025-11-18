@@ -2,10 +2,18 @@ import type { APIRoute } from 'astro';
 import { sendAdminEmail, sendEmail, getEmailConfig } from '../../lib/mail';
 import { createPractitioner, updatePractitioner, getPractitionersBySubmitter, getAllPractitioners } from '../../lib/db';
 import { verifySession } from '../../lib/github-oauth';
+import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, cookies }) => {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateCheck = checkRateLimit(clientId, RATE_LIMITS.SUBMIT);
+  if (rateCheck.limited) {
+    return createRateLimitResponse(rateCheck.resetTime);
+  }
+
   try {
     // Verify user is logged in
     const sessionCookie = cookies.get('github_session');

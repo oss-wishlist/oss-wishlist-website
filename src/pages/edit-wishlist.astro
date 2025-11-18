@@ -110,7 +110,6 @@ try {
   <script define:vars={{ basePath }}>
     // Listen for successful wishlist update
     window.addEventListener('wishlist-updated', () => {
-      console.log('[edit-wishlist] Wishlist updated - redirecting to maintainers page');
       setTimeout(() => {
         window.location.href = basePath + 'maintainers';
       }, 2000);

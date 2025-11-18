@@ -56,7 +56,6 @@ export default function YourWishlistsGrid({ user }: Props) {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.wishlist) {
         const newWishlist = customEvent.detail.wishlist;
-        console.log('[YourWishlistsGrid] Received wishlist-created event');
         
         // Immediately add to UI (don't wait for API)
         setWishlists(prev => [newWishlist, ...prev]);
@@ -70,12 +69,9 @@ export default function YourWishlistsGrid({ user }: Props) {
         const updatedWishlist = customEvent.detail.wishlist;
         const issueNumber = customEvent.detail.issueNumber;
         
-        console.log('[YourWishlistsGrid] Received wishlist-updated event for issue:', issueNumber);
-        
         // Immediately update UI with the returned data (don't wait for API)
         const updated = wishlists.map((w: any) => {
           if (w.id === issueNumber) {
-            console.log('[YourWishlistsGrid] Updating wishlist in UI:', { from: w.project, to: updatedWishlist.project });
             return updatedWishlist;
           }
           return w;
@@ -85,11 +81,9 @@ export default function YourWishlistsGrid({ user }: Props) {
     };
 
     if (typeof window !== 'undefined') {
-      console.log('[YourWishlistsGrid] Setting up event listeners for wishlist-created and wishlist-updated');
       window.addEventListener('wishlist-created', handleNewWishlist);
       window.addEventListener('wishlist-updated', handleUpdatedWishlist);
       return () => {
-        console.log('[YourWishlistsGrid] Removing event listeners');
         window.removeEventListener('wishlist-created', handleNewWishlist);
         window.removeEventListener('wishlist-updated', handleUpdatedWishlist);
       };
@@ -126,7 +120,6 @@ export default function YourWishlistsGrid({ user }: Props) {
       // For user's own dashboard, show both approved AND pending wishlists
       setWishlists(sortedWishlists);
       
-      console.log('[YourWishlistsGrid] Loaded wishlists:', allWishlists.length);
     } catch (err) {
       console.error('[YourWishlistsGrid] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load wishlists');

@@ -21,14 +21,11 @@ export const GET: APIRoute = async ({ url, request }) => {
     const wishlist = await getWishlistById(id);
     
     if (!wishlist) {
-      console.log(`[get-wishlist] Wishlist #${issueNumber} not found in database`);
       return new Response(JSON.stringify({ error: 'Wishlist not found' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    console.log(`[get-wishlist] Wishlist #${issueNumber} fetched from database`);
 
     // Fetch GitHub issue for labels (funding-yml status)
     let labels: string[] = [];

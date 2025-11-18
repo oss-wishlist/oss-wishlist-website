@@ -50,7 +50,6 @@ export default function WishlistsGrid({ user, mode }: Props) {
         const customEvent = event as CustomEvent;
         if (customEvent.detail?.wishlist) {
           const newWishlist = customEvent.detail.wishlist;
-          console.log('[WishlistsGrid] Received wishlist-created event');
           
           // Immediately add to UI (don't wait for API)
           setWishlists(prev => [newWishlist, ...prev]);
@@ -64,12 +63,9 @@ export default function WishlistsGrid({ user, mode }: Props) {
           const updatedWishlist = customEvent.detail.wishlist;
           const issueNumber = customEvent.detail.issueNumber;
           
-          console.log('[WishlistsGrid] Received wishlist-updated event for issue:', issueNumber);
-          
           // Immediately update UI with the returned data (don't wait for API)
           const updated = wishlists.map((w: any) => {
             if (w.id === issueNumber) {
-              console.log('[WishlistsGrid] Updating wishlist in UI:', { from: w.project, to: updatedWishlist.project });
               return updatedWishlist;
             }
             return w;
@@ -79,11 +75,9 @@ export default function WishlistsGrid({ user, mode }: Props) {
       };
 
       if (typeof window !== 'undefined') {
-        console.log('[WishlistsGrid] Setting up event listeners for wishlist-created and wishlist-updated');
         window.addEventListener('wishlist-created', handleNewWishlist);
         window.addEventListener('wishlist-updated', handleUpdatedWishlist);
         return () => {
-          console.log('[WishlistsGrid] Removing event listeners');
           window.removeEventListener('wishlist-created', handleNewWishlist);
           window.removeEventListener('wishlist-updated', handleUpdatedWishlist);
         };
@@ -124,7 +118,6 @@ export default function WishlistsGrid({ user, mode }: Props) {
       // For user's own dashboard, show both approved AND pending wishlists
       setWishlists(sortedWishlists);
       
-      console.log('[WishlistsGrid] Loaded user wishlists:', allWishlists.length);
     } catch (err) {
       console.error('[WishlistsGrid] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load wishlists');
@@ -165,7 +158,6 @@ export default function WishlistsGrid({ user, mode }: Props) {
       
       setWishlists(sortedWishlists);
       
-      console.log('[WishlistsGrid] Loaded public wishlists:', sortedWishlists.length);
     } catch (err) {
       console.error('[WishlistsGrid] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load wishlists');

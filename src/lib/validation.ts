@@ -83,7 +83,7 @@ export const wishlistFormDataSchema = z.object({
   organizationName: createOptionalModeratedString(),
   otherOrganizationType: createOptionalModeratedString(),
   
-  // Maintainer email (for internal coordination, not saved to public markdown/GitHub)
+  // Maintainer email (stored in database for coordination, not exposed in public API)
   maintainerEmail: z.string().email('Invalid email address').optional().or(z.literal(''))
 });
 

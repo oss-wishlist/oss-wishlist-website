@@ -400,7 +400,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       // Use the API endpoint with cache-busting timestamp to get fresh data
       const timestamp = Date.now();
       const apiUrl = getApiPath(`/api/get-wishlist?issueNumber=${issueNumber}&t=${timestamp}`);
-      console.log(`[WishlistForms] Loading wishlist data from ${apiUrl}`);
       const response = await fetch(apiUrl, {
         cache: 'no-store', // Don't use browser cache
         headers: {
@@ -417,8 +416,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       }
       
       const cachedData = await response.json();
-      console.log(`[WishlistForms] Received data - wishes: ${JSON.stringify(cachedData.wishes)}, project: "${cachedData.projectTitle}"`);
-      console.log(`[WishlistForms] Full cachedData:`, cachedData);
       
       // Enforce max wishes when loading existing data
       let incomingWishes: string[] = cachedData.wishes || [];
@@ -479,7 +476,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
           url: cachedData.repositoryUrl || cachedData.repository || '',
           username: cachedData.maintainer || ''
         };
-        console.log('[loadExistingWishlistData] Setting manualRepoData:', repoData);
         setManualRepoData(repoData);
       } else {
         console.warn('[loadExistingWishlistData] No repository URL found in cached data:', cachedData);
@@ -704,13 +700,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
           ? [manualRepoData]
           : [];
 
-      console.log('[handleWishlistSubmit] Repository data:', {
-        selectedRepo: selectedRepo ? 'YES' : 'NO',
-        manualRepoData: manualRepoData ? 'YES' : 'NO',
-        repositories: repositories,
-        isEditingExisting
-      });
-
       if (repositories.length === 0) {
         console.error('Repository information is missing');
         throw new Error('Repository information is missing. Please go back and select or enter a repository.');
@@ -742,19 +731,6 @@ ${repositories[0].url}
 
       // Submit directly to our API instead of opening GitHub
       const apiUrl = getApiPath('/api/submit-wishlist');
-      console.log('[WishlistForm] Submitting to API URL:', apiUrl);
-      console.log('[WishlistForm] Request payload:', {
-        title: issueTitle,
-        isUpdate: isEditingExisting,
-        issueNumber: existingIssueNumber
-      });
-      
-      console.log('[WishlistForm] About to fetch with payload:', {
-        projectUrl: repositories[0]?.url,
-        maintainer: repositories[0]?.username,
-        isUpdate: isEditingExisting,
-        issueNumber: existingIssueNumber
-      });
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -787,13 +763,11 @@ ${repositories[0].url}
             organizationType: wishlistData.organizationType,
             organizationName: wishlistData.organizationName,
             otherOrganizationType: wishlistData.otherOrganizationType,
-            maintainerEmail: wishlistData.maintainerEmail // Include maintainer email for admin notification (not saved to markdown/GitHub)
+            maintainerEmail: wishlistData.maintainerEmail // Include maintainer email for admin notification (stored in database)
           }
         })
       });
 
-      console.log('[WishlistForm] Fetch completed, status:', response.status);
-      
       // Clone the response so we can read it multiple times if needed
       const responseClone = response.clone();
       

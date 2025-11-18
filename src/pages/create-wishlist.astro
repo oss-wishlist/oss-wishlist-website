@@ -93,7 +93,6 @@ try {
   <script define:vars={{ basePath }}>
     // Listen for successful wishlist creation
     window.addEventListener('wishlist-created', () => {
-      console.log('[create-wishlist] Wishlist created - redirecting to maintainers page');
       setTimeout(() => {
         window.location.href = basePath + 'maintainers';
       }, 2000);
