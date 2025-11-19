@@ -384,8 +384,8 @@ const urgencyColors = {
   function createWishlistCard(wishlist) {
     const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';
     const maintainerAvatar = wishlist.maintainerAvatarUrl 
-      || `https://github.com/${wishlist.maintainerUsername}.png`
-      || `${cleanBasePath}/images/oss-wishlist-logo.jpg`;
+      || `https://github.com/${wishlist.maintainerUsername}.png`;
+    const fallbackAvatar = `${basePath}/images/oss-wishlist-logo.jpg`;
     
     // Format services list
     const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0 
@@ -411,7 +411,7 @@ const urgencyColors = {
         <div class="flex items-start justify-between mb-4">
           <div class="flex items-start gap-3 flex-1">
             <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
-              <img src="${maintainerAvatar}" alt="${wishlist.maintainerUsername}" class="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors" />
+              <img src="${maintainerAvatar}" alt="${wishlist.maintainerUsername}" class="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors" onerror="this.onerror=null; this.src='${fallbackAvatar}';" />
             </a>
             <div class="flex-1">
               <h3 class="text-lg font-semibold text-gray-900">${wishlist.projectName}</h3>

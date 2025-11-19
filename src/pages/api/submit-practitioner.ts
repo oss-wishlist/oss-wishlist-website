@@ -117,7 +117,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       github_sponsors: body.githubSponsors || undefined,
       mastodon: body.mastodon || undefined,
       linkedin: body.linkedin || undefined,
-      services: body.specialties || [],
+      services: body.services || body.specialties || [], // Accept both 'services' (edit form) and 'specialties' (new form)
       availability: body.availability,
       accepts_pro_bono: body.proBono === 'on' || body.proBono === true,
       pro_bono_criteria: body.proBonoCriteriaText || undefined,
@@ -177,7 +177,7 @@ ${isUpdate ? '**Action:** Profile update' : '**Action:** New application'}
 - **Website:** ${body.website || 'Not provided'}
 
 ## Expertise Areas
-${body.specialties && body.specialties.length > 0 ? body.specialties.map((s: string) => `- ${s}`).join('\n') : 'None selected'}
+${(body.services || body.specialties) && (body.services || body.specialties).length > 0 ? (body.services || body.specialties).map((s: string) => `- ${s}`).join('\n') : 'None selected'}
 ${body.otherSpecialties ? `\n**Other Specialties:** ${body.otherSpecialties}` : ''}
 
 ## Availability & Pro Bono
