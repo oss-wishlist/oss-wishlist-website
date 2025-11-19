@@ -325,8 +325,11 @@ export async function updateWishlist(id: number, updates: Partial<Wishlist>): Pr
  * Delete a wishlist (hard delete)
  */
 export async function deleteWishlist(id: number): Promise<boolean> {
+  console.log(`[db] Executing DELETE for wishlist #${id}`);
   const result = await query('DELETE FROM wishlists WHERE id = $1', [id]);
-  return (result.rowCount || 0) > 0;
+  const deleted = (result.rowCount || 0) > 0;
+  console.log(`[db] DELETE result for wishlist #${id}: ${deleted ? 'success' : 'not found'} (rowCount: ${result.rowCount})`);
+  return deleted;
 }
 
 /**

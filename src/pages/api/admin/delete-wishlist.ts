@@ -39,8 +39,22 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
+    console.log(`[delete-wishlist] Attempting to delete wishlist #${id}`);
+
     // Delete wishlist from database
-    await deleteWishlist(id);
+    const deleted = await deleteWishlist(id);
+
+    if (!deleted) {
+      console.error(`[delete-wishlist] Failed to delete wishlist #${id} - not found or already deleted`);
+      return new Response(JSON.stringify({ 
+        error: 'Wishlist not found or already deleted'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log(`[delete-wishlist] ✓ Successfully deleted wishlist #${id}`);
 
     // Trigger JSON feed update
     triggerJsonUpdate('deleted', id).catch(err => 
