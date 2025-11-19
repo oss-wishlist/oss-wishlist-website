@@ -8,13 +8,14 @@ import { createWishlist, updateWishlist, getWishlistById } from '../../lib/db.js
 import { generateWishlistSlug } from '../../lib/slugify.js';
 import { sendAdminEmail, sendEmail } from '../../lib/mail.js';
 import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit.js';
+import type { WishlistFormData } from '../../types/wishlist.js';
 
 export const prerender = false;
 
 /**
  * Format wishlist data for admin email notification
  */
-function formatWishlistEmail(formData: any, wishlistId: number, wishlistUrl: string, isUpdate: boolean): { subject: string; text: string; html: string } {
+function formatWishlistEmail(formData: WishlistFormData, wishlistId: number, wishlistUrl: string, isUpdate: boolean): { subject: string; text: string; html: string } {
   const action = isUpdate ? 'Updated' : 'New';
   const subject = `${action} Wishlist: ${formData.projectTitle} (#${wishlistId})`;
   
@@ -66,7 +67,7 @@ function formatWishlistEmail(formData: any, wishlistId: number, wishlistUrl: str
 /**
  * Format confirmation email for maintainer
  */
-function formatMaintainerConfirmationEmail(formData: any, wishlistId: number, wishlistUrl: string, isUpdate: boolean): { subject: string; text: string; html: string } {
+function formatMaintainerConfirmationEmail(formData: WishlistFormData, wishlistId: number, wishlistUrl: string, isUpdate: boolean): { subject: string; text: string; html: string } {
   const action = isUpdate ? 'updated' : 'submitted';
   const subject = `Wishlist ${action}: ${formData.projectTitle}`;
   

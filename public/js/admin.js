@@ -1,6 +1,42 @@
 // Admin page functions for approving/rejecting wishlists and practitioners
+// Uses event delegation for security (no inline onclick handlers)
 
-window.approveWishlist = async function(id) {
+// Event delegation handler
+document.addEventListener('DOMContentLoaded', () => {
+  // Handle all button clicks via event delegation
+  document.body.addEventListener('click', async (e) => {
+    const button = e.target.closest('button[data-action]');
+    if (!button) return;
+
+    const action = button.dataset.action;
+    const id = parseInt(button.dataset.id, 10);
+
+    if (!id) return;
+
+    switch (action) {
+      case 'approve-wishlist':
+        await approveWishlist(id);
+        break;
+      case 'reject-wishlist':
+        await rejectWishlist(id);
+        break;
+      case 'move-to-pending':
+        await moveToPending(id);
+        break;
+      case 'delete-wishlist':
+        await deleteWishlist(id);
+        break;
+      case 'approve-practitioner':
+        await approvePractitioner(id);
+        break;
+      case 'reject-practitioner':
+        await rejectPractitioner(id);
+        break;
+    }
+  });
+});
+
+async function approveWishlist(id) {
   if (!confirm('Approve this wishlist and make it publicly visible?')) return;
   
   try {
@@ -20,9 +56,9 @@ window.approveWishlist = async function(id) {
   } catch (err) {
     alert('Error: ' + err.message);
   }
-};
+}
 
-window.rejectWishlist = async function(id) {
+async function rejectWishlist(id) {
   if (!confirm('Are you sure you want to reject this wishlist? This action will update the status to rejected.')) return;
   
   try {
@@ -42,9 +78,9 @@ window.rejectWishlist = async function(id) {
   } catch (err) {
     alert('Error: ' + err.message);
   }
-};
+}
 
-window.approvePractitioner = async function(id) {
+async function approvePractitioner(id) {
   if (!confirm('Approve this practitioner and make their profile publicly visible?')) return;
   
   try {
@@ -64,9 +100,9 @@ window.approvePractitioner = async function(id) {
   } catch (err) {
     alert('Error: ' + err.message);
   }
-};
+}
 
-window.rejectPractitioner = async function(id) {
+async function rejectPractitioner(id) {
   if (!confirm('Are you sure you want to reject this practitioner application? This action will update the status to rejected.')) return;
   
   try {
@@ -86,9 +122,9 @@ window.rejectPractitioner = async function(id) {
   } catch (err) {
     alert('Error: ' + err.message);
   }
-};
+}
 
-window.moveToPending = async function(id) {
+async function moveToPending(id) {
   if (!confirm('Move this wishlist back to pending status?')) return;
   
   try {
@@ -108,9 +144,9 @@ window.moveToPending = async function(id) {
   } catch (err) {
     alert('Error: ' + err.message);
   }
-};
+}
 
-window.deleteWishlist = async function(id) {
+async function deleteWishlist(id) {
   if (!confirm('Are you sure you want to DELETE this wishlist? This action CANNOT be undone.')) return;
   
   try {
@@ -130,4 +166,4 @@ window.deleteWishlist = async function(id) {
   } catch (err) {
     alert('Error: ' + err.message);
   }
-};
+}

@@ -1,8 +1,9 @@
 ---
 import { getBasePath } from '../lib/paths';
+import type { Wishlist } from '../types/wishlist';
 
 interface Props {
-  wishlist: any;
+  wishlist: Wishlist;
   showEditDelete?: boolean;
   onEditClick?: (issueNumber: number) => void;
   onDeleteClick?: (issueNumber: number) => void;

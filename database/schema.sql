@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS wishlists (
   nominee_email VARCHAR(255),
   nominee_github VARCHAR(255),
   
+  -- GitHub Actions automation
+  funding_yml BOOLEAN DEFAULT FALSE,
+  funding_yml_processed BOOLEAN DEFAULT FALSE,
+  
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -58,6 +62,7 @@ CREATE INDEX IF NOT EXISTS idx_wishlists_maintainer ON wishlists(maintainer_user
 CREATE INDEX IF NOT EXISTS idx_wishlists_approved ON wishlists(approved);
 CREATE INDEX IF NOT EXISTS idx_wishlists_created_at ON wishlists(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_wishlists_issue_state ON wishlists(issue_state);
+CREATE INDEX IF NOT EXISTS idx_wishlists_funding_yml_processed ON wishlists(funding_yml, funding_yml_processed) WHERE funding_yml = TRUE AND funding_yml_processed = FALSE;
 
 -- Create a function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -80,3 +85,5 @@ COMMENT ON TABLE wishlists IS 'Stores wishlist submissions from open source main
 COMMENT ON COLUMN wishlists.id IS 'GitHub issue number, used as primary key';
 COMMENT ON COLUMN wishlists.maintainer_email IS 'Email for internal coordination only, not exposed publicly';
 COMMENT ON COLUMN wishlists.nominee_email IS 'Nominee email for internal coordination only, not exposed publicly';
+COMMENT ON COLUMN wishlists.funding_yml IS 'Indicates if maintainer requested FUNDING.yml PR creation';
+COMMENT ON COLUMN wishlists.funding_yml_processed IS 'Indicates if FUNDING.yml PR has been created (prevents duplicates)';

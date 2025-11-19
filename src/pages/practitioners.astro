@@ -117,7 +117,7 @@ if (wishlistSlug) {
               Edit Profile
             </a>
             <button 
-              onclick="if(confirm('Are you sure you want to delete your practitioner profile? This action cannot be undone.')) { alert('Please contact info@oss-wishlist.com to request profile deletion.'); }"
+              id="delete-practitioner-btn"
               class="text-sm text-red-600 hover:text-red-700 font-medium underline"
             >
               Delete
@@ -327,4 +327,14 @@ if (wishlistSlug) {
     } catch {}
     applyFilters();
   })();
+
+  // Delete practitioner button handler
+  const deleteBtn = document.getElementById('delete-practitioner-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete your practitioner profile? This action cannot be undone.')) {
+        alert('Please contact info@oss-wishlist.com to request profile deletion.');
+      }
+    });
+  }
 </script>

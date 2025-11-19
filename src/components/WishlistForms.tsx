@@ -427,7 +427,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       // Ensure we have a title from the API response
       const title = cachedData.projectTitle || cachedData.project || cachedData.title || '';
       
-      const updatedData: any = {
+      const updatedData = {
         maintainerEmail: cachedData.maintainerEmail || '', // Email included for edit form, can be updated
         projectTitle: title,
         selectedServices: incomingWishes,
@@ -1801,6 +1801,7 @@ ${repositories[0].url}
                           }));
                         }}
                         className="hover:text-gray-300"
+                        aria-label={`Remove ${ecosystem} tag`}
                       >
                         ×
                       </button>

@@ -128,6 +128,8 @@ export interface Wishlist {
   nominee_name?: string;
   nominee_email?: string;
   nominee_github?: string;
+  funding_yml: boolean;
+  funding_yml_processed: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -368,6 +370,8 @@ export async function moveToPending(id: number): Promise<Wishlist | null> {
   );
   return result.rows[0] || null;
 }
+
+
 
 // Practitioner-specific query helpers
 

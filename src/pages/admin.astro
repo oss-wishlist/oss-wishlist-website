@@ -96,13 +96,15 @@ const pendingPractitioners = allPractitioners.filter(p => !p.approved).map(p => 
                 <div class="flex gap-2 ml-4">
                   <button 
                     class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                    onclick={`approveWishlist(${wishlist.id})`}
+                    data-action="approve-wishlist"
+                    data-id={wishlist.id}
                   >
                     Approve
                   </button>
                   <button 
                     class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                    onclick={`rejectWishlist(${wishlist.id})`}
+                    data-action="reject-wishlist"
+                    data-id={wishlist.id}
                   >
                     Reject
                   </button>
@@ -141,13 +143,15 @@ const pendingPractitioners = allPractitioners.filter(p => !p.approved).map(p => 
                 <div class="flex gap-2 ml-4">
                   <button 
                     class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
-                    onclick={`moveToPending(${wishlist.id})`}
+                    data-action="move-to-pending"
+                    data-id={wishlist.id}
                   >
                     Move to Pending
                   </button>
                   <button 
                     class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                    onclick={`deleteWishlist(${wishlist.id})`}
+                    data-action="delete-wishlist"
+                    data-id={wishlist.id}
                   >
                     Delete
                   </button>
@@ -186,13 +190,15 @@ const pendingPractitioners = allPractitioners.filter(p => !p.approved).map(p => 
                 <div class="flex gap-2 ml-4">
                   <button 
                     class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                    onclick={`approvePractitioner(${practitioner.id})`}
+                    data-action="approve-practitioner"
+                    data-id={practitioner.id}
                   >
                     Approve
                   </button>
                   <button 
                     class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                    onclick={`rejectPractitioner(${practitioner.id})`}
+                    data-action="reject-practitioner"
+                    data-id={practitioner.id}
                   >
                     Reject
                   </button>

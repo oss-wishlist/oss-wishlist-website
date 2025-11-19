@@ -5,13 +5,21 @@
 
 interface Wishlist {
   id: number;
-  funding_yml?: boolean;
+  funding_yml: boolean;
+  funding_yml_processed: boolean;
   repository_url?: string;
   maintainer_username?: string;
   project_name?: string;
+  approved: boolean;
 }
 
 export async function triggerWishlistActions(wishlistId: number, wishlist: Wishlist): Promise<void> {
+  // Only trigger if: approved=true AND funding_yml=true (user wants it) AND funding_yml_processed=false (not done yet)
+  if (!wishlist.approved || !wishlist.funding_yml || wishlist.funding_yml_processed) {
+    console.log(`[trigger-actions] Skipping wishlist #${wishlistId}: approved=${wishlist.approved}, funding_yml=${wishlist.funding_yml}, funding_yml_processed=${wishlist.funding_yml_processed}`);
+    return;
+  }
+
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN || import.meta.env.GITHUB_TOKEN;
   // Use the website repo where the workflow is located
   const WEBSITE_REPO = 'oss-wish-list/oss-wishlist-website';
@@ -37,10 +45,6 @@ export async function triggerWishlistActions(wishlistId: number, wishlist: Wishl
         event_type: 'wishlist-approved',
         client_payload: {
           wishlist_id: wishlistId,
-          funding_yml: wishlist.funding_yml || false,
-          repository_url: wishlist.repository_url || '',
-          maintainer: wishlist.maintainer_username || '',
-          project_name: wishlist.project_name || '',
         },
       }),
     });

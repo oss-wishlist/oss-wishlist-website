@@ -70,7 +70,7 @@ export default function YourWishlistsGrid({ user }: Props) {
         const issueNumber = customEvent.detail.issueNumber;
         
         // Immediately update UI with the returned data (don't wait for API)
-        const updated = wishlists.map((w: any) => {
+        const updated = wishlists.map((w: Wishlist) => {
           if (w.id === issueNumber) {
             return updatedWishlist;
           }
