@@ -19,6 +19,9 @@ if (!id) {
   return Astro.redirect('/404');
 }
 
+// Get authenticated user
+const user = Astro.locals.user;
+
 // Fetch from database
 let wishlistData = null;
 
@@ -26,6 +29,23 @@ try {
   const wishlist = await getWishlistById(parseInt(id));
   
   if (wishlist) {
+    console.log(`[wishlist] Wishlist #${wishlist.id} fetched from database`);
+    
+    // Authorization check: If wishlist is not approved, only the maintainer can view it
+    if (!wishlist.approved) {
+      const isMaintainer = user && user.login === wishlist.maintainer_username;
+      console.log(`[wishlist] Authorization check for unapproved wishlist #${wishlist.id}:`, {
+        approved: wishlist.approved,
+        maintainer: wishlist.maintainer_username,
+        currentUser: user?.login || 'anonymous',
+        isMaintainer
+      });
+      if (!isMaintainer) {
+        console.log(`[wishlist] Access denied to unapproved wishlist #${wishlist.id}`);
+        return Astro.redirect('/404');
+      }
+    }
+    
     // Map database columns to page data structure
     wishlistData = {
       id: wishlist.id,
