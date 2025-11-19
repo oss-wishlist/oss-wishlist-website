@@ -22,7 +22,7 @@
     "@octokit/rest": "^22.0.0",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "astro": "^5.15.6",
+    "astro": "^5.15.8",
     "esbuild": "^0.25.11",
     "node-fetch": "^2.7.0",
     "react": "^18.0.0",
