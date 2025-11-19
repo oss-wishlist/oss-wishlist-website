@@ -350,6 +350,17 @@ export async function approveWishlist(id: number): Promise<Wishlist | null> {
 }
 
 /**
+ * Mark a wishlist's FUNDING.yml as processed
+ */
+export async function markFundingProcessed(id: number): Promise<Wishlist | null> {
+  const result = await query<Wishlist>(
+    `UPDATE wishlists SET funding_yml_processed = true WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
+/**
  * Reject a wishlist
  */
 export async function rejectWishlist(id: number): Promise<Wishlist | null> {
