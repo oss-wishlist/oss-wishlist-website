@@ -163,7 +163,14 @@ async function createPullRequest(
   const existingPR = await checkExistingPR(octokit, owner, repo, forkOwner, data.wishlistUrl);
   if (existingPR) {
     console.log(`[funding-pr] Existing PR found (${existingPR.state}): ${existingPR.html_url}`);
-    return existingPR.html_url;
+    return new Response(
+      JSON.stringify({
+        status: 'skipped',
+        pr_url: existingPR.html_url,
+        message: `PR already exists (${existingPR.state})`,
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   // Get default branch
@@ -333,6 +340,8 @@ export const POST: APIRoute = async ({ request }) => {
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`[funding-pr] Wishlist data: approved=${wishlist.approved}, funding_yml=${wishlist.funding_yml}, funding_yml_processed=${wishlist.funding_yml_processed}`);
 
     // Check conditions
     if (!wishlist.approved) {
