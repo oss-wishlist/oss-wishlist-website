@@ -504,6 +504,8 @@ export async function createPractitioner(practitioner: Partial<Practitioner>): P
 
 /**
  * Update an existing practitioner
+ * Note: This does NOT update the 'approved' field - approved status is preserved
+ * when practitioners edit their profile. Only admin actions can change approval status.
  */
 export async function updatePractitioner(id: number, updates: Partial<Practitioner>): Promise<Practitioner | null> {
   const result = await query<Practitioner>(

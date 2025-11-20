@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'approve-practitioner':
         await approvePractitioner(id);
         break;
+      case 'pending-practitioner':
+        await movePractitionerToPending(id);
+        break;
     }
   });
 });
@@ -112,6 +115,28 @@ async function deleteWishlist(id) {
       window.location.reload();
     } else {
       alert('Failed to delete wishlist');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function movePractitionerToPending(id) {
+  if (!confirm('Move this practitioner back to pending status?')) return;
+  
+  try {
+    const basePath = window.location.pathname.includes('/oss-wishlist-website') ? '/oss-wishlist-website/' : '/';
+    const response = await fetch(`${basePath}api/admin/pending-practitioner`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    
+    if (response.ok) {
+      alert('Practitioner moved to pending');
+      window.location.reload();
+    } else {
+      alert('Failed to move practitioner to pending');
     }
   } catch (err) {
     alert('Error: ' + err.message);

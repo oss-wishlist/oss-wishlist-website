@@ -63,6 +63,17 @@ const pendingPractitioners = allPractitioners.filter(p => !p.approved).map(p => 
   services: p.services,
   approved: p.approved
 }));
+
+const approvedPractitioners = allPractitioners.filter(p => p.approved).map(p => ({
+  id: p.id,
+  name: p.name,
+  title: p.title,
+  bio: p.bio,
+  location: p.location,
+  languages: p.languages,
+  services: p.services,
+  approved: p.approved
+}));
 ---
 
 <Layout title="Admin Dashboard" description="Manage wishlists and practitioners">
@@ -216,6 +227,56 @@ const pendingPractitioners = allPractitioners.filter(p => !p.approved).map(p => 
                       data-id={practitioner.id}
                     >
                       Approve
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Approved Practitioners Section (Collapsible) -->
+    <section class="mb-8">
+      <button 
+        class="w-full flex justify-between items-center bg-gray-100 hover:bg-gray-200 px-6 py-4 rounded-lg transition-colors"
+        onclick="toggleSection('approved-practitioners')"
+      >
+        <h2 class="text-2xl font-bold text-gray-900">
+          Approved Practitioners 
+          <span class="text-sm font-normal text-gray-600">({approvedPractitioners.length})</span>
+        </h2>
+        <svg id="approved-practitioners-icon" class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+
+      <div id="approved-practitioners-content" class="mt-4">
+        {approvedPractitioners.length === 0 ? (
+          <p class="text-gray-600 px-6">No approved practitioners</p>
+        ) : (
+          <div class="space-y-4">
+            {approvedPractitioners.map((practitioner) => (
+              <div class="bg-white border rounded-lg p-6 shadow-sm" key={practitioner.id}>
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-lg text-gray-900">{practitioner.name}</h3>
+                    <p class="text-sm text-gray-600 mt-1">{practitioner.title}</p>
+                    <p class="text-sm text-gray-700 mt-2">{practitioner.bio?.substring(0, 200)}...</p>
+                    <div class="flex gap-4 mt-3 text-sm text-gray-600">
+                      <span>Location: {practitioner.location || 'Not specified'}</span>
+                      <span>Languages: {practitioner.languages?.join(', ')}</span>
+                      <span>{practitioner.services?.length || 0} services</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-2 ml-4">
+                    <button 
+                      class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+                      data-action="pending-practitioner"
+                      data-id={practitioner.id}
+                    >
+                      Move to Pending
                     </button>
                   </div>
                 </div>
