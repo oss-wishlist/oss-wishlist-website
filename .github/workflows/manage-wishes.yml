@@ -17,6 +17,5 @@ jobs:
       - uses: oss-wishlist/manage-wishlist-actions@v1.1.2
         with:
           github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}
-          database-url: ${{ secrets.DATABASE_URL }}
-          wishlist-id: ${{ github.event.client_payload.wishlist_id || github.event.inputs.wishlist_id }}
+          cache-url: https://oss-wishlist.com/wishlist-cache
 
