@@ -20,44 +20,34 @@ export async function triggerWishlistActions(wishlistId: number, wishlist: Wishl
     return;
   }
 
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN || import.meta.env.GITHUB_TOKEN;
-  // Use the website repo where the workflow is located
-  const WEBSITE_REPO = 'oss-wish-list/oss-wishlist-website';
-
-  if (!GITHUB_TOKEN) {
-    console.error('[trigger-actions] GITHUB_TOKEN not configured');
-    return;
-  }
-
   try {
-    const [owner, repo] = WEBSITE_REPO.split('/');
-    const url = `https://api.github.com/repos/${owner}/${repo}/dispatches`;
+    // Call our internal funding PR API endpoint
+    const siteUrl = process.env.PUBLIC_SITE_URL || import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com';
+    const basePath = process.env.PUBLIC_BASE_PATH || import.meta.env.PUBLIC_BASE_PATH || '';
+    const apiUrl = `${siteUrl}${basePath}/api/create-funding-pr`;
 
-    const response = await fetch(url, {
+    console.log(`[trigger-actions] Calling funding PR API: ${apiUrl}`);
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
         'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28',
       },
       body: JSON.stringify({
-        event_type: 'wishlist-approved',
-        client_payload: {
-          wishlist_id: wishlistId,
-        },
+        wishlistId: wishlistId,
       }),
     });
 
+    const result = await response.json();
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[trigger-actions] Failed to trigger workflow:', response.status, errorText);
-      throw new Error(`GitHub API error: ${response.status}`);
+      console.error('[trigger-actions] Failed to create funding PR:', response.status, result);
+      throw new Error(`Funding PR API error: ${response.status} - ${result.error || result.message}`);
     }
 
-    console.log(`[trigger-actions] Successfully triggered wishlist actions for wishlist #${wishlistId}`);
+    console.log(`[trigger-actions] Successfully created funding PR for wishlist #${wishlistId}:`, result);
   } catch (error) {
-    console.error('[trigger-actions] Error triggering wishlist actions:', error);
+    console.error('[trigger-actions] Error creating funding PR:', error);
     throw error;
   }
 }
