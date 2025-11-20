@@ -1,0 +1,359 @@
+---
+import { getBasePath } from '../lib/paths';
+const basePath = getBasePath();
+import Layout from '../components/Layout.astro';
+import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
+import { getCollection } from 'astro:content';
+
+// Get user from session
+const user = Astro.locals.user;
+
+if (!user) {
+  return Astro.redirect(`${basePath}?error=login-required`);
+}
+
+// Fetch user's practitioner profile
+const origin = Astro.url.origin;
+const sessionCookie = Astro.cookies.get('github_session');
+const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
+  headers: {
+    'Cookie': `github_session=${sessionCookie?.value}`
+  }
+});
+
+let practitioner = null;
+if (myPractitionerResponse.ok) {
+  const data = await myPractitionerResponse.json();
+  if (data.success) {
+    practitioner = data.practitioner;
+  }
+}
+
+if (!practitioner) {
+  return Astro.redirect(`${basePath}practitioners?error=no-profile`);
+}
+
+// Get all services from the catalog (exclude resources)
+const allServices = await getCollection('services');
+const services = allServices.filter(s => s.data.type === 'service');
+const serviceCategories = [...new Set(services.map(s => s.data.service_category || 'Other'))].sort();
+
+export const prerender = false;
+---
+
+<Layout title="Edit Practitioner Profile - OSS Wishlist" description="Update your practitioner profile">
+  <AuthenticatedForm client:load user={user} formType="practitioner editing">
+    <section class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-5xl font-bold text-gray-900 mb-6">
+          Editing Practitioner <span class="text-accent">Profile</span>
+        </h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          Update your information and expertise. Changes will require admin approval before going live.
+        </p>
+      </div>
+
+    <!-- Edit Form -->
+    <div class="bg-white rounded-lg shadow-sm border p-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h2>
+      
+      <form id="practitionerApplicationForm" class="space-y-6">
+        <!-- Error box -->
+        <div id="formError" class="alert-error hidden" role="alert" aria-live="polite"></div>
+        
+        <!-- Personal Information -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+            <input 
+              type="text" 
+              id="fullName" 
+              name="fullName" 
+              required 
+              value={practitioner.name}
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+              placeholder="Your full name"
+            />
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              required 
+              value={practitioner.email}
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+              placeholder="your@email.com"
+            />
+          </div>
+        </div>
+
+        <!-- Professional Info -->
+        <div>
+          <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Professional Title *</label>
+          <input 
+            type="text" 
+            id="title" 
+            name="title" 
+            required 
+            value={practitioner.title}
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+            placeholder="e.g., Senior Software Engineer, Community Manager, Security Consultant"
+          />
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label for="company" class="block text-sm font-medium text-gray-700 mb-2">Current Company/Organization</label>
+            <input 
+              type="text" 
+              id="company" 
+              name="company" 
+              value={practitioner.company || ''}
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+              placeholder="Your current employer or 'Independent'"
+            />
+          </div>
+          <div>
+            <label for="location" class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <input 
+              type="text" 
+              id="location" 
+              name="location" 
+              value={practitioner.location || ''}
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+              placeholder="City, Country or Remote"
+            />
+          </div>
+        </div>
+
+        <!-- Bio -->
+        <div>
+          <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">Professional Bio *</label>
+          <textarea 
+            id="bio" 
+            name="bio" 
+            required 
+            rows="4"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+            placeholder="Tell us about your expertise, experience, and passion for open source..."
+          >{practitioner.bio}</textarea>
+          <p class="text-sm text-gray-600 mt-1">Minimum 50 characters</p>
+        </div>
+
+        <!-- Languages -->
+        <div>
+          <label for="languages" class="block text-sm font-medium text-gray-700 mb-2">Languages Spoken *</label>
+          <input 
+            type="text" 
+            id="languages" 
+            name="languages" 
+            required 
+            value={practitioner.languages?.join(', ')}
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+            placeholder="e.g., English, Spanish, Mandarin"
+          />
+          <p class="text-sm text-gray-600 mt-1">Comma-separated list</p>
+        </div>
+
+        <!-- Services Offered -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-3">Services You Offer *</label>
+          <div class="space-y-4">
+            {serviceCategories.map(category => (
+              <div>
+                <h4 class="font-semibold text-gray-800 mb-2">{category}</h4>
+                <div class="grid md:grid-cols-2 gap-2">
+                  {services
+                    .filter(s => (s.data.service_category || 'Other') === category)
+                    .map(service => (
+                      <label class="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          name="services" 
+                          value={service.slug}
+                          checked={practitioner.services?.includes(service.slug)}
+                          class="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                        />
+                        <span class="text-sm text-gray-700">{service.data.title}</span>
+                      </label>
+                    ))
+                  }
+                </div>
+              </div>
+            ))}
+          </div>
+          <p class="text-sm text-gray-600 mt-2">Select all services you're qualified to provide</p>
+        </div>
+
+        <!-- Rates -->
+        <div>
+          <label for="rates" class="block text-sm font-medium text-gray-700 mb-2">Rate Structure</label>
+          <select 
+            id="rates" 
+            name="rates" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+          >
+            <option value="volunteer" selected={practitioner.rates === 'volunteer'}>Volunteer (Pro Bono)</option>
+            <option value="discounted" selected={practitioner.rates === 'discounted'}>Discounted for Open Source</option>
+            <option value="market" selected={practitioner.rates === 'market'}>Market Rate</option>
+            <option value="negotiable" selected={practitioner.rates === 'negotiable'}>Negotiable</option>
+          </select>
+        </div>
+
+        <!-- Availability -->
+        <div>
+          <label for="availability" class="block text-sm font-medium text-gray-700 mb-2">Current Availability *</label>
+          <select 
+            id="availability" 
+            name="availability" 
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+          >
+            <option value="available" selected={practitioner.availability === 'available'}>Available</option>
+            <option value="limited" selected={practitioner.availability === 'limited'}>Limited availability</option>
+            <option value="unavailable" selected={practitioner.availability === 'unavailable'}>Not currently available</option>
+          </select>
+        </div>        <!-- Social Links -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label for="github" class="block text-sm font-medium text-gray-700 mb-2">GitHub Username * <span class="text-xs text-gray-500">(Required for authentication)</span></label>
+            <input 
+              type="text" 
+              id="github" 
+              name="github" 
+              required
+              readonly
+              value={user?.login || practitioner.github || ''}
+              class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" 
+            />
+            <p class="mt-1 text-xs text-gray-500">This matches your authenticated GitHub account and cannot be changed</p>
+          </div>
+          <div>
+            <label for="website" class="block text-sm font-medium text-gray-700 mb-2">Personal Website/Portfolio</label>
+            <input 
+              type="url" 
+              id="website" 
+              name="website" 
+              value={practitioner.website || ''}
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+              placeholder="https://yourwebsite.com"
+            />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label for="linkedin" class="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile</label>
+            <input 
+              type="url" 
+              id="linkedin" 
+              name="linkedin" 
+              value={practitioner.linkedin || ''}
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500" 
+              placeholder="https://linkedin.com/in/yourname"
+            />
+          </div>
+        </div>
+
+        <!-- Verification Info -->
+        <div class="bg-gray-50 border-l-4 border-gray-400 p-4 rounded">
+          <h3 class="font-semibold text-gray-900 mb-2">Verification Process</h3>
+          <p class="text-sm text-gray-700">
+            Your updated profile will be reviewed by our team before being published. 
+            We verify credentials and expertise to maintain trust in our practitioner community.
+            You'll receive an email once your changes are approved.
+          </p>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4">
+          <button 
+            type="submit" 
+            class="btn-sparkle w-full"
+          >
+            <svg class="btn-sparkle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="btn-sparkle-text">Update Profile</span>
+            <div class="btn-sparkle-particles"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+    </div>
+    </section>
+  </AuthenticatedForm>
+
+  <script is:inline define:vars={{ basePath }}>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('practitionerApplicationForm');
+      const errorBox = document.getElementById('formError');
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Clear previous errors
+        errorBox.classList.add('hidden');
+        errorBox.textContent = '';
+        
+        // Gather form data
+        const formData = new FormData(form);
+        const services = formData.getAll('services');
+        const languages = formData.get('languages')?.split(',').map(l => l.trim()).filter(Boolean) || [];
+        
+        const data = {
+          fullName: formData.get('fullName'),
+          email: formData.get('email'),
+          title: formData.get('title'),
+          company: formData.get('company') || '',
+          location: formData.get('location') || '',
+          bio: formData.get('bio'),
+          languages: languages,
+          services: services,
+          rates: formData.get('rates') || 'negotiable',
+          availability: formData.get('availability'),
+          website: formData.get('website') || '',
+          linkedin: formData.get('linkedin') || ''
+        };
+        
+        // Validate
+        if (!data.fullName || !data.email || !data.title || !data.bio || languages.length === 0 || services.length === 0 || !data.availability) {
+          errorBox.textContent = 'Please fill in all required fields';
+          errorBox.classList.remove('hidden');
+          return;
+        }
+        
+        if (data.bio.length < 50) {
+          errorBox.textContent = 'Bio must be at least 50 characters';
+          errorBox.classList.remove('hidden');
+          return;
+        }
+        
+        // Submit
+        try {
+          const response = await fetch(`${basePath}api/submit-practitioner`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            window.location.href = `${basePath}practitioners?success=profile-updated`;
+          } else {
+            errorBox.textContent = result.error || 'Failed to update profile';
+            errorBox.classList.remove('hidden');
+          }
+        } catch (error) {
+          errorBox.textContent = 'Network error. Please try again.';
+          errorBox.classList.remove('hidden');
+        }
+      });
+    });
+  </script>
+</Layout>

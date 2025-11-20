@@ -1,83 +1,82 @@
-// API endpoint to fetch approved wishlists from content collections
-// 
-// NOTE: This endpoint reads from markdown content collections (src/content/wishlists/)
-// which are the source of truth for the website. Only returns APPROVED wishlists.
-// The GitHub JSON (all-wishlists.json) is maintained separately for external consumers.
-//
+// API endpoint to fetch approved wishlists from database
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getApprovedWishlists } from '../../lib/db.js';
 
 interface Wishlist {
   id: number;
   projectName: string;
   repositoryUrl: string;
-  wishlistUrl: string;
+  projectDescription?: string;
   maintainerUsername: string;
+  maintainerEmail?: string;
   maintainerAvatarUrl: string;
   approved: boolean;
-  status: string;
+  issueState: string;
   created_at: string;
   updated_at: string;
   wishes: string[];
+  technologies: string[];
   urgency: string;
   projectSize?: string;
   additionalNotes?: string;
-  technologies?: string[];
+  organizationType?: string;
+  organizationName?: string;
 }
 
 export const prerender = false;
 
-async function fetchWishlistsFromContentCollections(): Promise<Wishlist[]> {
+async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
   try {
-    console.log('[wishlists] Fetching from content collections');
+    console.log('[wishlists] Fetching from database');
     
-    // Load all wishlists from content collections
-    const allWishlists = await getCollection('wishlists');
+    // Load approved wishlists from database
+    const dbWishlists = await getApprovedWishlists();
     
-    // Filter to only approved wishlists and map to API format
-    const approvedWishlists = allWishlists
-      .filter((entry) => entry.data.approved === true)
-      .map((entry) => ({
-        id: entry.data.id,
-        projectName: entry.data.projectName,
-        repositoryUrl: entry.data.repositoryUrl,
-        wishlistUrl: entry.data.issueUrl,
-        maintainerUsername: entry.data.maintainerUsername,
-        maintainerAvatarUrl: entry.data.maintainerAvatarUrl || `https://github.com/${entry.data.maintainerUsername}.png`,
-        approved: entry.data.approved,
-        status: 'approved',
-        created_at: entry.data.createdAt,
-        updated_at: entry.data.updatedAt,
-        wishes: entry.data.wishes || [],
-        urgency: entry.data.urgency || 'medium',
-        projectSize: entry.data.projectSize,
-        additionalNotes: entry.data.additionalNotes,
-        technologies: entry.data.technologies || [],
-      }));
+    // Map to API format with full data for wishlists page
+    const approvedWishlists = dbWishlists.map((wishlist) => ({
+      id: wishlist.id,
+      projectName: wishlist.project_name,
+      repositoryUrl: wishlist.repository_url,
+      projectDescription: wishlist.project_description,
+      maintainerUsername: wishlist.maintainer_username,
+      maintainerEmail: wishlist.maintainer_email,
+      // Use local logo to avoid cross-site cookie errors with GitHub images
+      maintainerAvatarUrl: '/images/oss-wishlist-logo.jpg',
+      approved: wishlist.approved,
+      issueState: wishlist.issue_state,
+      created_at: wishlist.created_at.toISOString(),
+      updated_at: wishlist.updated_at.toISOString(),
+      wishes: wishlist.wishes || [],
+      technologies: wishlist.technologies || [],
+      urgency: wishlist.urgency || 'medium',
+      projectSize: wishlist.project_size,
+      additionalNotes: wishlist.additional_notes,
+      organizationType: wishlist.organization_type,
+      organizationName: wishlist.organization_name,
+    }));
     
-    console.log(`[wishlists] Loaded ${approvedWishlists.length} approved wishlists from content collections`);
+    console.log(`[wishlists] Loaded ${approvedWishlists.length} approved wishlists from database`);
     return approvedWishlists;
   } catch (error) {
-    console.error('[wishlists] Error fetching from content collections:', error);
-    // Return empty array if no wishlists exist yet
+    console.error('[wishlists] Error fetching from database:', error);
     return [];
   }
 }
 
 export const GET: APIRoute = async () => {
   try {
-    // Fetch approved wishlists from content collections
-    const approvedWishlists = await fetchWishlistsFromContentCollections();
+    // Fetch approved wishlists from database with full data
+    const approvedWishlists = await fetchWishlistsFromDatabase();
     
     console.log(`[wishlists] Returning ${approvedWishlists.length} approved wishlists`);
 
-    // Build response object
+    // Build response object with full data
     const response = {
       wishlists: approvedWishlists,
       metadata: {
         total: approvedWishlists.length,
         approved: approvedWishlists.length,
-        source: 'content-collections',
+        source: 'database',
       }
     };
 
@@ -85,7 +84,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store', // Don't cache - we want fresh data from markdown
+        'Cache-Control': 'public, max-age=60',
       },
     });
   } catch (error) {

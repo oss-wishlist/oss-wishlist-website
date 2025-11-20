@@ -7,26 +7,29 @@
 export const SITE_TITLE = 'Open Source Wishlist';
 export const SITE_DESCRIPTION = 'Connecting open source projects with expert help and resources';
 
-// Get the base path from environment or default to empty string
-export const BASE_PATH = import.meta.env.PUBLIC_BASE_PATH || '';
+// Get the base path from Astro's built-in BASE_URL (set by astro.config.mjs)
+export const BASE_PATH = import.meta.env.BASE_URL || '/';
 
 // Construct full base URL for client-side usage
 export const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
     // Client-side: use current origin + base path
-    return `${window.location.origin}${BASE_PATH}`;
+    const basePath = BASE_PATH.endsWith('/') ? BASE_PATH.slice(0, -1) : BASE_PATH;
+    return `${window.location.origin}${basePath}`;
   }
   // Server-side: construct from env vars
   const protocol = import.meta.env.PUBLIC_SITE_URL?.startsWith('https') ? 'https' : 'http';
   const host = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4324';
-  return `${host}${BASE_PATH}`;
+  const basePath = BASE_PATH.endsWith('/') ? BASE_PATH.slice(0, -1) : BASE_PATH;
+  return `${host}${basePath}`;
 };
 
 // Helper to construct API paths with base
 export const getApiPath = (path: string) => {
   // Ensure path starts with /
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${BASE_PATH}${cleanPath}`;
+  const basePath = BASE_PATH === '/' ? '' : (BASE_PATH.endsWith('/') ? BASE_PATH.slice(0, -1) : BASE_PATH);
+  return `${basePath}${cleanPath}`;
 };
 
 // Helper to construct full API URLs

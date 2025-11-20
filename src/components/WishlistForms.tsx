@@ -145,8 +145,15 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     // Otherwise check cache
     if (typeof window === 'undefined') return { repos: [], loading: true };
     
-    const cachedRepos = sessionStorage.getItem('github_repositories');
-    const cacheTimestamp = sessionStorage.getItem('github_repositories_timestamp');
+    // Use user-specific cache keys to prevent cross-user data leakage
+    const username = initialUser?.login || '';
+    if (!username) return { repos: [], loading: true };
+    
+    const cacheKey = `github_repositories_${username}`;
+    const timestampKey = `github_repositories_timestamp_${username}`;
+    
+    const cachedRepos = sessionStorage.getItem(cacheKey);
+    const cacheTimestamp = sessionStorage.getItem(timestampKey);
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
     
     if (cachedRepos && cacheTimestamp) {
@@ -241,10 +248,11 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   ];
 
   useEffect(() => {
-    // If we have server-provided repos, cache them for future visits
-    if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined') {
-      sessionStorage.setItem('github_repositories', JSON.stringify(initialRepositories));
-      sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
+    // If we have server-provided repos, cache them for future visits with user-specific key
+    if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined' && initialUser) {
+      const username = initialUser.login;
+      sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(initialRepositories));
+      sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
     }
     
     // If we have cached repos, check for existing wishlists
@@ -333,9 +341,12 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         const repos = data.repositories || [];
         setRepositories(repos);
         
-        // Cache repositories in sessionStorage
-        sessionStorage.setItem('github_repositories', JSON.stringify(repos));
-        sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
+        // Cache repositories in sessionStorage with user-specific key
+        if (user) {
+          const username = user.login;
+          sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(repos));
+          sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+        }
         
         // Check for existing wishlists for these repositories
         if (repos.length > 0) {
@@ -400,7 +411,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       // Use the API endpoint with cache-busting timestamp to get fresh data
       const timestamp = Date.now();
       const apiUrl = getApiPath(`/api/get-wishlist?issueNumber=${issueNumber}&t=${timestamp}`);
-      console.log(`[WishlistForms] Loading wishlist data from ${apiUrl}`);
       const response = await fetch(apiUrl, {
         cache: 'no-store', // Don't use browser cache
         headers: {
@@ -417,8 +427,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       }
       
       const cachedData = await response.json();
-      console.log(`[WishlistForms] Received data - wishes: ${JSON.stringify(cachedData.wishes)}, project: "${cachedData.projectTitle}"`);
-      console.log(`[WishlistForms] Full cachedData:`, cachedData);
       
       // Enforce max wishes when loading existing data
       let incomingWishes: string[] = cachedData.wishes || [];
@@ -430,8 +438,8 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       // Ensure we have a title from the API response
       const title = cachedData.projectTitle || cachedData.project || cachedData.title || '';
       
-      const updatedData: any = {
-        maintainerEmail: '', // Email is not stored in markdown, always empty on edit
+      const updatedData = {
+        maintainerEmail: cachedData.maintainerEmail || '', // Email included for edit form, can be updated
         projectTitle: title,
         selectedServices: incomingWishes,
         urgency: cachedData.urgency || 'medium',
@@ -479,7 +487,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
           url: cachedData.repositoryUrl || cachedData.repository || '',
           username: cachedData.maintainer || ''
         };
-        console.log('[loadExistingWishlistData] Setting manualRepoData:', repoData);
         setManualRepoData(repoData);
       } else {
         console.warn('[loadExistingWishlistData] No repository URL found in cached data:', cachedData);
@@ -704,13 +711,6 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
           ? [manualRepoData]
           : [];
 
-      console.log('[handleWishlistSubmit] Repository data:', {
-        selectedRepo: selectedRepo ? 'YES' : 'NO',
-        manualRepoData: manualRepoData ? 'YES' : 'NO',
-        repositories: repositories,
-        isEditingExisting
-      });
-
       if (repositories.length === 0) {
         console.error('Repository information is missing');
         throw new Error('Repository information is missing. Please go back and select or enter a repository.');
@@ -742,19 +742,6 @@ ${repositories[0].url}
 
       // Submit directly to our API instead of opening GitHub
       const apiUrl = getApiPath('/api/submit-wishlist');
-      console.log('[WishlistForm] Submitting to API URL:', apiUrl);
-      console.log('[WishlistForm] Request payload:', {
-        title: issueTitle,
-        isUpdate: isEditingExisting,
-        issueNumber: existingIssueNumber
-      });
-      
-      console.log('[WishlistForm] About to fetch with payload:', {
-        projectUrl: repositories[0]?.url,
-        maintainer: repositories[0]?.username,
-        isUpdate: isEditingExisting,
-        issueNumber: existingIssueNumber
-      });
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -787,22 +774,40 @@ ${repositories[0].url}
             organizationType: wishlistData.organizationType,
             organizationName: wishlistData.organizationName,
             otherOrganizationType: wishlistData.otherOrganizationType,
-            maintainerEmail: wishlistData.maintainerEmail // Include maintainer email for admin notification (not saved to markdown/GitHub)
+            maintainerEmail: wishlistData.maintainerEmail // Include maintainer email for admin notification (stored in database)
           }
         })
       });
 
-      console.log('[WishlistForm] Fetch completed, status:', response.status);
+      // Clone the response so we can read it multiple times if needed
+      const responseClone = response.clone();
       
       if (!response.ok) {
-        const errorText = await response.text();
+        let errorText = 'Unknown error';
+        try {
+          errorText = await response.text();
+        } catch (e) {
+          console.error('[WishlistForm] Failed to read error response:', e);
+        }
         console.error('[WishlistForm] API error response:', errorText);
-        throw new Error(`API error (${response.status}): ${errorText}`);
+        throw new Error(`API error (${response.status}): ${errorText.substring(0, 200)}`);
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error('[WishlistForm] Failed to parse JSON response');
+        try {
+          const responseText = await responseClone.text();
+          console.error('[WishlistForm] Response text:', responseText.substring(0, 500));
+        } catch (e) {
+          console.error('[WishlistForm] Could not read response text');
+        }
+        throw new Error('Server returned invalid response. Please try again or contact support.');
+      }
 
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         // Handle validation errors with field information
         if (result.field) {
           // Convert technical field names to user-friendly labels
@@ -1016,7 +1021,7 @@ ${repositories[0].url}
                 onClick={() => {
                   // Navigate to wishlist detail page
                   const slug = success.issueUrl ? success.issueUrl.split('/').pop() : success.issueNumber;
-                  window.location.href = `${getBasePath()}/wishlist/${success.issueNumber}`;
+                  window.location.href = `${getBasePath()}wishlist/${success.issueNumber}`;
                 }}
                 className="btn-sparkle inline-flex items-center justify-center px-6 py-3"
               >
@@ -1572,7 +1577,7 @@ ${repositories[0].url}
                   className="mt-1 h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">
-                  I am open to receiving an honorarium as part of wish fulfillment
+                  I/we are open to receiving an honorarium as part of wish fulfillment
                   <span className="block text-xs text-gray-500 mt-1">
                     Organizations fulfilling your wish may offer an optional honorarium to recognize your time and collaboration (not payment for services or obligation)
                   </span>
@@ -1807,6 +1812,7 @@ ${repositories[0].url}
                           }));
                         }}
                         className="hover:text-gray-300"
+                        aria-label={`Remove ${ecosystem} tag`}
                       >
                         ×
                       </button>

@@ -1,10 +1,49 @@
 import type { APIRoute } from 'astro';
 import { sendAdminEmail, sendEmail, getEmailConfig } from '../../lib/mail';
+import { createPractitioner, updatePractitioner, getPractitionersBySubmitter, getAllPractitioners } from '../../lib/db';
+import { verifySession } from '../../lib/github-oauth';
+import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateCheck = checkRateLimit(clientId, RATE_LIMITS.SUBMIT);
+  if (rateCheck.limited) {
+    return createRateLimitResponse(rateCheck.resetTime);
+  }
+
   try {
+    // Verify user is logged in
+    const sessionCookie = cookies.get('github_session');
+    if (!sessionCookie?.value) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'You must be logged in to submit a practitioner profile',
+        code: 'UNAUTHORIZED'
+      }), { 
+        status: 401, 
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
+    const session = verifySession(sessionCookie.value, sessionSecret);
+    
+    if (!session) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid session. Please log in again.',
+        code: 'UNAUTHORIZED'
+      }), { 
+        status: 401, 
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const username = session.user?.login || session.user?.name || 'unknown';
+
     let body;
     try {
       body = await request.json();
@@ -20,8 +59,6 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
     
-    // Submission received
-    
     // Basic required field validation
     const missing: string[] = [];
     if (!body.fullName) missing.push('fullName');
@@ -29,6 +66,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!body.title) missing.push('title');
     if (!body.bio) missing.push('bio');
     if (!body.availability) missing.push('availability');
+    if (!body.languages || body.languages.length === 0) missing.push('languages');
     if (missing.length) {
       return new Response(JSON.stringify({
         success: false,
@@ -41,14 +79,84 @@ export const POST: APIRoute = async ({ request }) => {
     const proBonoHours = body.proBonoHours ?? body.proBonoCapacity ?? 0;
     
     // Generate slug from name (lowercase, replace spaces with hyphens)
-    const slug = body.fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = `${body.fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-practitioner`;
+
+    // Check if practitioner profile already exists for this user
+    const existingPractitioners = await getPractitionersBySubmitter(username);
+    const existingPractitioner = existingPractitioners.length > 0 ? existingPractitioners[0] : null;
+
+    // Check if email is already in use by another practitioner (different GitHub username)
+    const allPractitioners = await getAllPractitioners();
+    const emailTaken = allPractitioners.find(p => 
+      p.email === body.email && 
+      p.submitter_username !== username
+    );
+    if (emailTaken) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'This email address is already registered by another practitioner. Please use a different email.',
+        code: 'EMAIL_ALREADY_EXISTS'
+      }), { 
+        status: 400, 
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const practitionerData = {
+      slug,
+      name: body.fullName,
+      title: body.title,
+      company: body.company || '',
+      bio: body.bio,
+      avatar_url: `https://github.com/${username}.png`,
+      location: body.location || '',
+      languages: body.languages || ['English'],
+      email: body.email,
+      website: body.website || undefined,
+      github: username, // Always use authenticated GitHub username
+      github_sponsors: body.githubSponsors || undefined,
+      mastodon: body.mastodon || undefined,
+      linkedin: body.linkedin || undefined,
+      services: body.services || body.specialties || [], // Accept both 'services' (edit form) and 'specialties' (new form)
+      availability: body.availability,
+      accepts_pro_bono: body.proBono === 'on' || body.proBono === true,
+      pro_bono_criteria: body.proBonoCriteriaText || undefined,
+      pro_bono_hours_per_month: proBonoHours > 0 ? proBonoHours : undefined,
+      years_experience: body.experience ? parseInt(body.experience) : undefined,
+      notable_experience: body.projects ? body.projects.split('\n').filter((p: string) => p.trim()) : [],
+      certifications: [],
+      approved: false,
+      verified: false,
+      submitter_username: username
+    };
+
+    let practitioner;
+    let isUpdate = false;
+
+    if (existingPractitioner) {
+      // Update existing practitioner
+      practitioner = await updatePractitioner(existingPractitioner.id, practitionerData);
+      isUpdate = true;
+      console.log(`[submit-practitioner] ✓ Updated database record for practitioner #${practitioner.id} (${body.fullName})`);
+    } else {
+      // Create new practitioner
+      practitioner = await createPractitioner(practitionerData);
+      console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
+    }
 
     // Email subject
-    const subject = `New Practitioner Application: ${body.fullName}`;
+    const subject = isUpdate 
+      ? `Practitioner Profile Updated: ${body.fullName}`
+      : `New Practitioner Application: ${body.fullName}`;
     
     // Create simple email body with application details
     const emailBody = `
-New practitioner application received from ${body.fullName}.
+${isUpdate ? 'Practitioner profile updated' : 'New practitioner application received'} from ${body.fullName}.
+
+**Database ID:** ${practitioner.id}
+**Slug:** ${slug}
+**Submitter:** @${username}
+${isUpdate ? '**Action:** Profile update' : '**Action:** New application'}
 
 ## Contact Information
 - **Name:** ${body.fullName}
@@ -56,6 +164,7 @@ New practitioner application received from ${body.fullName}.
 - **Title:** ${body.title}
 - **Company:** ${body.company || 'Not specified'}
 - **Location:** ${body.location || 'Not specified'}
+- **Languages:** ${body.languages.join(', ')}
 
 ## Professional Background
 - **Years of Experience:** ${body.experience || 'Not specified'}
@@ -68,7 +177,7 @@ New practitioner application received from ${body.fullName}.
 - **Website:** ${body.website || 'Not provided'}
 
 ## Expertise Areas
-${body.specialties && body.specialties.length > 0 ? body.specialties.map((s: string) => `- ${s}`).join('\n') : 'None selected'}
+${(body.services || body.specialties) && (body.services || body.specialties).length > 0 ? (body.services || body.specialties).map((s: string) => `- ${s}`).join('\n') : 'None selected'}
 ${body.otherSpecialties ? `\n**Other Specialties:** ${body.otherSpecialties}` : ''}
 
 ## Availability & Pro Bono
@@ -83,8 +192,11 @@ ${body.projects || 'Not provided'}
 ${body.additionalInfo || 'None provided'}
 
 ---
-**Suggested filename (when approved):** ${slug}-practitioner.md
+**Database Record:** Practitioner #${practitioner.id}
+**Status:** Pending approval
 **Submitted:** ${new Date().toLocaleString()}
+
+To approve: Update status in database to 'approved' and set approved=true
 `;
 
     // Check email configuration first
@@ -142,12 +254,21 @@ This is an automated confirmation email.`;
       subject: confirmationSubject,
       text: confirmationBody
     });
-    // Optional: ignore confirmation failures
+
+    console.log(`[submit-practitioner] ✓ Admin notification email sent for practitioner #${practitioner.id}`);
+    if (confirmationResult.success) {
+      console.log(`[submit-practitioner] ✓ Confirmation email sent to ${body.email}`);
+    }
 
     return new Response(JSON.stringify({ 
       success: true,
-      message: 'Application submitted successfully',
-      slug: slug,
+      message: isUpdate ? 'Profile updated successfully' : 'Application submitted successfully',
+      practitioner: {
+        id: practitioner.id,
+        slug: slug,
+        name: body.fullName
+      },
+      isUpdate,
       emailProvider: emailResult.provider,
       confirmationSent: confirmationResult.success
     }), { 

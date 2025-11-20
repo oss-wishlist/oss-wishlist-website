@@ -56,7 +56,6 @@ export default function YourWishlistsGrid({ user }: Props) {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.wishlist) {
         const newWishlist = customEvent.detail.wishlist;
-        console.log('[YourWishlistsGrid] Received wishlist-created event');
         
         // Immediately add to UI (don't wait for API)
         setWishlists(prev => [newWishlist, ...prev]);
@@ -70,12 +69,9 @@ export default function YourWishlistsGrid({ user }: Props) {
         const updatedWishlist = customEvent.detail.wishlist;
         const issueNumber = customEvent.detail.issueNumber;
         
-        console.log('[YourWishlistsGrid] Received wishlist-updated event for issue:', issueNumber);
-        
         // Immediately update UI with the returned data (don't wait for API)
-        const updated = wishlists.map((w: any) => {
+        const updated = wishlists.map((w: Wishlist) => {
           if (w.id === issueNumber) {
-            console.log('[YourWishlistsGrid] Updating wishlist in UI:', { from: w.project, to: updatedWishlist.project });
             return updatedWishlist;
           }
           return w;
@@ -85,11 +81,9 @@ export default function YourWishlistsGrid({ user }: Props) {
     };
 
     if (typeof window !== 'undefined') {
-      console.log('[YourWishlistsGrid] Setting up event listeners for wishlist-created and wishlist-updated');
       window.addEventListener('wishlist-created', handleNewWishlist);
       window.addEventListener('wishlist-updated', handleUpdatedWishlist);
       return () => {
-        console.log('[YourWishlistsGrid] Removing event listeners');
         window.removeEventListener('wishlist-created', handleNewWishlist);
         window.removeEventListener('wishlist-updated', handleUpdatedWishlist);
       };
@@ -126,7 +120,6 @@ export default function YourWishlistsGrid({ user }: Props) {
       // For user's own dashboard, show both approved AND pending wishlists
       setWishlists(sortedWishlists);
       
-      console.log('[YourWishlistsGrid] Loaded wishlists:', allWishlists.length);
     } catch (err) {
       console.error('[YourWishlistsGrid] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load wishlists');
@@ -141,12 +134,12 @@ export default function YourWishlistsGrid({ user }: Props) {
   };
 
   const handleDelete = async (issueNumber: number) => {
-    const confirmed = confirm('Are you sure you want to delete this wishlist? This will mark it as no longer needing help.');
+    const confirmed = confirm('Are you sure you want to permanently delete this wishlist? This action cannot be undone.');
     if (!confirmed) return;
 
     try {
       setLoading(true);
-      const response = await fetch(`${basePath}api/close-wishlist`, {
+      const response = await fetch(`${basePath}api/delete-wishlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ issueNumber })
@@ -227,7 +220,8 @@ function WishlistCard({
   onDelete: (issueNumber: number) => void;
 }) {
   const urgencyColorClass = urgencyColors[wishlist.urgency || ''] || 'bg-gray-100 text-gray-700';
-  const maintainerAvatar = `https://github.com/${wishlist.maintainer}.png`;
+  // Use local logo to avoid cross-site cookie errors with GitHub images
+  const maintainerAvatar = `${basePath}images/oss-wishlist-logo.jpg`;
 
   // Format services list
   const servicesHtml = wishlist.services && wishlist.services.length > 0

@@ -83,22 +83,16 @@ export const wishlistFormDataSchema = z.object({
   organizationName: createOptionalModeratedString(),
   otherOrganizationType: createOptionalModeratedString(),
   
-  // Maintainer email (for internal coordination, not saved to public markdown/GitHub)
+  // Maintainer email (stored in database for coordination, not exposed in public API)
   maintainerEmail: z.string().email('Invalid email address').optional().or(z.literal(''))
 });
 
-// Wishlist submission schema
+// Wishlist submission schema (database-driven, no GitHub Issues)
 export const wishlistSubmissionSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  
-  body: z.string().min(1, 'Body is required'),
-  
-  labels: z.array(z.string()).optional(),
-  
+  // Actual form data
   formData: wishlistFormDataSchema,
   
   isUpdate: z.boolean().optional(),
-  
   issueNumber: z.number().int().positive().optional()
 }).superRefine((data, ctx) => {
   // If isUpdate is true, issueNumber must be provided

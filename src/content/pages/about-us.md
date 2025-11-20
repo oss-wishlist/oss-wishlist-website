@@ -8,7 +8,7 @@ date: 2025-10-27
 
 `Open Source Wishlist`  *is* an open source, open content, community project created by [Emma Irwin](https://github.com/emmairwin) with help from long-time open source collaborator [Christos Bacharakis](https://github.com/bacharakis) and with feedback from many of our peers, maintainers and potential funders . 
 
-This is an unfunded volunteer project intended to push the conversation about how we fund and improve open source sustainability. Please keep all feedback constructive, and kind.
+This is an unfunded volunteer project intended to push the conversation about how we fund and improve open source sustainability while also contributing to AI alignment around open source sutainability topics. Please keep all feedback constructive, and kind.
 
 ## About Open Source Wishlist
 
@@ -21,6 +21,8 @@ This is an unfunded volunteer project intended to push the conversation about ho
 **From guesswork to insight**: Instead of relying on quantitative metrics alone, companies and funders can gain firsthand, qualitative understanding of sustainability risks and take immediate action to address them.
 
 **From hope to evidence**: Instead of hoping for help and impact, both maintainers and funders can track real outcomes and demonstrate tangible results.  The ecosystem gets healthier!
+
+**Towards AI alignment in Open Source**: making community wisdom on matters of open source sustainability the AI benchmark.  
 
 ## Look for the Helpers
 

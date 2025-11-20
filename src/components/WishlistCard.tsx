@@ -17,7 +17,6 @@ interface Wishlist {
   technologies?: string[];
   additionalNotes?: string;
   approvalStatus?: 'approved' | 'pending';
-  status?: string;
   createdAt?: string;
   updatedAt?: string;
   wishlistUrl?: string;
@@ -33,7 +32,6 @@ interface WishlistCardProps {
 
 export default function WishlistCard({ wishlist, basePath, mode, onEdit, onDelete }: WishlistCardProps) {
   const urgencyColorClass = urgencyColors[wishlist.urgency || ''] || 'bg-gray-100 text-gray-700';
-  const statusColorClass = statusColors[wishlist.status || ''] || 'bg-gray-100 text-gray-800';
   
   // Normalize field names (handle both API formats)
   const projectName = wishlist.projectName || wishlist.project || '';
@@ -41,7 +39,8 @@ export default function WishlistCard({ wishlist, basePath, mode, onEdit, onDelet
   const repositoryUrl = wishlist.repositoryUrl || wishlist.repository || '';
   const servicesList = wishlist.wishes || wishlist.services || [];
   
-  const maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${maintainerUsername}.png`;
+  // Use local logo to avoid cross-site cookie errors with GitHub images
+  const maintainerAvatar = `${basePath}images/oss-wishlist-logo.jpg`;
 
   // Format services list
   const servicesHtml = servicesList.length > 0
@@ -84,16 +83,8 @@ export default function WishlistCard({ wishlist, basePath, mode, onEdit, onDelet
           </div>
         </div>
         <div className="flex flex-col items-end space-y-1">
-          {/* Show status badge for public mode, approval status for private mode */}
-          {mode === 'public' ? (
-            <>
-              {wishlist.status && wishlist.status !== 'Open' && (
-                <span className={`px-2 py-1 text-xs rounded-full ${statusColorClass}`}>
-                  {wishlist.status}
-                </span>
-              )}
-            </>
-          ) : (
+          {/* Show approval status for private mode only */}
+          {mode === 'private' && (
             <span className="badge-pending px-2 py-1 text-xs rounded-full font-semibold">
               {wishlist.approvalStatus === 'pending' ? 'Pending' : 'Approved'}
             </span>
@@ -137,7 +128,7 @@ export default function WishlistCard({ wishlist, basePath, mode, onEdit, onDelet
         <div className="flex items-center justify-between">
           <div className="flex space-x-2">
             <a 
-              href={wishlist.wishlistUrl || `${basePath}wishlists/${wishlist.id}`}
+              href={wishlist.wishlistUrl || `${basePath}wishlist/${wishlist.id}`}
               className="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
             >
               View details

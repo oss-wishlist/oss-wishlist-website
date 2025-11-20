@@ -1,17 +1,33 @@
 /**
- * API endpoint to delete a wishlist
- * Closes the GitHub issue and removes from cache
+ * API endpoint for users to delete their own wishlists
+ * Requires authentication and verifies ownership
  */
 
 import type { APIRoute } from 'astro';
-import { GITHUB_CONFIG } from '../../config/github.js';
 import { jsonSuccess, jsonError } from '../../lib/api-response.js';
-import { removeWishlistFromCache, fetchCacheFromGitHub } from '../../lib/cache-updater.js';
+import { deleteWishlist, getWishlistById } from '../../lib/db.js';
+import { verifySession } from '../../lib/github-oauth';
 
 export const prerender = false;
 
-export const DELETE: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
+    // Verify user authentication
+    const sessionCookie = cookies.get('github_session');
+    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
+
+    if (!sessionCookie?.value) {
+      return jsonError('Unauthorized', 'You must be logged in to delete a wishlist', 401);
+    }
+
+    const session = verifySession(sessionCookie.value, sessionSecret);
+    if (!session?.user?.login) {
+      return jsonError('Unauthorized', 'Invalid session', 401);
+    }
+
+    const username = session.user.login;
+
+    // Get wishlist ID from request body
     const body = await request.json();
     const { issueNumber } = body;
 
@@ -19,64 +35,37 @@ export const DELETE: APIRoute = async ({ request }) => {
       return jsonError('Missing required field', 'issueNumber required', 400);
     }
 
-    const githubToken = import.meta.env.GITHUB_TOKEN;
-    if (!githubToken) {
-      return jsonError('Server error', 'GitHub token not configured', 500);
+    // Get wishlist to verify ownership
+    const wishlist = await getWishlistById(issueNumber);
+    
+    if (!wishlist) {
+      return jsonError('Not Found', 'Wishlist not found', 404);
     }
 
-    // Close the issue on GitHub (soft delete)
-    const closeResponse = await fetch(
-      `https://api.github.com/repos/${GITHUB_CONFIG.ORG}/${GITHUB_CONFIG.REPO}/issues/${issueNumber}`,
-      {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'OSS-Wishlist-Bot',
-        },
-        body: JSON.stringify({
-          state: 'closed',
-          state_reason: 'not_planned',
-        }),
-      }
-    );
-
-    if (!closeResponse.ok) {
-      return jsonError('Failed to close issue', 'GitHub API error', 500);
+    // Verify user owns this wishlist
+    if (wishlist.maintainer_username !== username) {
+      console.log(`[delete-wishlist] ✗ User @${username} attempted to delete wishlist #${issueNumber} owned by @${wishlist.maintainer_username}`);
+      return jsonError('Forbidden', 'You can only delete your own wishlists', 403);
     }
 
-    // STEP 1: Update local cache file to reflect the deleted wishlist
-    const origin = new URL(request.url).origin;
-    const basePath = import.meta.env.BASE_URL || '';
+    console.log(`[delete-wishlist] User @${username} deleting wishlist #${issueNumber}`);
 
-    try {
-      await fetch(`${origin}${basePath}/api/cache-wishlist?issueNumber=${issueNumber}`, {
-        method: 'GET'
-      });
-      console.log('[delete-wishlist] Local cache updated after deletion');
-    } catch (err) {
-      console.warn('[delete-wishlist] Failed to update local cache:', err);
+    // Delete from database
+    const deleted = await deleteWishlist(issueNumber);
+    
+    if (!deleted) {
+      return jsonError('Server Error', 'Failed to delete wishlist', 500);
     }
 
-    // STEP 2: Invalidate in-memory cache
-    try {
-      await fetch(`${origin}${basePath}/api/cache-invalidate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cacheKey: 'wishlists_full_cache' })
-      });
-      console.log('[delete-wishlist] In-memory cache invalidated');
-    } catch (err) {
-      console.warn('[delete-wishlist] Failed to invalidate cache:', err);
-    }
+    console.log(`[delete-wishlist] ✓ Deleted wishlist #${issueNumber} from database`);
 
     return jsonSuccess({
       deleted: true,
       issueNumber,
+      message: 'Wishlist deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting wishlist:', error);
+    console.error('[delete-wishlist] Error:', error);
     return jsonError(
       'Server error',
       error instanceof Error ? error.message : 'An unexpected error occurred',

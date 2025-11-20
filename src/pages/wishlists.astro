@@ -9,15 +9,6 @@ const user = Astro.locals.user;
 // We'll fetch wishlists client-side from our API endpoint
 const basePath = getBasePath();
 
-const statusColors = {
-  'Open': 'bg-gray-100 text-gray-800',
-  'In Progress': 'bg-gray-200 text-gray-900',
-  'Review': 'bg-gray-300 text-gray-900',
-  'Funded': 'bg-gray-400 text-white',
-  'Completed': 'bg-gray-700 text-white',
-  'On Hold': 'bg-gray-500 text-white',
-};
-
 const urgencyColors = {
   low: 'bg-gray-100 text-gray-700',
   medium: 'bg-gray-200 text-gray-800', 
@@ -119,21 +110,11 @@ const urgencyColors = {
   
 
 <script>
-  console.log('[wishlists page] Script tag is executing!');
   // Wishlist data
   let allWishlists = [];
   let basePath = '';
+  let cleanBasePath = '';
   
-  // Status colors mapping
-  const statusColors = {
-    'Open': 'bg-gray-100 text-gray-800',
-    'In Progress': 'bg-gray-200 text-gray-900',
-    'Review': 'bg-gray-300 text-gray-900',
-    'Funded': 'bg-gray-400 text-white',
-    'Completed': 'bg-gray-700 text-white',
-    'On Hold': 'bg-gray-500 text-white',
-  };
-
   const urgencyColors = {
     low: 'bg-gray-100 text-gray-700',
     medium: 'bg-gray-200 text-gray-800', 
@@ -147,17 +128,14 @@ const urgencyColors = {
 
   // Fetch wishlists from GitHub
   async function fetchWishlists() {
-    console.log('[wishlists page] fetchWishlists() called');
     try {
       const grid = document.getElementById('wishlistsGrid');
       basePath = grid?.dataset.basePath || '';
       // Remove trailing slash if present to avoid double slashes
-      const cleanBasePath = basePath.replace(/\/$/, '');
+      cleanBasePath = basePath.replace(/\/$/, '');
       const apiUrl = `${cleanBasePath}/api/wishlists`;
-      console.log('[wishlists page] Fetching from:', apiUrl);
       
       const response = await fetch(apiUrl);
-      console.log('[wishlists page] Response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -404,9 +382,9 @@ const urgencyColors = {
 
   // Create wishlist card HTML
   function createWishlistCard(wishlist) {
-    const statusColorClass = statusColors[wishlist.status] || 'bg-gray-100 text-gray-800';
     const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';
-    const maintainerAvatar = wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`;
+    // Use local logo to avoid cross-site cookie errors with GitHub images
+    const maintainerAvatar = `${basePath}images/oss-wishlist-logo.jpg`;
     
     // Format services list
     const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0 
@@ -440,11 +418,6 @@ const urgencyColors = {
             </div>
           </div>
           <div class="flex flex-col items-end space-y-1">
-            ${wishlist.status && wishlist.status !== 'Open' ? `
-              <span class="px-2 py-1 text-xs rounded-full ${statusColorClass}">
-                ${wishlist.status}
-              </span>
-            ` : ''}
             ${wishlist.urgency && wishlist.urgency !== 'medium' ? `
               <span class="badge-pending px-2 py-1 text-xs rounded-full">
                 ${wishlist.urgency}
@@ -485,7 +458,7 @@ const urgencyColors = {
         <div class="flex items-center justify-between">
           <div class="flex space-x-2">
             <a 
-              href="${wishlist.wishlistUrl}"
+              href="${cleanBasePath}/wishlist/${wishlist.id}"
               class="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
             >
               View details
@@ -528,12 +501,10 @@ const urgencyColors = {
 
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('[wishlists page] DOMContentLoaded event fired');
     // Initialize ecosystem filter dropdown
     initializeEcosystemFilter();
     
     // Fetch wishlists
-    console.log('[wishlists page] About to call fetchWishlists()');
     fetchWishlists();
     
     // Set up search

@@ -3,8 +3,68 @@ import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { verifySession } from '../lib/github-oauth';
 
-const allPractitioners = await getCollection('practitioners');
+// Check if user is logged in
+const sessionCookie = Astro.cookies.get('github_session');
+const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
+let session = null;
+let userPractitioner = null;
+
+if (sessionCookie?.value) {
+  session = verifySession(sessionCookie.value, sessionSecret);
+  
+  // Check if logged-in user has a practitioner profile
+  if (session?.user?.login) {
+    const origin = Astro.url.origin;
+    const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
+      headers: {
+        'Cookie': `github_session=${sessionCookie.value}`
+      }
+    });
+    if (myPractitionerResponse.ok) {
+      const data = await myPractitionerResponse.json();
+      if (data.success) {
+        userPractitioner = data.practitioner;
+      }
+    }
+  }
+}
+
+// Fetch practitioners from database API
+const origin = Astro.url.origin;
+const practitionersResponse = await fetch(`${origin}${basePath}api/practitioners`);
+const practitionersData = await practitionersResponse.json();
+
+// Transform API response to match content collection structure
+const allPractitioners = (practitionersData.practitioners || []).map(p => ({
+  slug: p.slug,
+  data: {
+    name: p.name,
+    title: p.title,
+    company: p.company,
+    bio: p.bio,
+    avatar_url: p.avatar_url,
+    location: p.location,
+    languages: p.languages,
+    email: p.email,
+    website: p.website,
+    github: p.github,
+    github_sponsors: p.github_sponsors,
+    mastodon: p.mastodon,
+    linkedin: p.linkedin,
+    services: p.services,
+    availability: p.availability,
+    accepts_pro_bono: p.accepts_pro_bono,
+    pro_bono_criteria: p.pro_bono_criteria,
+    pro_bono_hours_per_month: p.pro_bono_hours_per_month,
+    years_experience: p.years_experience,
+    notable_experience: p.notable_experience,
+    certifications: p.certifications,
+    verified: p.verified
+  }
+}));
+
 const allServices = await getCollection('services');
 const filteredServices = allServices.filter(s => s.data.type === 'service');
 
@@ -17,13 +77,56 @@ const projectName = url.searchParams.get('project');
 
 let selectedWishlist = null;
 if (wishlistSlug) {
-  const wishlists = await getCollection('wishlists');
-  selectedWishlist = wishlists.find(w => w.slug === wishlistSlug);
+  // Fetch wishlist from database if needed
+  const wishlistResponse = await fetch(`${origin}${basePath}api/wishlist?id=${wishlistSlug}`);
+  if (wishlistResponse.ok) {
+    const data = await wishlistResponse.json();
+    selectedWishlist = data.wishlist;
+  }
 }
 ---
 
 <Layout title="Open Source Practitioners" description="Connect with verified open source practitioners who can help with your project needs">
   <div class="max-w-7xl mx-auto px-4 py-10">
+    
+    {userPractitioner && (
+      <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-base text-gray-700 font-medium">
+              Your Practitioner Profile
+              {userPractitioner.approved ? (
+                <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  ✓ Approved
+                </span>
+              ) : (
+                <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  ⏳ Pending Approval
+                </span>
+              )}
+            </p>
+          </div>
+          <div class="flex gap-3 items-center">
+            <a 
+              href={`${basePath}edit-practitioner`} 
+              class="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-violet-600 rounded-lg hover:from-purple-700 hover:to-violet-700 transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Profile
+            </a>
+            <button 
+              id="delete-practitioner-btn"
+              class="text-sm text-red-600 hover:text-red-700 font-medium underline"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <!-- Header -->
     <div class="text-center mb-10">
       {selectedWishlist ? (
@@ -93,14 +196,12 @@ if (wishlistSlug) {
             data-services={(practitioner.data.services || []).join(',')}
           >
             <div class="flex items-start space-x-4 mb-4">
-              {practitioner.data.avatar_url && (
-                <img 
-                  src={practitioner.data.avatar_url} 
-                  alt={practitioner.data.name}
-                  class="w-12 h-12 rounded-full object-cover"
-                  loading="lazy"
-                />
-              )}
+              <img 
+                src={practitioner.data.avatar_url || `${basePath}images/oss-wishlist-logo.jpg`} 
+                alt={practitioner.data.name}
+                class="w-12 h-12 rounded-full object-cover"
+                loading="lazy"
+              />
               <div class="flex-1">
                 <h3 class="font-semibold text-gray-900">{practitioner.data.name}</h3>
                 <p class="text-sm text-gray-600">{practitioner.data.title}</p>
@@ -226,4 +327,14 @@ if (wishlistSlug) {
     } catch {}
     applyFilters();
   })();
+
+  // Delete practitioner button handler
+  const deleteBtn = document.getElementById('delete-practitioner-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete your practitioner profile? This action cannot be undone.')) {
+        alert('Please contact info@oss-wishlist.com to request profile deletion.');
+      }
+    });
+  }
 </script>

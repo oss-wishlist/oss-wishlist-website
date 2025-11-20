@@ -1,43 +1,37 @@
 // API endpoint to fetch all wishlists (approved and pending) for a specific user
 // This allows authenticated users to see both their approved and pending wishlists
-//
-// NOTE: This endpoint reads from markdown content collections (src/content/wishlists/)
-// which are the source of truth for the website. The GitHub JSON is only for external consumers.
-//
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getWishlistsByMaintainer } from '../../lib/db.js';
 
 export const prerender = false;
 
 async function fetchUserWishlists(username: string): Promise<any[]> {
   try {
-    // Load wishlists from content collections
-    const allWishlists = await getCollection('wishlists');
+    // Load wishlists from database
+    const dbWishlists = await getWishlistsByMaintainer(username);
     
-    // Filter to wishlists for this user
-    const userWishlists = allWishlists
-      .filter((entry) => entry.data.maintainerUsername === username)
-      .map((entry) => ({
-        project: entry.data.projectName,
-        services: entry.data.wishes || [],
-        urgency: entry.data.urgency || 'medium',
-        projectSize: entry.data.projectSize || 'medium',
-        timeline: '',
-        organizationType: 'single-maintainer',
-        organizationName: '',
-        otherOrganizationType: '',
-        additionalNotes: entry.data.additionalNotes || '',
-        technologies: entry.data.technologies || [],
-        resources: entry.data.resources || [],
-        openToSponsorship: false,
-        repository: entry.data.repositoryUrl || '',
-        maintainer: entry.data.maintainerUsername,
-        id: entry.data.id,
-        approvalStatus: entry.data.approved ? 'approved' : 'pending',
-        issueUrl: entry.data.issueUrl,
-        createdAt: entry.data.createdAt,
-        updatedAt: entry.data.updatedAt,
-      }));
+    // Map to API format
+    const userWishlists = dbWishlists.map((wishlist) => ({
+      project: wishlist.project_name,
+      services: wishlist.wishes || [],
+      urgency: wishlist.urgency || 'medium',
+      projectSize: wishlist.project_size || 'medium',
+      timeline: '',
+      organizationType: wishlist.organization_type || 'single-maintainer',
+      organizationName: wishlist.organization_name || '',
+      otherOrganizationType: wishlist.other_organization_type || '',
+      additionalNotes: wishlist.additional_notes || '',
+      technologies: wishlist.technologies || [],
+      resources: wishlist.resources || [],
+      openToSponsorship: wishlist.open_to_sponsorship || false,
+      repository: wishlist.repository_url || '',
+      maintainer: wishlist.maintainer_username,
+      id: wishlist.id,
+      approvalStatus: wishlist.approved ? 'approved' : 'pending',
+      issueUrl: wishlist.issue_url,
+      createdAt: wishlist.created_at,
+      updatedAt: wishlist.updated_at,
+    }));
 
     // Sort: newest first
     userWishlists.sort((a: any, b: any) => {
@@ -46,11 +40,10 @@ async function fetchUserWishlists(username: string): Promise<any[]> {
       return dateA - dateB;
     });
 
-    console.log(`[user-wishlists] Loaded ${userWishlists.length} wishlists for ${username} from content collections`);
+    console.log(`[user-wishlists] Loaded ${userWishlists.length} wishlists for ${username} from database`);
     return userWishlists;
   } catch (error) {
-    console.error('[user-wishlists] Error fetching wishlists from content collections:', error);
-    // Return empty array if no wishlists exist yet (new user or no markdown files)
+    console.error('[user-wishlists] Error fetching wishlists from database:', error);
     return [];
   }
 }
@@ -74,7 +67,7 @@ export const GET: APIRoute = async ({ url }) => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store', // Don't cache - we want fresh data from markdown
+        'Cache-Control': 'no-store', // Don't cache - we want fresh data from database
       },
     });
   } catch (error) {
