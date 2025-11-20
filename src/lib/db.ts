@@ -45,25 +45,42 @@ const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.
 let sslConfig: any = false;
 if (shouldUseSSL) {
   try {
-    // Load Digital Ocean CA certificate from public directory (included in deployment)
+    // Log current working directory and try multiple certificate locations
+    console.log('[Database] Current working directory:', process.cwd());
+    console.log('[Database] __dirname equivalent:', new URL('.', import.meta.url).pathname);
+    
     // Try multiple locations to handle different deployment scenarios
-    let caPath = path.join(process.cwd(), 'public', 'ca-certificate.crt');
-    if (!fs.existsSync(caPath)) {
-      // Fallback for standalone builds where public/ is copied to dist/client/
-      caPath = path.join(process.cwd(), 'dist', 'client', 'ca-certificate.crt');
-    }
-    if (!fs.existsSync(caPath)) {
-      // Fallback for original location
-      caPath = path.join(process.cwd(), 'certs', 'ca-certificate.crt');
+    const possiblePaths = [
+      path.join(process.cwd(), 'public', 'ca-certificate.crt'),
+      path.join(process.cwd(), 'dist', 'client', 'ca-certificate.crt'),
+      path.join(process.cwd(), 'certs', 'ca-certificate.crt'),
+      '/workspace/dist/client/ca-certificate.crt', // Digital Ocean absolute path
+      '/workspace/public/ca-certificate.crt',
+    ];
+    
+    let ca: string | undefined;
+    let usedPath: string | undefined;
+    
+    for (const certPath of possiblePaths) {
+      if (fs.existsSync(certPath)) {
+        console.log('[Database] Found certificate at:', certPath);
+        ca = fs.readFileSync(certPath, 'utf-8');
+        usedPath = certPath;
+        break;
+      } else {
+        console.log('[Database] Certificate not found at:', certPath);
+      }
     }
     
-    const ca = fs.readFileSync(caPath, 'utf-8');
-    
-    sslConfig = {
-      rejectUnauthorized: true, // Enable full SSL validation
-      ca: ca,
-    };
-    console.log('[Database] Using Digital Ocean CA certificate for SSL validation');
+    if (ca) {
+      sslConfig = {
+        rejectUnauthorized: true, // Enable full SSL validation
+        ca: ca,
+      };
+      console.log('[Database] Using Digital Ocean CA certificate from:', usedPath);
+    } else {
+      throw new Error('CA certificate not found in any expected location');
+    }
   } catch (error) {
     console.error('[Database] Failed to load CA certificate, falling back to unverified SSL:', error);
     // Fallback to unverified SSL if certificate not available
