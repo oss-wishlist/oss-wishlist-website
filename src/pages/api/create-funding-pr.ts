@@ -163,7 +163,14 @@ async function createPullRequest(
   const existingPR = await checkExistingPR(octokit, owner, repo, forkOwner, data.wishlistUrl);
   if (existingPR) {
     console.log(`[funding-pr] Existing PR found (${existingPR.state}): ${existingPR.html_url}`);
-    return existingPR.html_url;
+    return new Response(
+      JSON.stringify({
+        status: 'skipped',
+        pr_url: existingPR.html_url,
+        message: `PR already exists (${existingPR.state})`,
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   // Get default branch
