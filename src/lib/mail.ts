@@ -92,7 +92,7 @@ function getFromAddress(customFrom?: { email: string; name?: string }) {
   }
   
   return {
-    email: import.meta.env.EMAIL_FROM_ADDRESS || 'noreply@oss-wishlist.org',
+    email: import.meta.env.EMAIL_FROM_ADDRESS || 'noreply@oss-wishlist.com',
     name: import.meta.env.EMAIL_FROM_NAME || 'OSS Wishlist'
   };
 }
