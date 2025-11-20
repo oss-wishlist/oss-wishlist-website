@@ -37,18 +37,31 @@ if (!DATABASE_URL) {
 }
 
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
-const NODE_TLS_REJECT = process.env.NODE_TLS_REJECT_UNAUTHORIZED || import.meta.env?.NODE_TLS_REJECT_UNAUTHORIZED;
 
 // SSL configuration for Digital Ocean managed PostgreSQL
-// Bypasses certificate validation to avoid "self-signed certificate in chain" errors
-// Always use rejectUnauthorized: false for local development or when NODE_TLS_REJECT_UNAUTHORIZED=0
-const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || PGSSLMODE === 'require';
-const sslConfig = shouldUseSSL
-  ? {
-      rejectUnauthorized: NODE_TLS_REJECT === '0' ? false : false, // Always false for staging DB
-      checkServerIdentity: () => undefined,
-    }
-  : false;
+// Uses the official Digital Ocean CA certificate for proper SSL validation
+const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.includes('ssl=true') || PGSSLMODE === 'require';
+
+let sslConfig: any = false;
+if (shouldUseSSL) {
+  try {
+    // Load Digital Ocean CA certificate
+    const caPath = path.join(process.cwd(), 'certs', 'ca-certificate.crt');
+    const ca = fs.readFileSync(caPath, 'utf-8');
+    
+    sslConfig = {
+      rejectUnauthorized: true, // Enable full SSL validation
+      ca: ca,
+    };
+    console.log('[Database] Using Digital Ocean CA certificate for SSL validation');
+  } catch (error) {
+    console.error('[Database] Failed to load CA certificate, falling back to unverified SSL:', error);
+    // Fallback to unverified SSL if certificate not available
+    sslConfig = {
+      rejectUnauthorized: false,
+    };
+  }
+}
 
 // Connection pool configuration
 const pool = new Pool({
