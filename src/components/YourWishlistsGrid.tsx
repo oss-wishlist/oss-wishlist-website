@@ -134,12 +134,12 @@ export default function YourWishlistsGrid({ user }: Props) {
   };
 
   const handleDelete = async (issueNumber: number) => {
-    const confirmed = confirm('Are you sure you want to delete this wishlist? This will mark it as no longer needing help.');
+    const confirmed = confirm('Are you sure you want to permanently delete this wishlist? This action cannot be undone.');
     if (!confirmed) return;
 
     try {
       setLoading(true);
-      const response = await fetch(`${basePath}api/close-wishlist`, {
+      const response = await fetch(`${basePath}api/delete-wishlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ issueNumber })
