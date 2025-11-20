@@ -40,6 +40,15 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
+    // Only return approved wishlists
+    if (!wishlist.approved) {
+      console.log(`[wishlist] Wishlist #${id} is not approved`);
+      return new Response(JSON.stringify({ error: 'Wishlist not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     console.log(`[wishlist] Wishlist #${id} fetched from database`);
 
     // Return in format expected by fulfill page
