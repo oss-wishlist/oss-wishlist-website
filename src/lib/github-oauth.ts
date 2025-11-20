@@ -161,7 +161,7 @@ export async function fetchUserRepositories(username: string): Promise<GitHubRep
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetchWithTimeout(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated&type=owner`, {
+  const response = await fetchWithTimeout(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated&type=all`, {
     headers
   }, 10000) as Response;
 
