@@ -14,7 +14,7 @@ jobs:
   manage-wishlist:
     runs-on: ubuntu-latest
     steps:
-      - uses: oss-wishlist/manage-wishlist-actions@v2
+      - uses: oss-wishlist/manage-wishlist-actions@v1.1.2
         with:
           github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}
           database-url: ${{ secrets.DATABASE_URL }}
