@@ -145,8 +145,15 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     // Otherwise check cache
     if (typeof window === 'undefined') return { repos: [], loading: true };
     
-    const cachedRepos = sessionStorage.getItem('github_repositories');
-    const cacheTimestamp = sessionStorage.getItem('github_repositories_timestamp');
+    // Use user-specific cache keys to prevent cross-user data leakage
+    const username = initialUser?.login || '';
+    if (!username) return { repos: [], loading: true };
+    
+    const cacheKey = `github_repositories_${username}`;
+    const timestampKey = `github_repositories_timestamp_${username}`;
+    
+    const cachedRepos = sessionStorage.getItem(cacheKey);
+    const cacheTimestamp = sessionStorage.getItem(timestampKey);
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
     
     if (cachedRepos && cacheTimestamp) {
@@ -241,10 +248,11 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   ];
 
   useEffect(() => {
-    // If we have server-provided repos, cache them for future visits
-    if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined') {
-      sessionStorage.setItem('github_repositories', JSON.stringify(initialRepositories));
-      sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
+    // If we have server-provided repos, cache them for future visits with user-specific key
+    if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined' && initialUser) {
+      const username = initialUser.login;
+      sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(initialRepositories));
+      sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
     }
     
     // If we have cached repos, check for existing wishlists
@@ -333,9 +341,12 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         const repos = data.repositories || [];
         setRepositories(repos);
         
-        // Cache repositories in sessionStorage
-        sessionStorage.setItem('github_repositories', JSON.stringify(repos));
-        sessionStorage.setItem('github_repositories_timestamp', Date.now().toString());
+        // Cache repositories in sessionStorage with user-specific key
+        if (user) {
+          const username = user.login;
+          sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(repos));
+          sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+        }
         
         // Check for existing wishlists for these repositories
         if (repos.length > 0) {
