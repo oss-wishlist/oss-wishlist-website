@@ -1,4 +1,4 @@
-// Admin page functions for approving/rejecting wishlists and practitioners
+// Admin page functions for approving/deleting wishlists and approving practitioners
 // Uses event delegation for security (no inline onclick handlers)
 
 // Event delegation handler
@@ -17,9 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'approve-wishlist':
         await approveWishlist(id);
         break;
-      case 'reject-wishlist':
-        await rejectWishlist(id);
-        break;
       case 'move-to-pending':
         await moveToPending(id);
         break;
@@ -28,9 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       case 'approve-practitioner':
         await approvePractitioner(id);
-        break;
-      case 'reject-practitioner':
-        await rejectPractitioner(id);
         break;
     }
   });
@@ -58,28 +52,6 @@ async function approveWishlist(id) {
   }
 }
 
-async function rejectWishlist(id) {
-  if (!confirm('Are you sure you want to reject this wishlist? This action will update the status to rejected.')) return;
-  
-  try {
-    const basePath = window.location.pathname.includes('/oss-wishlist-website') ? '/oss-wishlist-website/' : '/';
-    const response = await fetch(`${basePath}api/admin/reject-wishlist`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    
-    if (response.ok) {
-      alert('Wishlist rejected');
-      window.location.reload();
-    } else {
-      alert('Failed to reject wishlist');
-    }
-  } catch (err) {
-    alert('Error: ' + err.message);
-  }
-}
-
 async function approvePractitioner(id) {
   if (!confirm('Approve this practitioner and make their profile publicly visible?')) return;
   
@@ -96,28 +68,6 @@ async function approvePractitioner(id) {
       window.location.reload();
     } else {
       alert('Failed to approve practitioner');
-    }
-  } catch (err) {
-    alert('Error: ' + err.message);
-  }
-}
-
-async function rejectPractitioner(id) {
-  if (!confirm('Are you sure you want to reject this practitioner application? This action will update the status to rejected.')) return;
-  
-  try {
-    const basePath = window.location.pathname.includes('/oss-wishlist-website') ? '/oss-wishlist-website/' : '/';
-    const response = await fetch(`${basePath}api/admin/reject-practitioner`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    
-    if (response.ok) {
-      alert('Practitioner application rejected');
-      window.location.reload();
-    } else {
-      alert('Failed to reject practitioner');
     }
   } catch (err) {
     alert('Error: ' + err.message);

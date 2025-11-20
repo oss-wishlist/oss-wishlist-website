@@ -69,147 +69,178 @@ const pendingPractitioners = allPractitioners.filter(p => !p.approved).map(p => 
   <div class="max-w-7xl mx-auto px-4 py-10">
     <h1 class="text-4xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
 
-    <!-- Wishlists Section -->
-    <section class="mb-12">
-      <h2 class="text-2xl font-bold text-gray-900 mb-4">
-        Pending Wishlists 
-        <span class="text-sm font-normal text-gray-600">({pendingWishlists.length})</span>
-      </h2>
+    <!-- Pending Wishlists Section (Collapsible) -->
+    <section class="mb-8">
+      <button 
+        class="w-full flex justify-between items-center bg-gray-100 hover:bg-gray-200 px-6 py-4 rounded-lg transition-colors"
+        onclick="toggleSection('pending-wishlists')"
+      >
+        <h2 class="text-2xl font-bold text-gray-900">
+          Pending Wishlists 
+          <span class="text-sm font-normal text-gray-600">({pendingWishlists.length})</span>
+        </h2>
+        <svg id="pending-wishlists-icon" class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
       
-      {pendingWishlists.length === 0 ? (
-        <p class="text-gray-600">No pending wishlists</p>
-      ) : (
-        <div class="space-y-4">
-          {pendingWishlists.map((wishlist) => (
-            <div class="bg-white border rounded-lg p-6 shadow-sm" key={wishlist.id}>
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <h3 class="font-semibold text-lg text-gray-900">{wishlist.projectName}</h3>
-                  <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
-                  <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
-                  <div class="flex gap-4 mt-3 text-sm text-gray-600">
-                    <span>Size: {wishlist.projectSize || 'medium'}</span>
-                    <span>Urgency: {wishlist.urgency || 'medium'}</span>
-                    <span>{wishlist.wishes?.length || 0} wishes</span>
+      <div id="pending-wishlists-content" class="mt-4">
+        {pendingWishlists.length === 0 ? (
+          <p class="text-gray-600 px-6">No pending wishlists</p>
+        ) : (
+          <div class="space-y-4">
+            {pendingWishlists.map((wishlist) => (
+              <div class="bg-white border rounded-lg p-6 shadow-sm" key={wishlist.id}>
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-lg text-gray-900">{wishlist.projectName}</h3>
+                    <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
+                    <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
+                    <div class="flex gap-4 mt-3 text-sm text-gray-600">
+                      <span>Size: {wishlist.projectSize || 'medium'}</span>
+                      <span>Urgency: {wishlist.urgency || 'medium'}</span>
+                      <span>{wishlist.wishes?.length || 0} wishes</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-2 ml-4">
+                    <button 
+                      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                      data-action="approve-wishlist"
+                      data-id={wishlist.id}
+                    >
+                      Approve
+                    </button>
+                    <button 
+                      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                      data-action="delete-wishlist"
+                      data-id={wishlist.id}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-                <div class="flex gap-2 ml-4">
-                  <button 
-                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                    data-action="approve-wishlist"
-                    data-id={wishlist.id}
-                  >
-                    Approve
-                  </button>
-                  <button 
-                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                    data-action="reject-wishlist"
-                    data-id={wishlist.id}
-                  >
-                    Reject
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </section>
 
-    <!-- Approved Wishlists Section -->
-    <section class="mb-12">
-      <h2 class="text-2xl font-bold text-gray-900 mb-4">
-        Approved Wishlists 
-        <span class="text-sm font-normal text-gray-600">({approvedWishlists.length})</span>
-      </h2>
+    <!-- Approved Wishlists Section (Collapsible) -->
+    <section class="mb-8">
+      <button 
+        class="w-full flex justify-between items-center bg-gray-100 hover:bg-gray-200 px-6 py-4 rounded-lg transition-colors"
+        onclick="toggleSection('approved-wishlists')"
+      >
+        <h2 class="text-2xl font-bold text-gray-900">
+          Approved Wishlists 
+          <span class="text-sm font-normal text-gray-600">({approvedWishlists.length})</span>
+        </h2>
+        <svg id="approved-wishlists-icon" class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
       
-      {approvedWishlists.length === 0 ? (
-        <p class="text-gray-600">No approved wishlists</p>
-      ) : (
-        <div class="space-y-4">
-          {approvedWishlists.map((wishlist) => (
-            <div class="bg-white border rounded-lg p-6 shadow-sm" key={wishlist.id}>
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <h3 class="font-semibold text-lg text-gray-900">{wishlist.projectName}</h3>
-                  <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
-                  <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
-                  <div class="flex gap-4 mt-3 text-sm text-gray-600">
-                    <span>Size: {wishlist.projectSize || 'medium'}</span>
-                    <span>Urgency: {wishlist.urgency || 'medium'}</span>
-                    <span>{wishlist.wishes?.length || 0} wishes</span>
+      <div id="approved-wishlists-content" class="mt-4">
+        {approvedWishlists.length === 0 ? (
+          <p class="text-gray-600 px-6">No approved wishlists</p>
+        ) : (
+          <div class="space-y-4">
+            {approvedWishlists.map((wishlist) => (
+              <div class="bg-white border rounded-lg p-6 shadow-sm" key={wishlist.id}>
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-lg text-gray-900">{wishlist.projectName}</h3>
+                    <p class="text-sm text-gray-600 mt-1">by @{wishlist.maintainerUsername}</p>
+                    <p class="text-sm text-gray-700 mt-2">{wishlist.description?.substring(0, 200)}...</p>
+                    <div class="flex gap-4 mt-3 text-sm text-gray-600">
+                      <span>Size: {wishlist.projectSize || 'medium'}</span>
+                      <span>Urgency: {wishlist.urgency || 'medium'}</span>
+                      <span>{wishlist.wishes?.length || 0} wishes</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-2 ml-4">
+                    <button 
+                      class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+                      data-action="move-to-pending"
+                      data-id={wishlist.id}
+                    >
+                      Move to Pending
+                    </button>
                   </div>
                 </div>
-                <div class="flex gap-2 ml-4">
-                  <button 
-                    class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
-                    data-action="move-to-pending"
-                    data-id={wishlist.id}
-                  >
-                    Move to Pending
-                  </button>
-                  <button 
-                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                    data-action="delete-wishlist"
-                    data-id={wishlist.id}
-                  >
-                    Delete
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </section>
 
-    <!-- Practitioners Section -->
-    <section>
-      <h2 class="text-2xl font-bold text-gray-900 mb-4">
-        Pending Practitioners 
-        <span class="text-sm font-normal text-gray-600">({pendingPractitioners.length})</span>
-      </h2>
+    <!-- Pending Practitioners Section (Collapsible) -->
+    <section class="mb-8">
+      <button 
+        class="w-full flex justify-between items-center bg-gray-100 hover:bg-gray-200 px-6 py-4 rounded-lg transition-colors"
+        onclick="toggleSection('pending-practitioners')"
+      >
+        <h2 class="text-2xl font-bold text-gray-900">
+          Pending Practitioners 
+          <span class="text-sm font-normal text-gray-600">({pendingPractitioners.length})</span>
+        </h2>
+        <svg id="pending-practitioners-icon" class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
       
-      {pendingPractitioners.length === 0 ? (
-        <p class="text-gray-600">No pending practitioners</p>
-      ) : (
-        <div class="space-y-4">
-          {pendingPractitioners.map((practitioner) => (
-            <div class="bg-white border rounded-lg p-6 shadow-sm" key={practitioner.id}>
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <h3 class="font-semibold text-lg text-gray-900">{practitioner.name}</h3>
-                  <p class="text-sm text-gray-600 mt-1">{practitioner.title}</p>
-                  <p class="text-sm text-gray-700 mt-2">{practitioner.bio?.substring(0, 200)}...</p>
-                  <div class="flex gap-4 mt-3 text-sm text-gray-600">
-                    <span>Location: {practitioner.location || 'Not specified'}</span>
-                    <span>Languages: {practitioner.languages?.join(', ')}</span>
-                    <span>{practitioner.services?.length || 0} services</span>
+      <div id="pending-practitioners-content" class="mt-4">
+        {pendingPractitioners.length === 0 ? (
+          <p class="text-gray-600 px-6">No pending practitioners</p>
+        ) : (
+          <div class="space-y-4">
+            {pendingPractitioners.map((practitioner) => (
+              <div class="bg-white border rounded-lg p-6 shadow-sm" key={practitioner.id}>
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-lg text-gray-900">{practitioner.name}</h3>
+                    <p class="text-sm text-gray-600 mt-1">{practitioner.title}</p>
+                    <p class="text-sm text-gray-700 mt-2">{practitioner.bio?.substring(0, 200)}...</p>
+                    <div class="flex gap-4 mt-3 text-sm text-gray-600">
+                      <span>Location: {practitioner.location || 'Not specified'}</span>
+                      <span>Languages: {practitioner.languages?.join(', ')}</span>
+                      <span>{practitioner.services?.length || 0} services</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-2 ml-4">
+                    <button 
+                      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                      data-action="approve-practitioner"
+                      data-id={practitioner.id}
+                    >
+                      Approve
+                    </button>
                   </div>
                 </div>
-                <div class="flex gap-2 ml-4">
-                  <button 
-                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                    data-action="approve-practitioner"
-                    data-id={practitioner.id}
-                  >
-                    Approve
-                  </button>
-                  <button 
-                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                    data-action="reject-practitioner"
-                    data-id={practitioner.id}
-                  >
-                    Reject
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   </div>
 
+  <script is:inline>
+    // Toggle collapsible sections
+    function toggleSection(sectionId) {
+      const content = document.getElementById(sectionId + '-content');
+      const icon = document.getElementById(sectionId + '-icon');
+      
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(0deg)';
+      } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(-90deg)';
+      }
+    }
+  </script>
   <script is:inline src="/js/admin.js"></script>
 </Layout>
