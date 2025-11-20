@@ -1721,7 +1721,7 @@ ${repositories[0].url}
               Package Ecosystem
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Select up to 2 package managers/ecosystems your project uses. This helps practitioners find projects in ecosystems they specialize in.
+              Select up to 2 package managers/ecosystems your project publishes to. This helps practitioners find projects in ecosystems they specialize in.
             </p>
             
             {/* Package ecosystem buttons */}
