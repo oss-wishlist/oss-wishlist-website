@@ -334,6 +334,8 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    console.log(`[funding-pr] Wishlist data: approved=${wishlist.approved}, funding_yml=${wishlist.funding_yml}, funding_yml_processed=${wishlist.funding_yml_processed}`);
+
     // Check conditions
     if (!wishlist.approved) {
       return new Response(
