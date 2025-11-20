@@ -53,6 +53,7 @@ async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
       additionalNotes: wishlist.additional_notes,
       organizationType: wishlist.organization_type,
       organizationName: wishlist.organization_name,
+      wishlistUrl: `https://oss-wishlist.com/fulfill?issue=${wishlist.id}`,
     }));
     
     console.log(`[wishlists] Loaded ${approvedWishlists.length} approved wishlists from database`);
