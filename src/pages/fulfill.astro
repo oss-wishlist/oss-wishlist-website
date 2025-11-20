@@ -193,6 +193,38 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
             )}
           </div>
 
+          <!-- How to Select Practitioners Info Box -->
+          {wishlistData && (
+            <div class="alert-info">
+              <h3 class="font-semibold mb-2 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Selecting Practitioners
+              </h3>
+              <p class="text-sm mb-3">
+                For each service, you can choose from approved practitioners who specialize in that service, or select "No preference" and we'll match you with the best practitioner.
+              </p>
+              <div class="flex flex-wrap gap-3 text-sm">
+                <a href={`${basePath}practitioners`} target="_blank" rel="noopener noreferrer" class="underline hover:opacity-80 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Browse all practitioners
+                </a>
+                <a href={`${basePath}faq#practitioner-matching-preferences`} target="_blank" rel="noopener noreferrer" class="underline hover:opacity-80 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  How matching works
+                </a>
+              </div>
+              <p class="text-xs mt-3 text-gray-600">
+                <strong>Want to nominate someone?</strong> If the maintainer knows someone qualified who isn't yet a listed practitioner, they can nominate them when creating their wishlist. Nominees are vetted before approval.
+              </p>
+            </div>
+          )}
+
           <!-- Maintainer's Practitioner Preferences (if any) -->
           {wishlistData && (wishlistData.preferredPractitioner || wishlistData.nomineeName) && (
             <div class="alert-info">
