@@ -102,6 +102,25 @@ export async function closePool() {
 
 // Type definitions
 
+export interface Service {
+  id: number;
+  slug: string;
+  title: string;
+  description?: string;
+  type: 'service' | 'resource';
+  service_type?: 'one-time' | 'ongoing' | 'workshop' | 'consulting' | 'audit' | 'training' | 'support' | 'credit' | 'budget' | 'hosting' | 'tool';
+  target_audience?: 'maintainer' | 'company' | 'both';
+  available: boolean;
+  unavailable_reason?: string;
+  impact?: string;
+  playbook?: string;
+  pricing_small?: number;
+  pricing_medium?: number;
+  pricing_large?: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface Wishlist {
   id: number;
   slug: string;
@@ -569,4 +588,110 @@ export async function rejectPractitioner(id: number): Promise<Practitioner | nul
     [id]
   );
   return result.rows[0] || null;
+}
+
+// Service-specific query helpers
+
+/**
+ * Get all services
+ */
+export async function getAllServices(): Promise<Service[]> {
+  const result = await query<Service>('SELECT * FROM services ORDER BY title ASC');
+  return result.rows;
+}
+
+/**
+ * Get service by slug
+ */
+export async function getServiceBySlug(slug: string): Promise<Service | null> {
+  const result = await query<Service>('SELECT * FROM services WHERE slug = $1', [slug]);
+  return result.rows[0] || null;
+}
+
+/**
+ * Get available services only
+ */
+export async function getAvailableServices(): Promise<Service[]> {
+  const result = await query<Service>(
+    'SELECT * FROM services WHERE available = TRUE ORDER BY title ASC'
+  );
+  return result.rows;
+}
+
+/**
+ * Create a new service
+ */
+export async function createService(service: Partial<Service>): Promise<Service> {
+  const result = await query<Service>(
+    `INSERT INTO services (
+      slug, title, description, type, service_type, target_audience,
+      available, unavailable_reason, impact, playbook,
+      pricing_small, pricing_medium, pricing_large
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    RETURNING *`,
+    [
+      service.slug,
+      service.title,
+      service.description,
+      service.type || 'service',
+      service.service_type,
+      service.target_audience,
+      service.available ?? true,
+      service.unavailable_reason,
+      service.impact,
+      service.playbook,
+      service.pricing_small,
+      service.pricing_medium,
+      service.pricing_large
+    ]
+  );
+  return result.rows[0];
+}
+
+/**
+ * Update a service
+ */
+export async function updateService(id: number, updates: Partial<Service>): Promise<Service | null> {
+  const result = await query<Service>(
+    `UPDATE services SET
+      title = COALESCE($2, title),
+      description = COALESCE($3, description),
+      type = COALESCE($4, type),
+      service_type = COALESCE($5, service_type),
+      target_audience = COALESCE($6, target_audience),
+      available = COALESCE($7, available),
+      unavailable_reason = COALESCE($8, unavailable_reason),
+      impact = COALESCE($9, impact),
+      playbook = COALESCE($10, playbook),
+      pricing_small = COALESCE($11, pricing_small),
+      pricing_medium = COALESCE($12, pricing_medium),
+      pricing_large = COALESCE($13, pricing_large),
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING *`,
+    [
+      id,
+      updates.title,
+      updates.description,
+      updates.type,
+      updates.service_type,
+      updates.target_audience,
+      updates.available,
+      updates.unavailable_reason,
+      updates.impact,
+      updates.playbook,
+      updates.pricing_small,
+      updates.pricing_medium,
+      updates.pricing_large
+    ]
+  );
+  return result.rows[0] || null;
+}
+
+/**
+ * Delete a service
+ */
+export async function deleteService(id: number): Promise<boolean> {
+  const result = await query('DELETE FROM services WHERE id = $1', [id]);
+  return (result.rowCount ?? 0) > 0;
 }
