@@ -67,7 +67,7 @@ export function getGitHubAuthUrl(clientId: string, redirectUri: string, state: s
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
-    scope: 'read:user user:email', // Only user profile info - no repo access needed
+    scope: 'read:user user:email read:org', // User profile + organization membership/repos
     state: state,
     response_type: 'code'
   });
