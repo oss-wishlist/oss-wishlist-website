@@ -39,55 +39,18 @@ if (!DATABASE_URL) {
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
 
 // SSL configuration for Digital Ocean managed PostgreSQL
-// Uses the official Digital Ocean CA certificate for proper SSL validation
+// Temporarily disabling certificate validation due to intermediate CA chain issues
+// TODO: Get complete certificate chain from Digital Ocean
 const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.includes('ssl=true') || PGSSLMODE === 'require';
 
-let sslConfig: any = false;
+const sslConfig = shouldUseSSL
+  ? {
+      rejectUnauthorized: false, // Temporarily disabled - cert chain incomplete
+    }
+  : false;
+
 if (shouldUseSSL) {
-  try {
-    // Log current working directory and try multiple certificate locations
-    console.log('[Database] Current working directory:', process.cwd());
-    console.log('[Database] __dirname equivalent:', new URL('.', import.meta.url).pathname);
-    
-    // Try multiple locations to handle different deployment scenarios
-    const possiblePaths = [
-      path.join(process.cwd(), 'public', 'ca-certificate.crt'),
-      path.join(process.cwd(), 'dist', 'client', 'ca-certificate.crt'),
-      path.join(process.cwd(), 'certs', 'ca-certificate.crt'),
-      '/workspace/dist/client/ca-certificate.crt', // Digital Ocean absolute path
-      '/workspace/public/ca-certificate.crt',
-    ];
-    
-    let ca: string | undefined;
-    let usedPath: string | undefined;
-    
-    for (const certPath of possiblePaths) {
-      if (fs.existsSync(certPath)) {
-        console.log('[Database] Found certificate at:', certPath);
-        ca = fs.readFileSync(certPath, 'utf-8');
-        usedPath = certPath;
-        break;
-      } else {
-        console.log('[Database] Certificate not found at:', certPath);
-      }
-    }
-    
-    if (ca) {
-      sslConfig = {
-        rejectUnauthorized: true, // Enable full SSL validation
-        ca: ca,
-      };
-      console.log('[Database] Using Digital Ocean CA certificate from:', usedPath);
-    } else {
-      throw new Error('CA certificate not found in any expected location');
-    }
-  } catch (error) {
-    console.error('[Database] Failed to load CA certificate, falling back to unverified SSL:', error);
-    // Fallback to unverified SSL if certificate not available
-    sslConfig = {
-      rejectUnauthorized: false,
-    };
-  }
+  console.log('[Database] Using SSL with certificate validation temporarily disabled');
 }
 
 // Connection pool configuration
