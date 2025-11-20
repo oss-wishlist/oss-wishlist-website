@@ -45,8 +45,18 @@ const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.
 let sslConfig: any = false;
 if (shouldUseSSL) {
   try {
-    // Load Digital Ocean CA certificate
-    const caPath = path.join(process.cwd(), 'certs', 'ca-certificate.crt');
+    // Load Digital Ocean CA certificate from public directory (included in deployment)
+    // Try multiple locations to handle different deployment scenarios
+    let caPath = path.join(process.cwd(), 'public', 'ca-certificate.crt');
+    if (!fs.existsSync(caPath)) {
+      // Fallback for standalone builds where public/ is copied to dist/client/
+      caPath = path.join(process.cwd(), 'dist', 'client', 'ca-certificate.crt');
+    }
+    if (!fs.existsSync(caPath)) {
+      // Fallback for original location
+      caPath = path.join(process.cwd(), 'certs', 'ca-certificate.crt');
+    }
+    
     const ca = fs.readFileSync(caPath, 'utf-8');
     
     sslConfig = {
