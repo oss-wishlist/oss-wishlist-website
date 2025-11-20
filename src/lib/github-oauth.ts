@@ -170,8 +170,21 @@ export async function fetchUserRepositories(username: string): Promise<GitHubRep
   }
 
   const repos = await response.json();
-  // Return all repositories (they're already filtered to ones the user owns)
-  return repos;
+  
+  // Filter to only include repos where user has admin or push permissions
+  // This excludes read-only collaborators
+  const filteredRepos = repos.filter((repo: any) => {
+    // Owner always has full access
+    if (repo.owner.login === username) return true;
+    // Check permissions object (present when using authenticated API)
+    if (repo.permissions) {
+      return repo.permissions.admin === true || repo.permissions.push === true;
+    }
+    // If no permissions object, include it (fallback for public API)
+    return true;
+  });
+  
+  return filteredRepos;
 }
 
 /**
