@@ -16,12 +16,25 @@ let isAdmin = false;
 
 if (sessionCookie?.value) {
   session = verifySession(sessionCookie.value, sessionSecret);
+  console.log('[Admin] Session check:', {
+    hasSession: !!session,
+    authenticated: session?.authenticated,
+    username: session?.user?.username,
+    login: session?.user?.login,
+    adminUsernames: ADMIN_USERNAMES
+  });
   if (session?.user?.login) {
     isAdmin = ADMIN_USERNAMES.includes(session.user.login);
+  } else if (session?.user?.username) {
+    // Fallback to username if login not present
+    isAdmin = ADMIN_USERNAMES.includes(session.user.username);
   }
 }
 
+console.log('[Admin] Auth result:', { isAdmin, hasSessionCookie: !!sessionCookie });
+
 if (!isAdmin) {
+  console.log('[Admin] Access denied - redirecting');
   return Astro.redirect(`${basePath}?error=unauthorized`);
 }
 
