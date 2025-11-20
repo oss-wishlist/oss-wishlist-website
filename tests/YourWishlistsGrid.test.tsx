@@ -159,7 +159,7 @@ describe('YourWishlistsGrid - Edit/Create/Delete Modes', () => {
   });
 
   describe('Delete Mode Functionality', () => {
-    it('should call close-wishlist API when delete confirmed', async () => {
+    it('should call delete-wishlist API when delete confirmed', async () => {
       global.fetch = vi.fn()
         .mockImplementationOnce(() =>
           Promise.resolve({
@@ -193,7 +193,7 @@ describe('YourWishlistsGrid - Edit/Create/Delete Modes', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/close-wishlist'),
+          expect.stringContaining('/api/delete-wishlist'),
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
