@@ -53,7 +53,8 @@ export const GET: APIRoute = async ({ url }) => {
         title: practitioner.title,
         company: practitioner.company || '',
         bio: practitioner.bio,
-        avatar_url: practitioner.avatar_url || `https://github.com/${practitioner.github}.png`,
+        // Use local logo to avoid cross-site cookie errors with GitHub images
+        avatar_url: '/images/oss-wishlist-logo.jpg',
         location: practitioner.location || '',
         languages: practitioner.languages,
         email: practitioner.email,

@@ -40,7 +40,8 @@ async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
       projectDescription: wishlist.project_description,
       maintainerUsername: wishlist.maintainer_username,
       maintainerEmail: wishlist.maintainer_email,
-      maintainerAvatarUrl: wishlist.maintainer_avatar_url || `https://github.com/${wishlist.maintainer_username}.png`,
+      // Use local logo to avoid cross-site cookie errors with GitHub images
+      maintainerAvatarUrl: '/images/oss-wishlist-logo.jpg',
       approved: wishlist.approved,
       issueState: wishlist.issue_state,
       created_at: wishlist.created_at.toISOString(),

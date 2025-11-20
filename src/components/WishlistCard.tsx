@@ -39,9 +39,8 @@ export default function WishlistCard({ wishlist, basePath, mode, onEdit, onDelet
   const repositoryUrl = wishlist.repositoryUrl || wishlist.repository || '';
   const servicesList = wishlist.wishes || wishlist.services || [];
   
-  const maintainerAvatar = wishlist.maintainerAvatarUrl 
-    || `https://github.com/${maintainerUsername}.png`
-    || `${basePath}images/oss-wishlist-logo.jpg`;
+  // Use local logo to avoid cross-site cookie errors with GitHub images
+  const maintainerAvatar = `${basePath}images/oss-wishlist-logo.jpg`;
 
   // Format services list
   const servicesHtml = servicesList.length > 0

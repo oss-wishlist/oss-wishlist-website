@@ -233,7 +233,8 @@ export const POST: APIRoute = async ({ request }) => {
         project_description: formData.description,
         maintainer_username: formData.maintainer,
         maintainer_email: formData.maintainerEmail,
-        maintainer_avatar_url: `https://github.com/${formData.maintainer}.png`,
+        // Use local logo to avoid cross-site cookie errors with GitHub images
+        maintainer_avatar_url: '/images/oss-wishlist-logo.jpg',
         issue_url: wishlistUrl, // Self-referential for now
         issue_state: 'open',
         approved: false, // New wishlists start unapproved

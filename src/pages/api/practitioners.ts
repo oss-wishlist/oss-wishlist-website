@@ -21,7 +21,8 @@ export const GET: APIRoute = async () => {
       title: p.title,
       company: p.company || '',
       bio: p.bio,
-      avatar_url: p.avatar_url || `https://github.com/${p.github}.png`,
+      // Use local logo to avoid cross-site cookie errors with GitHub images
+      avatar_url: '/images/oss-wishlist-logo.jpg',
       location: p.location || '',
       languages: p.languages,
       email: p.email,

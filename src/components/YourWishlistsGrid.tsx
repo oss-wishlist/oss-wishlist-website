@@ -220,7 +220,8 @@ function WishlistCard({
   onDelete: (issueNumber: number) => void;
 }) {
   const urgencyColorClass = urgencyColors[wishlist.urgency || ''] || 'bg-gray-100 text-gray-700';
-  const maintainerAvatar = `https://github.com/${wishlist.maintainer}.png`;
+  // Use local logo to avoid cross-site cookie errors with GitHub images
+  const maintainerAvatar = `${basePath}images/oss-wishlist-logo.jpg`;
 
   // Format services list
   const servicesHtml = wishlist.services && wishlist.services.length > 0

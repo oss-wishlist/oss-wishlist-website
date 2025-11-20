@@ -53,7 +53,8 @@ try {
       projectName: wishlist.project_name,
       repositoryUrl: wishlist.repository_url,
       maintainer: wishlist.maintainer_username,
-      maintainerAvatar: wishlist.maintainer_avatar_url || `https://github.com/${wishlist.maintainer_username}.png`,
+      // Use local logo to avoid cross-site cookie errors with GitHub images
+      maintainerAvatar: '/images/oss-wishlist-logo.jpg',
       services: wishlist.wishes || [],
       resources: wishlist.resources || [],
       technologies: wishlist.technologies || [],

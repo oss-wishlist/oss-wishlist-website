@@ -51,7 +51,8 @@ export const GET: APIRoute = async ({ url }) => {
         repositoryUrl: wishlist.repository_url,
         maintainer: wishlist.maintainer_username,
         maintainerUsername: wishlist.maintainer_username,
-        maintainerAvatarUrl: wishlist.maintainer_avatar_url || `https://github.com/${wishlist.maintainer_username}.png`,
+        // Use local logo to avoid cross-site cookie errors with GitHub images
+        maintainerAvatarUrl: '/images/oss-wishlist-logo.jpg',
         wishes: wishlist.wishes || [],
         urgency: wishlist.urgency || 'medium',
         projectSize: wishlist.project_size || 'medium',

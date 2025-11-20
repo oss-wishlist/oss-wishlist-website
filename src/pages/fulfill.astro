@@ -75,7 +75,8 @@ if (issueNumber) {
           html_url: wishlist.wishlistUrl,
           user: {
             login: wishlist.maintainerUsername,
-            avatar_url: wishlist.maintainerAvatarUrl || `https://github.com/${wishlist.maintainerUsername}.png`,
+            // Use local logo to avoid cross-site cookie errors with GitHub images
+            avatar_url: '/images/oss-wishlist-logo.jpg',
           },
         };
       }
