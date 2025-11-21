@@ -36,34 +36,8 @@ const origin = Astro.url.origin;
 const practitionersResponse = await fetch(`${origin}${basePath}api/practitioners`);
 const practitionersData = await practitionersResponse.json();
 
-// Transform API response to match content collection structure
-const allPractitioners = (practitionersData.practitioners || []).map(p => ({
-  slug: p.slug,
-  data: {
-    name: p.name,
-    title: p.title,
-    company: p.company,
-    bio: p.bio,
-    avatar_url: p.avatar_url,
-    location: p.location,
-    languages: p.languages,
-    email: p.email,
-    website: p.website,
-    github: p.github,
-    github_sponsors: p.github_sponsors,
-    mastodon: p.mastodon,
-    linkedin: p.linkedin,
-    services: p.services,
-    availability: p.availability,
-    accepts_pro_bono: p.accepts_pro_bono,
-    pro_bono_criteria: p.pro_bono_criteria,
-    pro_bono_hours_per_month: p.pro_bono_hours_per_month,
-    years_experience: p.years_experience,
-    notable_experience: p.notable_experience,
-    certifications: p.certifications,
-    verified: p.verified
-  }
-}));
+// Use practitioners directly from database (no transformation needed)
+const allPractitioners = practitionersData.practitioners || [];
 
 const allServices = await getCollection('services');
 const filteredServices = allServices.filter(s => s.data.type === 'service');
