@@ -77,8 +77,12 @@ export const validateUrl = (url: string, fieldName: string = 'URL'): ValidationR
   try {
     const urlObj = new URL(url);
     
-    // Reject javascript: and data: protocols
-    if (urlObj.protocol === 'javascript:' || urlObj.protocol === 'data:') {
+    // Reject javascript:, data:, and vbscript: protocols
+    if (
+      urlObj.protocol === 'javascript:' ||
+      urlObj.protocol === 'data:' ||
+      urlObj.protocol === 'vbscript:'
+    ) {
       return {
         isValid: false,
         error: 'Invalid protocol in URL',
