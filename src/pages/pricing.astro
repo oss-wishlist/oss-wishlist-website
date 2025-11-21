@@ -105,49 +105,6 @@ const hosting = allServices.find((s) => s.data.service_type === 'hosting');
     </div>
   </section>
 </Layout>
----
-import { getBasePath } from '../lib/paths';
-const basePath = getBasePath();
-import Layout from '../components/Layout.astro';
-import { getEntry } from 'astro:content';
-
-const page = await getEntry('pages', 'pricing');
-const { Content } = await page.render();
----
-
-<Layout title="Community Pricing Guide - OSS Wishlist" description="Transparent pricing for open source sustainability services. Fair rates that respect practitioner expertise and project needs.">
-  <!-- Hero Section -->
-  <section class="bg-gradient-to-br from-gray-100 to-gray-200 py-16">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">{page.data.title}</h1>
-      <p class="text-xl text-gray-600">
-        {page.data.description}
-      </p>
-    </div>
-  </section>
-
-  <!-- Main Content -->
-  <section class="py-12 bg-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-h2:text-3xl prose-h2:font-bold prose-h2:mb-6 prose-h2:mt-12 prose-h3:text-xl prose-h3:font-semibold prose-h3:mb-3 prose-h4:text-lg prose-h4:font-semibold prose-h4:mb-2 prose-p:text-gray-600 prose-ul:text-gray-600 prose-strong:text-gray-900">
-        <Content />
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="py-16 bg-gray-600">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h2 class="text-3xl font-bold text-white mb-4">Join Our Community</h2>
-      <p class="text-xl text-gray-200 mb-8">Explore what we offer together, or share what your project needs</p>
-      <div class="flex justify-center space-x-4">
-        <a href={`${basePath}catalog`} class="badge-pending px-8 py-3 rounded-lg font-semibold hover:opacity-80 transition-opacity">
-          Explore Services
-        </a>
-        <a href={`${basePath}create-wishlist`} class="border border-gray-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
-          Share Your Wishlist
-        </a>
-      </div>
     </div>
   </section>
 </Layout>
