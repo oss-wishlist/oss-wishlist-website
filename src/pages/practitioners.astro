@@ -203,37 +203,37 @@ if (wishlistSlug) {
       <div id="practitionersGrid" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {allPractitioners.map((practitioner) => (
           <div 
-            key={practitioner.slug} 
+            key={practitioner.github_username} 
             class="bg-white rounded-lg shadow-sm border p-6 practitioner-card"
-            data-name={`${practitioner.data.name} ${practitioner.data.title || ''} ${practitioner.data.company || ''} ${practitioner.data.bio || ''}`.toLowerCase()}
-            data-services={(practitioner.data.services || []).join(',')}
+            data-name={`${practitioner.name} ${practitioner.title || ''} ${practitioner.company || ''} ${practitioner.bio || ''}`.toLowerCase()}
+            data-services={(practitioner.services || []).join(',')}
           >
             <div class="flex items-start space-x-4 mb-4">
               <img 
-                src={practitioner.data.avatar_url || `${basePath}images/oss-wishlist-logo.jpg`} 
-                alt={practitioner.data.name}
+                src={practitioner.avatar_url || `${basePath}images/oss-wishlist-logo.jpg`} 
+                alt={practitioner.name}
                 class="w-12 h-12 rounded-full object-cover"
                 loading="lazy"
               />
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{practitioner.data.name}</h3>
-                <p class="text-sm text-gray-600">{practitioner.data.title}</p>
-                {practitioner.data.company && (
-                  <p class="text-xs text-gray-600">{practitioner.data.company}</p>
+                <h3 class="font-semibold text-gray-900">{practitioner.name}</h3>
+                <p class="text-sm text-gray-600">{practitioner.title}</p>
+                {practitioner.company && (
+                  <p class="text-xs text-gray-600">{practitioner.company}</p>
                 )}
               </div>
             </div>
             
-            <p class="text-sm text-gray-700 mb-3 line-clamp-2">{practitioner.data.bio}</p>
+            <p class="text-sm text-gray-700 mb-3 line-clamp-2">{practitioner.bio}</p>
             
 
             
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
-                {practitioner.data.verified && (
+                {practitioner.verified && (
                   <span class="text-gray-700 text-xs">✓ Verified</span>
                 )}
-                {practitioner.data.accepts_pro_bono && (
+                {practitioner.accepts_pro_bono && (
                   <span class="text-gray-600 text-xs">Pro Bono</span>
                 )}
               </div>
@@ -246,11 +246,11 @@ if (wishlistSlug) {
                 </a>
                 {selectedWishlist && (
                   <a 
-                    href={practitioner.data.github ? `https://github.com/sponsors/${practitioner.data.github}` : `mailto:${practitioner.data.email}?subject=${encodeURIComponent(`Hire ${practitioner.data.name} for ${projectName || selectedWishlist.data.project_name}`)}`}
-                    target={practitioner.data.github ? "_blank" : "_self"}
-                    rel={practitioner.data.github ? "noopener noreferrer" : ""}
+                    href={practitioner.github_username ? `https://github.com/sponsors/${practitioner.github_username}` : `mailto:${practitioner.email}?subject=${encodeURIComponent(`Hire ${practitioner.name} for ${projectName || selectedWishlist.data.project_name}`)}`}
+                    target={practitioner.github_username ? "_blank" : "_self"}
+                    rel={practitioner.github_username ? "noopener noreferrer" : ""}
                     class="bg-gray-900 text-white px-3 py-1 rounded text-xs font-medium hover:bg-gray-800 transition-colors"
-                    title={`Hire ${practitioner.data.name} for ${projectName || selectedWishlist.data.project_name}`}
+                    title={`Hire ${practitioner.name} for ${projectName || selectedWishlist.data.project_name}`}
                   >
                     Hire
                   </a>
