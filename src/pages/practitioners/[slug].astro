@@ -11,9 +11,9 @@ const basePath = getBasePath();
 // Server-rendered: resolve content dynamically at request time
 const { slug } = Astro.params;
 
-// Fetch practitioner from database by github_username (which is used as slug)
+// Fetch practitioner from database by slug
 const allPractitioners = await getAllPractitioners();
-const practitioner = allPractitioners.find(p => p.github_username === slug);
+const practitioner = allPractitioners.find(p => p.slug === slug);
 
 // If practitioner doesn't exist or not approved, return 404
 if (!practitioner || !practitioner.approved) {
@@ -37,12 +37,12 @@ const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';
 
 <Layout title={`${practitioner.name} - OSS Practitioner`} description={practitioner.bio}>
   {(
-    (Astro.locals.user && Astro.locals.user.login && practitioner.github_username &&
-      typeof Astro.locals.user.login === 'string' && typeof practitioner.github_username === 'string' &&
-      Astro.locals.user.login.toLowerCase() === practitioner.github_username.toLowerCase()) ||
-    (Astro.locals.session && Astro.locals.session.user && practitioner.github_username &&
-      typeof Astro.locals.session.user.login === 'string' && typeof practitioner.github_username === 'string' &&
-      Astro.locals.session.user.login.toLowerCase() === practitioner.github_username.toLowerCase())
+    (Astro.locals.user && Astro.locals.user.login && practitioner.github &&
+      typeof Astro.locals.user.login === 'string' &&
+      Astro.locals.user.login.toLowerCase() === practitioner.github.replace('https://github.com/', '').toLowerCase()) ||
+    (Astro.locals.session && Astro.locals.session.user && practitioner.github &&
+      typeof Astro.locals.session.user.login === 'string' &&
+      Astro.locals.session.user.login.toLowerCase() === practitioner.github.replace('https://github.com/', '').toLowerCase())
   ) && (
     <div class="max-w-4xl mx-auto px-4 py-4">
       <div class="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-6 text-center text-gray-900">
@@ -153,8 +153,8 @@ const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';
         <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <h3 class="text-lg font-bold text-gray-900 mb-4">Connect</h3>
           <div class="space-y-3">
-            {practitioner.github_username && (
-              <a href={`https://github.com/${practitioner.github_username}`} target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-700 hover:text-gray-600">
+            {practitioner.github && (
+              <a href={practitioner.github} target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-700 hover:text-gray-600">
                 <svg class="w-5 h-5 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg>
                 GitHub
               </a>
