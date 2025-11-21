@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { verifySession } from '../../lib/github-oauth';
 import { fetchUserRepositories } from '../../lib/github-oauth';
-import { getWishlistsBySubmitter } from '../../lib/db';
+import { getWishlistsByMaintainer } from '../../lib/db';
 
 export const prerender = false;
 
@@ -36,7 +36,7 @@ export const GET: APIRoute = async ({ cookies }) => {
     const repositories = await fetchUserRepositories(session.user.login);
     
     // Filter out repos that already have wishlists
-    const userWishlists = await getWishlistsBySubmitter(session.user.login);
+    const userWishlists = await getWishlistsByMaintainer(session.user.login);
     const wishlistRepoUrls = new Set(userWishlists.map(w => w.repo_url.toLowerCase()));
     
     const availableRepositories = repositories.filter(repo => {
