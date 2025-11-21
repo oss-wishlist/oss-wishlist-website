@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
 import { verifySession } from '../../lib/github-oauth';
 import { fetchUserRepositories } from '../../lib/github-oauth';
-import { getWishlistsByMaintainer } from '../../lib/db';
 
 export const prerender = false;
 
@@ -34,26 +33,9 @@ export const GET: APIRoute = async ({ cookies }) => {
     // Fetch public repositories from GitHub API using the username
     // This uses the public API endpoint and doesn't require repo OAuth scopes
     const repositories = await fetchUserRepositories(session.user.login);
-    
-    // Filter out repos that already have wishlists
-    const userWishlists = await getWishlistsByMaintainer(session.user.login);
-    const wishlistRepoUrls = new Set(userWishlists.map(w => w.repository_url.toLowerCase()));
-    
-    const availableRepositories = repositories.filter(repo => {
-      const repoUrl = repo.html_url.toLowerCase();
-      const isFiltered = wishlistRepoUrls.has(repoUrl);
-      if (isFiltered) {
-        console.log(`[repositories] Filtering out: ${repoUrl}`);
-      }
-      return !isFiltered;
-    });
-    
-    console.log(`[repositories] User: ${session.user.login}`);
-    console.log(`[repositories] Wishlist URLs:`, Array.from(wishlistRepoUrls));
-    console.log(`[repositories] Total repos: ${repositories.length}, Filtered: ${repositories.length - availableRepositories.length}, Available: ${availableRepositories.length}`);
 
     return new Response(JSON.stringify({ 
-      repositories: availableRepositories,
+      repositories,
       user: session.user
     }), {
       status: 200,

@@ -74,7 +74,7 @@ if (!user) {
   return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
 }
 
-// Fetch user's repositories server-side (filtering happens in /api/repositories)
+// Fetch user's repositories server-side (client-side will filter out existing wishlists)
 let userRepositories = [];
 try {
   userRepositories = await fetchUserRepositories(user.login);
