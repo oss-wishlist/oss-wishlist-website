@@ -1,6 +1,6 @@
 ---
 import { getBasePath } from '../lib/paths';
-import { getCollection } from 'astro:content';
+import { getAllPractitioners } from '../lib/db';
 
 // This is a standalone header component extracted from Layout.astro
 // It contains the navigation menu with dropdowns for:
@@ -19,12 +19,12 @@ const user = Astro.locals.user;
 // Check if the logged-in user has a practitioner profile
 let userPractitionerSlug = null;
 if (user?.login) {
-  const practitioners = await getCollection('practitioners');
+  const practitioners = await getAllPractitioners();
   const userPractitioner = practitioners.find(p => 
-    p.data.github?.toLowerCase() === user.login.toLowerCase()
+    p.github_username?.toLowerCase() === user.login.toLowerCase()
   );
   if (userPractitioner) {
-    userPractitionerSlug = userPractitioner.slug;
+    userPractitionerSlug = userPractitioner.github_username;
   }
 }
 ---

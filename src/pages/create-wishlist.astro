@@ -4,13 +4,22 @@ import WishlistForm from '../components/WishlistForms.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
 import { fetchUserRepositories } from '../lib/github-oauth';
+import { getAllPractitioners } from '../lib/db';
 
 const services = await getCollection('services');
-const practitioners = await getCollection('practitioners');
+
+// Fetch practitioners from database with error handling
+let practitioners = [];
+try {
+  practitioners = await getAllPractitioners();
+  console.log(`[create-wishlist] Fetched ${practitioners.length} practitioners from database`);
+} catch (error) {
+  console.error('[create-wishlist] Error fetching practitioners:', error);
+}
 
 const practitionerCounts = services.reduce((acc, s) => {
   const slug = s.slug;
-  const count = practitioners.filter(p => Array.isArray(p.data.services) && p.data.services.includes(slug)).length;
+  const count = practitioners.filter(p => Array.isArray(p.services) && p.services.includes(slug)).length;
   acc[slug] = count;
   return acc;
 }, {} as Record<string, number>);
@@ -31,10 +40,12 @@ const servicesData = services.map(service => {
 });
 
 const practitionersData = practitioners.map(p => ({
-  slug: p.slug,
-  name: p.data.name,
-  github: p.data.github || '',
+  slug: p.github_username,
+  name: p.name,
+  github: p.github_username || '',
 }));
+
+console.log(`[create-wishlist] Passing ${practitionersData.length} practitioners to WishlistForm component`);
 
 const user = Astro.locals.user;
 const basePath = getBasePath();

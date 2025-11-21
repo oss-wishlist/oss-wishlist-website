@@ -2,6 +2,7 @@
 import Layout from '../../components/Layout.astro';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../../lib/paths';
+import { getAllPractitioners } from '../../lib/db';
 
 // Disable prerendering for this dynamic route
 export const prerender = false;
@@ -10,7 +11,7 @@ export const prerender = false;
 const { wishlist } = Astro.params;
 
 // Get practitioners and data
-const practitioners = await getCollection('practitioners');
+const practitioners = await getAllPractitioners();
 const wishlists = await getCollection('wishlists');
 const services = await getCollection('services');
 const basePath = getBasePath();
