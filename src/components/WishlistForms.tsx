@@ -584,7 +584,15 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         result = validateEmail(value);
         break;
       case 'url':
-        if (value.includes('github.com')) {
+        let isGitHubUrl = false;
+        try {
+          const parsedUrl = new URL(value);
+          // Only accept plain github.com (not attacker-controlled or subdomain unless desired)
+          isGitHubUrl = parsedUrl.hostname === 'github.com';
+        } catch (e) {
+          isGitHubUrl = false;
+        }
+        if (isGitHubUrl) {
           result = validateGitHubUrl(value);
         } else {
           result = validateUrl(value, fieldName);
