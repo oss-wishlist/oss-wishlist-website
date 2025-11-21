@@ -72,15 +72,21 @@ export const POST: APIRoute = async ({ request }) => {
       const urlMatches = body.matchAll(/https?:\/\/[^\s\)]+/g);
       for (const match of urlMatches) {
         const repoUrl = match[0];
-        // Only process GitHub URLs (or other common git hosting)
-        if (repoUrl.includes('github.com') || repoUrl.includes('gitlab.com') || repoUrl.includes('bitbucket.org')) {
-          const normalizedUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '');
-          existingWishlists[normalizedUrl] = {
-            issueUrl: issue.html_url,
-            issueNumber: issue.number,
-            isApproved: isApproved,
-            projectTitle: issue.title,
-          };
+        // Only process URLs with allowed hosts (GitHub, GitLab, Bitbucket)
+        try {
+          const parsedUrl = new URL(repoUrl);
+          const allowedHosts = ['github.com', 'gitlab.com', 'bitbucket.org'];
+          if (allowedHosts.includes(parsedUrl.hostname)) {
+            const normalizedUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '');
+            existingWishlists[normalizedUrl] = {
+              issueUrl: issue.html_url,
+              issueNumber: issue.number,
+              isApproved: isApproved,
+              projectTitle: issue.title,
+            };
+          }
+        } catch (e) {
+          // Ignore invalid URLs
         }
       }
     }
