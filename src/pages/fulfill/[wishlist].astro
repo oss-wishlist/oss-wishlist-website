@@ -160,8 +160,8 @@ if (wishlist) {
                 >
                   <option value="">Select an practitioner...</option>
                   {practitioners.map(practitioner => (
-                    <option value={practitioner.slug}>
-                      {practitioner.data.name} - {practitioner.data.title} ({practitioner.data.specialties?.join(', ') || 'Multiple specialties'})
+                    <option value={practitioner.github_username}>
+                      {practitioner.name} - {practitioner.title}
                     </option>
                   ))}
                 </select>
@@ -300,13 +300,13 @@ if (wishlist) {
 
   <script define:vars={{ 
     practitionerData: practitioners.reduce((acc, practitioner) => {
-      acc[practitioner.slug] = {
-        name: practitioner.data.name,
-        title: practitioner.data.title,
-        bio: practitioner.data.bio,
-        specialties: practitioner.data.specialties || [],
-        location: practitioner.data.location || 'Not specified',
-        languages: practitioner.data.languages || []
+      acc[practitioner.github_username] = {
+        name: practitioner.name,
+        title: practitioner.title,
+        bio: practitioner.bio,
+        specialties: [],
+        location: practitioner.location || 'Not specified',
+        languages: practitioner.languages || []
       };
       return acc;
     }, {})
