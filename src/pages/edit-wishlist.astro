@@ -4,13 +4,14 @@ import WishlistForm from '../components/WishlistForms.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
 import { fetchUserRepositories } from '../lib/github-oauth';
+import { getAllPractitioners } from '../lib/db';
 
 const services = await getCollection('services');
-const practitioners = await getCollection('practitioners');
+const practitioners = await getAllPractitioners();
 
 const practitionerCounts = services.reduce((acc, s) => {
   const slug = s.slug;
-  const count = practitioners.filter(p => Array.isArray(p.data.services) && p.data.services.includes(slug)).length;
+  const count = practitioners.filter(p => Array.isArray(p.services) && p.services.includes(slug)).length;
   acc[slug] = count;
   return acc;
 }, {} as Record<string, number>);
@@ -31,9 +32,9 @@ const servicesData = services.map(service => {
 });
 
 const practitionersData = practitioners.map(p => ({
-  slug: p.slug,
-  name: p.data.name,
-  github: p.data.github || '',
+  slug: p.github_username,
+  name: p.name,
+  github: p.github_username || '',
 }));
 
 const user = Astro.locals.user;

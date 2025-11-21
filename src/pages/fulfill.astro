@@ -5,12 +5,13 @@ import { GITHUB_CONFIG } from '../config/github.js';
 import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
 import { parseIssueForm } from '../lib/issue-form-parser.js';
+import { getAllPractitioners } from '../lib/db';
 
 const basePath = getBasePath();
 const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
 
 // Get practitioners for the dropdown
-const practitioners = await getCollection('practitioners');
+const practitioners = await getAllPractitioners();
 
 // Get services for detailed display
 const services = await getCollection('services');
@@ -247,12 +248,12 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
                   <p class="text-sm">
                     {(() => {
                       // Try to find the practitioner in our collection
-                      const practitioner = practitioners.find(p => p.slug === wishlistData.preferredPractitioner);
+                      const practitioner = practitioners.find(p => p.github_username === wishlistData.preferredPractitioner);
                       return practitioner ? (
                         <>
-                          <strong>{practitioner.data.name}</strong>
-                          {practitioner.data.github && ` (@${practitioner.data.github})`}
-                          {practitioner.data.title && ` — ${practitioner.data.title}`}
+                          <strong>{practitioner.name}</strong>
+                          {practitioner.github_username && ` (@${practitioner.github_username})`}
+                          {practitioner.title && ` — ${practitioner.title}`}
                         </>
                       ) : (
                         wishlistData.preferredPractitioner
@@ -302,7 +303,7 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
                   
                   // Filter practitioners who offer this service
                   const availablePractitioners = practitioners.filter(p => 
-                    p.data.services && p.data.services.includes(serviceSlug)
+                    p.services && p.services.includes(serviceSlug)
                   );
 
                   return (
@@ -359,8 +360,8 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
                                 <option value="provide-own">We will use our own employee practitioner</option>
                                 <optgroup label="Available Practitioners">
                                   {availablePractitioners.map(practitioner => (
-                                    <option value={practitioner.slug}>
-                                      {practitioner.data.name} - {practitioner.data.title}
+                                    <option value={practitioner.github_username}>
+                                      {practitioner.name} - {practitioner.title}
                                     </option>
                                   ))}
                                 </optgroup>

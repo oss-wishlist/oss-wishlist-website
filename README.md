@@ -124,7 +124,8 @@ The placeholder page displays:
 - **Tailwind CSS** (v3.x) - Styling
 - **React** + **TypeScript** - Interactive components
 - **GitHub OAuth** - Authentication
-- **Markdown** - Content management
+- **PostgreSQL** - Database for wishlists, practitioners, and fulfillments
+- **Markdown** - Content collections for services, FAQ, and documentation
 
 ## 📒 Playbooks (submodule)
 
@@ -167,35 +168,35 @@ Note: Manual edits to submodule files should be done in the source repo via PR; 
 
 ```
 src/
-├── pages/                 # Website pages
+├── pages/                 # Website pages (file-based routing)
 │   ├── index.astro       # Homepage
-│   ├── practitioners.astro # Browse practitioners
-│   ├── maintainers.astro  # Create wishlists
-│   └── ecosystem-guardians.astro # Sponsor info
-├── content/              # Content collections (markdown files)
-│   ├── practitioners/    # Practitioner profiles
+│   ├── create-wishlist.astro # Create wishlists
+│   ├── fulfill.astro     # Fulfill wishlists (sponsors)
+│   └── api/              # API endpoints
+├── content/              # Static content (markdown)
+│   ├── services/         # Service definitions
+│   ├── faq/              # FAQ entries
 │   ├── guardians/        # Sponsor organizations
-│   ├── services/         # Available services
-│   ├── wishlists/        # Project wishlists
-│   └── faq/              # FAQ entries
-└── components/           # Reusable components
+│   └── playbooks-external/ # Git submodule
+├── components/           # Reusable UI components
+└── lib/                  # Utilities and database functions
+    ├── db.ts            # Database queries
+    └── github.ts        # GitHub API integration
 ```
 
 ## 🎨 Making Changes
 
-### Adding Content
-All content is in markdown files under `src/content/`:
+### Database Content
+- **Wishlists**: Created by maintainers via `/create-wishlist` form
+- **Practitioners**: Added via `/practitioner-submission` form
+- **Fulfillments**: Created when sponsors commit to fund services
 
-- **New Practitioner**: Add file to `src/content/practitioners/`
-- **New Service**: Add file to `src/content/services/`
-- **New FAQ**: Add file to `src/content/faq/`
-- **New Sponsor**: Add file to `src/content/guardians/`
-
-### Updating Pages
-Main pages are in `src/pages/` as `.astro` files. Edit directly and save - the dev server will auto-reload.
-
-### Environment Variables
-Copy `.env` file for any API keys or configuration. The site works without setup for demo purposes.
+### Static Content
+Content collections in `src/content/` (markdown files):
+- **Services**: Add/edit in `src/content/services/`
+- **FAQ**: Add/edit in `src/content/faq/`
+- **Guardians**: Add/edit in `src/content/guardians/`
+- **Playbooks**: External git submodule (see Playbooks section above)
 
 ## 🚀 Deployment
 
@@ -238,22 +239,23 @@ npm run preview  # Preview production build
 
 ### Key URLs (when running locally)
 - **Homepage**: `/` - Main landing page
-- **For Maintainers**: `/maintainers` - Create project wishlists
-- **Practitioners**: `/practitioners` - Browse available practitioners
-- **Ecosystem Sponsors**: `/ecosystem-guardians` - Sponsor organizations
+- **Create Wishlist**: `/create-wishlist` - Maintainers create wishlists
+- **Fulfill Wishlist**: `/fulfill` - Sponsors commit funding
+- **Browse Wishlists**: `/wishlists` - View all approved wishlists
+- **Admin Panel**: `/admin` - Manage wishlists and practitioners
 - **FAQ**: `/faq` - Frequently asked questions
-- **Service Catalog**: `/catalog` - Browse all services
 
-### Content Structure Example
+### Content Structure Example (Static Content)
 ```markdown
 ---
 # Frontmatter (metadata)
-name: "Example Person"
-specialties: ["Security", "Community"]
+title: "Service Name"
+description: "Brief description"
+available: true
 ---
 
 # Content goes here in markdown
-This person specializes in...
+This service provides...
 ```
 
 ---
@@ -261,13 +263,15 @@ This person specializes in...
 ## 📚 Additional Info
 
 ### Project Status
-This is a working demo platform connecting open source maintainers with practitioners and ecosystem sponsors.
+Production platform connecting open source maintainers with practitioners and ecosystem sponsors. Uses PostgreSQL for dynamic content and markdown for static content.
 
 ### AI Assistance
 Portions of this codebase were developed with assistance from AI tools, specifically GitHub Copilot with Claude Sonnet 4.5. All AI-generated code has been reviewed, tested, and modified to meet project standards and security requirements.
 
 ### Contributing
-The platform uses markdown-based content management. To add new content, create markdown files in the appropriate `src/content/` subdirectory.
+- **Database content**: Use web forms (`/create-wishlist`, `/practitioner-submission`)
+- **Static content**: Edit markdown files in `src/content/`
+- **Code changes**: Edit `.astro`, `.tsx`, or `.ts` files as needed
 
 ### Support
 For questions about setup or deployment, check the git history for configuration details or contact the development team.
