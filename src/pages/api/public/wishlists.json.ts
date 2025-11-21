@@ -60,8 +60,7 @@ export const GET: APIRoute = async ({ request }) => {
     }
     
     return new Response(JSON.stringify({
-      error: 'Failed to load wishlist data',
-      details: error instanceof Error ? error.message : String(error)
+      error: 'Failed to load wishlist data'
     }), {
       status: 500,
       headers: {
