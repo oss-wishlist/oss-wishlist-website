@@ -2,21 +2,11 @@
 import Layout from '../../components/Layout.astro';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../../lib/paths';
-import { getAllPractitioners, getApprovedPractitioners } from '../../lib/db';
+import { getApprovedPractitioners } from '../../lib/db';
 import { marked } from 'marked';
-import { verifySession } from '../../lib/github-oauth';
 
 export const prerender = false;
 const basePath = getBasePath();
-
-// Check if user is logged in
-const sessionCookie = Astro.cookies.get('github_session');
-const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
-let session = null;
-if (sessionCookie?.value) {
-  session = verifySession(sessionCookie.value, sessionSecret);
-}
-const currentUser = session?.user?.login;
 
 // Server-rendered: resolve content dynamically at request time
 const { slug } = Astro.params;
@@ -25,21 +15,8 @@ const { slug } = Astro.params;
 const approvedPractitioners = await getApprovedPractitioners();
 const practitioner = approvedPractitioners.find(p => p.slug === slug);
 
-// Debug logging for 404 issues
-if (!practitioner) {
-  console.log(`[practitioners/${slug}] NOT FOUND. Looking for: "${slug}"`);
-  console.log(`[practitioners/${slug}] Available approved slugs:`, approvedPractitioners.map(p => `"${p.slug}"`));
-  console.log(`[practitioners/${slug}] Total approved: ${approvedPractitioners.length}`);
-}
-
 // If practitioner doesn't exist, return 404
 if (!practitioner) {
-  return Astro.redirect('/404');
-}
-
-// Allow owner to view their own unapproved profile
-if (!practitioner.approved && practitioner.submitter_username !== currentUser) {
-  console.log(`[practitioners/${slug}] Not approved and not owner`);
   return Astro.redirect('/404');
 }
 
