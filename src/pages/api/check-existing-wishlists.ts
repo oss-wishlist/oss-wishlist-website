@@ -1,20 +1,7 @@
 import type { APIRoute } from 'astro';
-import { GITHUB_CONFIG } from '../../config/github.js';
+import { getAllWishlists } from '../../lib/db';
 
 export const prerender = false;
-
-const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
-
-interface GitHubIssue {
-  id: number;
-  number: number;
-  title: string;
-  body: string;
-  html_url: string;
-  labels: Array<{
-    name: string;
-  }>;
-}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -27,37 +14,57 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    // Fetch all open wishlist issues
-    const response = await fetch(
-      `${GITHUB_CONFIG.API_ISSUES_URL}?state=open&labels=wishlist&per_page=100`,
-      {
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github.v3+json',
-        },
+    // Fetch all wishlists from database
+    const wishlists = await getAllWishlists();
+    
+    // Create a map of repository URLs to wishlist info
+    const results: Record<string, { 
+      exists: boolean; 
+      issueUrl?: string; 
+      issueNumber?: number; 
+      isApproved?: boolean; 
+      projectTitle?: string 
+    }> = {};
+    
+    // Initialize all requested URLs as not existing
+    for (const url of repositoryUrls) {
+      results[url] = { exists: false };
+    }
+    
+    // Check each wishlist against requested URLs
+    for (const wishlist of wishlists) {
+      const repoUrl = wishlist.repository_url.toLowerCase();
+      
+      // Check if this repo URL matches any of the requested URLs
+      for (const requestedUrl of repositoryUrls) {
+        if (requestedUrl.toLowerCase() === repoUrl) {
+          results[requestedUrl] = {
+            exists: true,
+            issueUrl: wishlist.issue_url || `/wishlist/${wishlist.id}`,
+            issueNumber: wishlist.id,
+            isApproved: wishlist.approved,
+            projectTitle: wishlist.project_name,
+          };
+          break;
+        }
       }
-    );
-
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`);
     }
 
-    const issues: GitHubIssue[] = await response.json();
-    
-    // Create a map of repository URLs to issue URLs
-    const existingWishlists: Record<string, { issueUrl: string; issueNumber: number; isApproved: boolean; projectTitle: string }> = {};
-    
-    for (const issue of issues) {
-      // Parse the issue body to extract repository URLs
-      const body = issue.body || '';
-      
-      // Check if issue is approved
-      const isApproved = issue.labels.some(label => label.name === 'approved-wishlist');
-      
-      // Look for repository URLs in multiple formats:
-      // 1. Markdown links: [text](url)
-      const markdownMatches = body.matchAll(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g);
-      for (const match of markdownMatches) {
+    return new Response(JSON.stringify({ results }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error checking existing wishlists:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+};
         const repoUrl = match[2];
         const normalizedUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '');
         existingWishlists[normalizedUrl] = {

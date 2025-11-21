@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { getWishlistById } from '../../lib/db.js';
-import { GITHUB_CONFIG } from '../../config/github.js';
 
 export const prerender = false;
 
@@ -27,26 +26,6 @@ export const GET: APIRoute = async ({ url, request }) => {
       });
     }
 
-    // Fetch GitHub issue for labels (funding-yml status)
-    let labels: string[] = [];
-    try {
-      const token = import.meta.env.GITHUB_TOKEN as string | undefined;
-      const headers: Record<string, string> = {
-        'Accept': 'application/vnd.github.v3+json',
-      };
-      if (token) headers['Authorization'] = `token ${token}`;
-
-      const issueResp = await fetch(`${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`, { headers });
-      if (issueResp.ok) {
-        const issue = await issueResp.json();
-        labels = Array.isArray(issue.labels) 
-          ? issue.labels.map((l: any) => typeof l === 'string' ? l : l.name).filter(Boolean)
-          : [];
-      }
-    } catch (err) {
-      console.warn(`[get-wishlist] Could not fetch GitHub labels:`, err);
-    }
-
     // Transform database record to form-compatible format
     const response = {
       id: wishlist.id,
@@ -65,14 +44,14 @@ export const GET: APIRoute = async ({ url, request }) => {
       openToSponsorship: wishlist.open_to_sponsorship || false,
       repositoryUrl: wishlist.repository_url,
       maintainer: wishlist.maintainer_username,
-      maintainerEmail: wishlist.maintainer_email || '', // Include for edit form
+      maintainerEmail: wishlist.maintainer_email || '',
       preferredPractitioner: wishlist.preferred_practitioner || '',
       nomineeName: wishlist.nominee_name || '',
       nomineeEmail: wishlist.nominee_email || '',
       nomineeGithub: wishlist.nominee_github || '',
-      labels: labels,
-      wantsFundingYml: labels.includes('funding-yml-requested'),
-      fundingYmlProcessed: labels.includes('funding-yml-processed'),
+      labels: [], // Legacy field, all data now in database fields
+      wantsFundingYml: wishlist.funding_yml,
+      fundingYmlProcessed: wishlist.funding_yml_processed,
     };
 
     console.log(`[get-wishlist] Returning wishlist data - wishes: ${JSON.stringify(response.wishes)}`);

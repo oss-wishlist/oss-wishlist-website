@@ -1,16 +1,13 @@
 ---
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
-import { GITHUB_CONFIG } from '../config/github.js';
 import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
-import { parseIssueForm } from '../lib/issue-form-parser.js';
 import { getAllPractitioners } from '../lib/db';
 
 export const prerender = false;
 
 const basePath = getBasePath();
-const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
 
 // Get user from session - require authentication
 const user = Astro.locals.user;
@@ -112,54 +109,13 @@ if (issueNumber) {
       }
     }
   } catch (error) {
-    // Database fetch failed, will try GitHub fallback
+    // Database fetch failed, will show error
   }
 }
 
-// Fallback to GitHub API if database lookup failed (shouldn't normally happen)
-if (issueNumber && !wishlistData && GITHUB_TOKEN) {
-  try {
-    // Fetch the GitHub issue data
-    const response = await fetch(
-      `${GITHUB_CONFIG.API_ISSUES_URL}/${issueNumber}`,
-      {
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      }
-    );
-
-    if (response.ok) {
-      githubIssue = await response.json();
-      
-      // Parse the issue body using the same parser as the API
-      const parsed = parseIssueForm(githubIssue.body || '');
-      
-      // Extract project name from parsed data or title
-      const projectName = parsed.project || githubIssue.title.replace(/^Wishlist:\s*/i, '').trim();
-      
-      // Set project size from parsed data
-      if (parsed.projectSize) {
-        projectSize = parsed.projectSize;
-      }
-      
-      wishlistData = {
-        issueNumber: githubIssue.number,
-        projectName: projectName,
-        wishes: parsed.services,  // Use parsed services instead of manual parsing
-        url: githubIssue.html_url,
-        maintainer: githubIssue.user.login,
-        openToSponsorship: parsed.openToSponsorship,
-        preferredPractitioner: parsed.preferredPractitioner || null,
-        nomineeName: parsed.nomineeName || null,
-        nomineeEmail: parsed.nomineeEmail || null,
-        nomineeGithub: parsed.nomineeGithub || null
-      };
-    }
-  } catch (error) {
-    console.error('Error fetching GitHub issue:', error);
-  }
+// If no wishlist data found, show error
+if (!wishlistData) {
+  return Astro.redirect(`${basePath}error?message=${encodeURIComponent('Wishlist not found')}`);
 }
 ---
 
