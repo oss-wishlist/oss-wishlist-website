@@ -213,16 +213,16 @@ if (wishlistSlug) {
               </div>
               <div class="flex space-x-2">
                 <a 
-                  href={`${basePath}practitioners/${practitioner.github_username}`}
+                  href={`${basePath}practitioners/${practitioner.slug}`}
                   class="text-gray-600 hover:text-gray-700 text-sm font-medium"
                 >
                   View →
                 </a>
                 {selectedWishlist && (
                   <a 
-                    href={practitioner.github_username ? `https://github.com/sponsors/${practitioner.github_username}` : `mailto:${practitioner.email}?subject=${encodeURIComponent(`Hire ${practitioner.name} for ${projectName || selectedWishlist.data.project_name}`)}`}
-                    target={practitioner.github_username ? "_blank" : "_self"}
-                    rel={practitioner.github_username ? "noopener noreferrer" : ""}
+                    href={practitioner.github ? `https://github.com/sponsors/${practitioner.github.replace('https://github.com/', '')}` : `mailto:${practitioner.email}?subject=${encodeURIComponent(`Hire ${practitioner.name} for ${projectName || selectedWishlist.data.project_name}`)}`}
+                    target={practitioner.github ? "_blank" : "_self"}
+                    rel={practitioner.github ? "noopener noreferrer" : ""}
                     class="bg-gray-900 text-white px-3 py-1 rounded text-xs font-medium hover:bg-gray-800 transition-colors"
                     title={`Hire ${practitioner.name} for ${projectName || selectedWishlist.data.project_name}`}
                   >
