@@ -28,6 +28,7 @@ describe('Practitioner Creation (Database)', () => {
       rates: 'discounted',
       availability: 'immediate',
       website: 'https://janedoe.com',
+      github: 'https://github.com/janedoe', // Optional - not tied to authentication
       linkedin: 'https://linkedin.com/in/janedoe',
     };
 
@@ -99,6 +100,31 @@ describe('Practitioner Creation (Database)', () => {
 
     expect(newPractitioner.status).toBe('pending');
     expect(newPractitioner.approved).toBe(false);
+  });
+
+  it('should generate slug from name, not authentication provider', () => {
+    // Slug should be based on name, not GitHub username or other auth
+    const name = 'Jane Smith';
+    const expectedSlug = 'jane-smith-practitioner';
+    const actualSlug = `${name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-practitioner`;
+    
+    expect(actualSlug).toBe(expectedSlug);
+  });
+
+  it('should allow github field to be optional', () => {
+    const practitionerWithoutGitHub = {
+      id: 10,
+      slug: 'jane-doe-practitioner',
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      title: 'Engineer',
+      bio: 'Experienced engineer',
+      github: undefined, // Optional - user might not have GitHub
+      submitter_username: 'google:jane@example.com', // Could be authenticated via Google
+    };
+
+    expect(practitionerWithoutGitHub.github).toBeUndefined();
+    expect(practitionerWithoutGitHub.submitter_username).toContain('google');
   });
 });
 

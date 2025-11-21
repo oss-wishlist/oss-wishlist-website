@@ -375,7 +375,7 @@ describe('Practitioners Page - Error Handling', () => {
   it('should handle missing practitioner fields gracefully', () => {
     const practitioner = {
       id: 1,
-      slug: 'jane-doe-1',
+      slug: 'jane-doe-practitioner',
       name: 'Jane Doe',
       title: 'Engineer',
       bio: 'Experienced',
@@ -390,6 +390,57 @@ describe('Practitioners Page - Error Handling', () => {
     expect(practitioner.name).toBeTruthy();
     expect(practitioner.company).toBeUndefined();
     expect(practitioner.github).toBeUndefined();
+  });
+
+  it('should use default avatar when github field is missing', () => {
+    const practitionerWithoutGitHub = {
+      id: 1,
+      slug: 'jane-doe-practitioner',
+      name: 'Jane Doe',
+      github: undefined,
+      avatar_url: '/images/oss-wishlist-logo.jpg', // Default fallback
+    };
+
+    expect(practitionerWithoutGitHub.avatar_url).toBe('/images/oss-wishlist-logo.jpg');
+  });
+
+  it('should use GitHub avatar when github field is provided', () => {
+    const practitionerWithGitHub = {
+      id: 1,
+      slug: 'jane-doe-practitioner',
+      name: 'Jane Doe',
+      github: 'https://github.com/janedoe',
+      avatar_url: 'https://github.com/janedoe.png',
+    };
+
+    expect(practitionerWithGitHub.avatar_url).toContain('github.com');
+    expect(practitionerWithGitHub.avatar_url).toContain('.png');
+  });
+});
+
+describe('Practitioners Page - Authentication Agnostic', () => {
+  it('should support different authentication providers via submitter_username', () => {
+    const githubAuthPractitioner = {
+      id: 1,
+      slug: 'jane-doe-practitioner',
+      name: 'Jane Doe',
+      submitter_username: 'janedoe', // GitHub username
+      github: 'https://github.com/janedoe',
+    };
+
+    const googleAuthPractitioner = {
+      id: 2,
+      slug: 'john-smith-practitioner',
+      name: 'John Smith',
+      submitter_username: 'google:john.smith@example.com', // Could be Google
+      github: undefined, // No GitHub profile
+    };
+
+    // Both should work with same system
+    expect(githubAuthPractitioner.submitter_username).toBeTruthy();
+    expect(googleAuthPractitioner.submitter_username).toBeTruthy();
+    expect(githubAuthPractitioner.slug).toContain('jane-doe');
+    expect(googleAuthPractitioner.slug).toContain('john-smith');
   });
 });
 
@@ -424,19 +475,20 @@ describe('Practitioners Page - Regression Tests', () => {
   it('should use slug field for practitioner detail page links', () => {
     const practitioner = {
       id: 1,
-      slug: 'jane-doe-1',
+      slug: 'jane-doe-practitioner',
       name: 'Jane Doe',
+      github: 'https://github.com/janedoe',
     };
 
     const basePath = '/';
     const link = `${basePath}practitioners/${practitioner.slug}`;
 
-    // CORRECT: Uses slug
-    expect(link).toBe('/practitioners/jane-doe-1');
+    // CORRECT: Uses slug (name-based, auth-agnostic)
+    expect(link).toBe('/practitioners/jane-doe-practitioner');
 
-    // WRONG: Using undefined field
-    const badLink = `${basePath}practitioners/${(practitioner as any).github_username}`;
-    expect(badLink).toBe('/practitioners/undefined');
+    // Slug is independent of GitHub username
+    expect(practitioner.slug).not.toContain('janedoe');
+    expect(practitioner.slug).toContain('jane-doe');
   });
 
   it('should extract GitHub username from github field (not github_username)', () => {

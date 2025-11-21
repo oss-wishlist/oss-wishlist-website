@@ -108,12 +108,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       title: body.title,
       company: body.company || '',
       bio: body.bio,
-      avatar_url: `https://github.com/${username}.png`,
+      // Avatar: Use GitHub avatar if GitHub username provided, otherwise use default logo
+      avatar_url: body.github ? `https://github.com/${body.github.replace('https://github.com/', '')}.png` : '/images/oss-wishlist-logo.jpg',
       location: body.location || '',
       languages: body.languages || ['English'],
       email: body.email,
       website: body.website || undefined,
-      github: username, // Always use authenticated GitHub username
+      github: body.github || undefined, // Optional: User's GitHub profile URL
       github_sponsors: body.githubSponsors || undefined,
       mastodon: body.mastodon || undefined,
       linkedin: body.linkedin || undefined,
@@ -127,7 +128,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       certifications: [],
       approved: false,
       verified: false,
-      submitter_username: username
+      submitter_username: username // Auth identifier (currently GitHub username, could be Google email, etc.)
     };
 
     let practitioner;
