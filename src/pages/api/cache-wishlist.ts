@@ -327,8 +327,7 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     console.error('Error in cache-wishlist:', error);
     return new Response(JSON.stringify({ 
-      error: 'Failed to cache wishlist',
-      details: error instanceof Error ? error.message : String(error)
+      error: 'Failed to cache wishlist'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
