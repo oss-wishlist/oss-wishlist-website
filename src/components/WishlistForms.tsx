@@ -1594,6 +1594,24 @@ ${repositories[0].url}
               <span>Project Details</span>
             </h3>
             
+            {/* Selected Repository Info */}
+            {(selectedRepo || manualRepoData) && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-1">Repository:</p>
+                <p className="text-base font-semibold text-gray-900">
+                  {selectedRepo ? selectedRepo.name : manualRepoData?.name}
+                </p>
+                <a 
+                  href={selectedRepo ? selectedRepo.html_url : manualRepoData?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
+                >
+                  {selectedRepo ? selectedRepo.html_url : manualRepoData?.url}
+                </a>
+              </div>
+            )}
+            
             {/* Project Title */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
