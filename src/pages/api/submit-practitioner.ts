@@ -232,7 +232,7 @@ To approve: Update status in database to 'approved' and set approved=true
 
 Thank you for applying to become a practitioner with OSS Wishlist!
 
-We've received your application and our team will review it within 3-5 business days. We'll verify your expertise and experience, and get back to you via email with next steps or any questions we might have.
+We've received your application and will review it within 3-5 business days. We'll take a quick look to ensure everything is in order, and get back to you via email if we have any questions.
 
 In the meantime:
 • Join our Discord community: https://discord.gg/9BY9P5FD
@@ -241,7 +241,7 @@ In the meantime:
 
 If you have any questions, please contact us at info@oss-wishlist.com
 
-We're excited to potentially have you join our community of practitioners helping open source projects thrive!
+We're excited to have you join our community of practitioners helping open source projects thrive!
 
 Best regards,
 The OSS Wishlist Team
