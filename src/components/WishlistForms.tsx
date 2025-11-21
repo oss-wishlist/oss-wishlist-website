@@ -553,6 +553,20 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     }
   };
 
+  // Allow only http and https schemes
+  const sanitizeUrl = (url: string | undefined | null): string => {
+    if (!url) return "#";
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.protocol === "http:" || urlObj.protocol === "https:") {
+        return url;
+      }
+    } catch {
+      // If invalid, fall through below
+    }
+    return "#";
+  };
+
   const handleManualRepoSubmit = () => {
     setError('');
     const repoData = parseProjectUrl(manualRepoUrl);
@@ -1610,7 +1624,7 @@ ${repositories[0].url}
                   {selectedRepo ? selectedRepo.name : manualRepoData?.name}
                 </p>
                 <a 
-                  href={selectedRepo ? selectedRepo.html_url : manualRepoData?.url}
+                  href={selectedRepo ? sanitizeUrl(selectedRepo.html_url) : sanitizeUrl(manualRepoData?.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
