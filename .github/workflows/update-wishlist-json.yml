@@ -1,4 +1,6 @@
 name: Update Wishlist JSON Feed
+permissions:
+  contents: write
 
 # Trigger when wishlists are approved, rejected, or deleted via API
 # This action can be manually triggered or called from the application
