@@ -184,7 +184,12 @@ describe('Fulfillment Form Security', () => {
    */
   it('should prevent XSS in contact person field', () => {
     const maliciousInput = '<script>alert("xss")</script>John Doe';
-    const sanitized = maliciousInput.replace(/<[^>]*>/g, '');
+    let sanitized = maliciousInput;
+    let previous;
+    do {
+      previous = sanitized;
+      sanitized = sanitized.replace(/<[^>]*>/g, '');
+    } while (sanitized !== previous);
     
     expect(sanitized).toBe('alert("xss")John Doe');
     expect(maliciousInput).toContain('<script>');
