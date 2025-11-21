@@ -41,10 +41,16 @@ export const GET: APIRoute = async ({ cookies }) => {
     
     const availableRepositories = repositories.filter(repo => {
       const repoUrl = repo.html_url.toLowerCase();
-      return !wishlistRepoUrls.has(repoUrl);
+      const isFiltered = wishlistRepoUrls.has(repoUrl);
+      if (isFiltered) {
+        console.log(`[repositories] Filtering out: ${repoUrl}`);
+      }
+      return !isFiltered;
     });
     
-    console.log(`[repositories] User has ${userWishlists.length} existing wishlists, returning ${availableRepositories.length} available repos out of ${repositories.length} total`);
+    console.log(`[repositories] User: ${session.user.login}`);
+    console.log(`[repositories] Wishlist URLs:`, Array.from(wishlistRepoUrls));
+    console.log(`[repositories] Total repos: ${repositories.length}, Filtered: ${repositories.length - availableRepositories.length}, Available: ${availableRepositories.length}`);
 
     return new Response(JSON.stringify({ 
       repositories: availableRepositories,
