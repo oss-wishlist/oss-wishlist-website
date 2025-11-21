@@ -6,7 +6,6 @@ import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
 import { parseIssueForm } from '../lib/issue-form-parser.js';
 import { getAllPractitioners } from '../lib/db';
-import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
 
 export const prerender = false;
 
@@ -15,6 +14,30 @@ const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
 
 // Get user from session - require authentication
 const user = Astro.locals.user;
+
+// Handle authentication redirect server-side
+if (!user) {
+  const currentPath = Astro.url.pathname;
+  const searchParams = Astro.url.search;
+  
+  // Strip the base path if it exists to get the relative path
+  let relativePath = currentPath.startsWith(basePath.slice(0, -1)) 
+    ? currentPath.slice(basePath.slice(0, -1).length)
+    : currentPath;
+  
+  // Ensure relativePath starts with /
+  if (relativePath && !relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath;
+  }
+  if (!relativePath) {
+    relativePath = '/';
+  }
+  
+  // Redirect to login page with return URL
+  const fullReturnPath = relativePath + searchParams;
+  const returnTo = encodeURIComponent(fullReturnPath);
+  return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
+}
 
 // Get practitioners for the dropdown
 const practitioners = await getAllPractitioners();
@@ -832,5 +855,4 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
       }
     });
   </script>
-  </AuthenticatedForm>
 </Layout>
