@@ -11,8 +11,7 @@
  * Run with: node scripts/generate-minimal-json.mjs
  */
 
-// Disable TLS certificate validation for Digital Ocean managed PostgreSQL
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// (Certificate validation is now enforced for TLS connections)
 
 import pg from 'pg';
 import fs from 'fs';
@@ -51,8 +50,8 @@ if (!DATABASE_URL) {
 // SSL configuration for Digital Ocean managed PostgreSQL
 // Always use SSL with rejectUnauthorized: false to avoid certificate issues
 const sslConfig = {
-  rejectUnauthorized: false,
-  checkServerIdentity: () => undefined,
+  rejectUnauthorized: true, // Enforce certificate validation
+  // If needed, add `ca: fs.readFileSync('path/to/ca-cert.pem').toString()` here
 };
 
 const pool = new Pool({
