@@ -6,9 +6,15 @@ import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
 import { parseIssueForm } from '../lib/issue-form-parser.js';
 import { getAllPractitioners } from '../lib/db';
+import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
+
+export const prerender = false;
 
 const basePath = getBasePath();
 const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
+
+// Get user from session - require authentication
+const user = Astro.locals.user;
 
 // Get practitioners for the dropdown
 const practitioners = await getAllPractitioners();
@@ -826,4 +832,5 @@ if (issueNumber && !wishlistData && GITHUB_TOKEN) {
       }
     });
   </script>
+  </AuthenticatedForm>
 </Layout>
