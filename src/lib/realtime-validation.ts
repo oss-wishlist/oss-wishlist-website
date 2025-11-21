@@ -122,10 +122,26 @@ export const validateGitHubUrl = (url: string): ValidationResult => {
     return urlValidation;
   }
   
-  if (!url.includes('github.com')) {
+  try {
+    const urlObj = new URL(url);
+    // Explicit whitelist of allowed GitHub hosts:
+    const allowedHosts = [
+      'github.com',
+      'www.github.com',
+      'gist.github.com',
+      'api.github.com'
+    ];
+    if (!allowedHosts.includes(urlObj.hostname)) {
+      return {
+        isValid: false,
+        error: 'Please enter a GitHub URL',
+        severity: 'error'
+      };
+    }
+  } catch {
     return {
       isValid: false,
-      error: 'Please enter a GitHub URL',
+      error: 'Invalid GitHub URL format',
       severity: 'error'
     };
   }
