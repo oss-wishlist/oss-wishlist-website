@@ -37,7 +37,7 @@ export const GET: APIRoute = async ({ cookies }) => {
     
     // Filter out repos that already have wishlists
     const userWishlists = await getWishlistsByMaintainer(session.user.login);
-    const wishlistRepoUrls = new Set(userWishlists.map(w => w.repo_url.toLowerCase()));
+    const wishlistRepoUrls = new Set(userWishlists.map(w => w.repository_url.toLowerCase()));
     
     const availableRepositories = repositories.filter(repo => {
       const repoUrl = repo.html_url.toLowerCase();
