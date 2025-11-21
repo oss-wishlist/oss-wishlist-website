@@ -47,8 +47,7 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     console.error('❌ Error in cache refresh webhook:', error);
     return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : String(error)
+      error: 'Internal server error'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
