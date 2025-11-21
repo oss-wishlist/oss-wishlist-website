@@ -142,9 +142,22 @@ if (wishlistSlug) {
       ) : (
         <>
           <h1 class="text-5xl font-bold text-gray-900 mb-6">Open Source <span class="text-accent">Practitioners</span></h1>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
            Open source practitioners are experienced subject matter experts in sustainability-critical areas.
           </p>
+          {!userPractitioner && (
+            <div class="mt-6">
+              <a 
+                href={`${basePath}apply-practitioner`}
+                class="inline-flex items-center px-8 py-3 text-base font-semibold text-white bg-gradient-to-r from-purple-600 to-violet-600 rounded-lg hover:from-purple-700 hover:to-violet-700 transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Apply to be a Practitioner
+              </a>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -226,7 +239,7 @@ if (wishlistSlug) {
               </div>
               <div class="flex space-x-2">
                 <a 
-                  href={`${basePath}practitioners/${practitioner.slug}`}
+                  href={`${basePath}practitioners/${practitioner.github_username}`}
                   class="text-gray-600 hover:text-gray-700 text-sm font-medium"
                 >
                   View →
