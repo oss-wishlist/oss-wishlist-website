@@ -6,6 +6,8 @@ import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
 import { getCollection } from 'astro:content';
 import { getPractitionersBySubmitter } from '../lib/db';
 
+export const prerender = false;
+
 // Get user from session
 const user = Astro.locals.user;
 
