@@ -67,6 +67,20 @@ const playbooksExternal = defineCollection({
   }),
 });
 
+// Ecosystem Guardians (sponsors/organizations supporting OSS sustainability)
+const guardians = defineCollection({
+  type: 'content',
+  schema: z.object({
+    name: z.string(),
+    description: z.string(),
+    website: z.string().url().optional(),
+    logo_url: z.string().url().optional(),
+    contact_email: z.string().email().optional(),
+    sponsorship_level: z.enum(['platinum', 'gold', 'silver', 'bronze']).optional(),
+    active: z.boolean().default(true),
+  }),
+});
+
 // Community Campaigns (e.g., ecosystem-wide initiatives like "Python Foundation")
 const campaigns = defineCollection({
   type: 'content',
@@ -91,5 +105,6 @@ export const collections = {
   faq,
   pages,
   campaigns,
+  guardians,
   'playbooks-external': playbooksExternal,
 };

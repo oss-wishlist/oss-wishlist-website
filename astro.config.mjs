@@ -44,6 +44,10 @@ export default defineConfig({
     }
   },
   integrations: [tailwind(), react()],
+  redirects: {
+    // Redirect old practitioner markdown slugs to new github_username format
+    '/practitioners/[slug]-practitioner': '/practitioners/[slug]',
+  },
   markdown: {
     shikiConfig: {
       theme: 'github-dark'
