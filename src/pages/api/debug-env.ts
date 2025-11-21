@@ -30,7 +30,9 @@ export const GET: APIRoute = async () => {
     },
   });
   } catch (error) {
-    return new Response(JSON.stringify({ error: String(error) }), {
+    // Log the actual error details for server-side debugging
+    console.error('Error in /api/debug-env:', error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
