@@ -198,7 +198,12 @@ describe('Fulfillment Form Security', () => {
     const maliciousEmail = 'test@example.com" onload="alert(1)"';
     expect(maliciousEmail).toContain('onload=');
     
-    const sanitized = maliciousEmail.replace(/\s+on\w+\s*=/gi, '');
+    let sanitized = maliciousEmail;
+    let prev;
+    do {
+      prev = sanitized;
+      sanitized = sanitized.replace(/\s+on\w+\s*=/gi, '');
+    } while (sanitized !== prev);
     expect(sanitized).not.toContain('onload=');
   });
 
