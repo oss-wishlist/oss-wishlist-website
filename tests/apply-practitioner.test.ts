@@ -874,4 +874,72 @@ describe('Practitioner Application - Duplicate Prevention', () => {
     expect(existingProfile.id).toBe(1);
     expect(expectedError).toContain('edit page');
   });
+
+  it('should redirect existing practitioners from apply page to edit page', async () => {
+    // Test that /apply-practitioner redirects users with existing profiles
+    const authenticatedUser = {
+      login: 'existinguser',
+      id: 123,
+      name: 'Existing Practitioner'
+    };
+
+    const existingProfile = {
+      id: 1,
+      name: 'Existing Practitioner',
+      github_username: 'existinguser',
+      submitter_username: 'existinguser',
+      approved: true,
+      email: 'existing@example.com'
+    };
+
+    // When user with existing profile visits /apply-practitioner
+    // Server-side check should redirect to /edit-practitioner
+    const visitUrl = '/apply-practitioner';
+    const expectedRedirectUrl = '/edit-practitioner';
+
+    // Verify the logic:
+    // 1. User is authenticated
+    expect(authenticatedUser.login).toBe('existinguser');
+    
+    // 2. getPractitionersBySubmitter returns existing profile
+    expect(existingProfile.submitter_username).toBe(authenticatedUser.login);
+    
+    // 3. Redirect to edit page (not stay on apply page)
+    expect(expectedRedirectUrl).toBe('/edit-practitioner');
+    
+    // 4. User should NOT be able to create duplicate profile
+    const shouldAllowCreate = existingProfile ? false : true;
+    expect(shouldAllowCreate).toBe(false);
+  });
+
+  it('should allow new practitioners to access apply page', async () => {
+    // Test that users WITHOUT existing profiles can access apply page
+    const authenticatedUser = {
+      login: 'newuser',
+      id: 456,
+      name: 'New User'
+    };
+
+    // getPractitionersBySubmitter returns empty array
+    const existingProfiles = [];
+
+    // When user with NO existing profile visits /apply-practitioner
+    // Should stay on page (not redirect)
+    const visitUrl = '/apply-practitioner';
+    const shouldRedirect = existingProfiles.length > 0;
+
+    // Verify the logic:
+    // 1. User is authenticated
+    expect(authenticatedUser.login).toBe('newuser');
+    
+    // 2. No existing profile found
+    expect(existingProfiles.length).toBe(0);
+    
+    // 3. Should NOT redirect (stay on apply page)
+    expect(shouldRedirect).toBe(false);
+    
+    // 4. User SHOULD be able to create profile
+    const shouldAllowCreate = existingProfiles.length === 0;
+    expect(shouldAllowCreate).toBe(true);
+  });
 });

@@ -1,29 +1,29 @@
 ---
 import Layout from '../../components/Layout.astro';
-import { getEntry, getCollection } from 'astro:content';
+import { getCollection } from 'astro:content';
 import { getBasePath } from '../../lib/paths';
+import { getAllPractitioners } from '../../lib/db';
+import { marked } from 'marked';
 
 export const prerender = false;
 const basePath = getBasePath();
 
 // Server-rendered: resolve content dynamically at request time
-
-// Get the practitioner from props (static) or params (SSR fallback)
-const { practitioner: propsPractitioner } = Astro.props;
 const { slug } = Astro.params;
 
-// Use props practitioner if available, otherwise fetch dynamically
-const practitioner = propsPractitioner || await getEntry('practitioners', slug);
+// Fetch practitioner from database by github_username (which is used as slug)
+const allPractitioners = await getAllPractitioners();
+const practitioner = allPractitioners.find(p => p.github_username === slug);
 
-// If practitioner doesn't exist, return 404
-if (!practitioner) {
+// If practitioner doesn't exist or not approved, return 404
+if (!practitioner || !practitioner.approved) {
   return Astro.redirect('/404');
 }
 
 // Fetch services to map slugs to titles
 const allServices = await getCollection('services');
-const practitionerServices = practitioner.data.services 
-  ? practitioner.data.services
+const practitionerServices = practitioner.services 
+  ? practitioner.services
       .map(serviceSlug => {
         const service = allServices.find(s => s.slug === serviceSlug);
         return service ? { slug: serviceSlug, title: service.data.title } : null;
@@ -31,21 +31,22 @@ const practitionerServices = practitioner.data.services
       .filter(Boolean)
   : [];
 
-const { Content } = await practitioner.render();
+// Render bio as markdown
+const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';
 ---
 
-<Layout title={`${practitioner.data.name} - OSS Practitioner`} description={practitioner.data.bio}>
+<Layout title={`${practitioner.name} - OSS Practitioner`} description={practitioner.bio}>
   {(
-    (Astro.locals.user && Astro.locals.user.login && practitioner.data.github &&
-      typeof Astro.locals.user.login === 'string' && typeof practitioner.data.github === 'string' &&
-      Astro.locals.user.login.toLowerCase() === practitioner.data.github.toLowerCase()) ||
-    (Astro.locals.session && Astro.locals.session.user && practitioner.data.github &&
-      typeof Astro.locals.session.user.login === 'string' && typeof practitioner.data.github === 'string' &&
-      Astro.locals.session.user.login.toLowerCase() === practitioner.data.github.toLowerCase())
+    (Astro.locals.user && Astro.locals.user.login && practitioner.github_username &&
+      typeof Astro.locals.user.login === 'string' && typeof practitioner.github_username === 'string' &&
+      Astro.locals.user.login.toLowerCase() === practitioner.github_username.toLowerCase()) ||
+    (Astro.locals.session && Astro.locals.session.user && practitioner.github_username &&
+      typeof Astro.locals.session.user.login === 'string' && typeof practitioner.github_username === 'string' &&
+      Astro.locals.session.user.login.toLowerCase() === practitioner.github_username.toLowerCase())
   ) && (
     <div class="max-w-4xl mx-auto px-4 py-4">
       <div class="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-6 text-center text-gray-900">
-        <strong>To update your profile, use the <a href={`${basePath}/edit-practitioner`} class="underline">edit profile page</a>. To delete your profile, email <a href="mailto:info@oss-wishlist.org" class="underline">info@oss-wishlist.org</a></strong>
+        <strong>To update your profile, use the <a href={`${basePath}edit-practitioner`} class="underline">edit profile page</a>. To delete your profile, email <a href="mailto:info@oss-wishlist.org" class="underline">info@oss-wishlist.org</a></strong>
       </div>
     </div>
   )}
@@ -53,41 +54,41 @@ const { Content } = await practitioner.render();
     <!-- Practitioner Header -->
     <div class="bg-white rounded-lg shadow-sm border p-8 mb-8">
       <div class="flex flex-col md:flex-row md:items-start space-y-6 md:space-y-0 md:space-x-8">
-        {practitioner.data.avatar_url && (
+        {practitioner.avatar_url && (
           <img 
-            src={practitioner.data.avatar_url} 
-            alt={practitioner.data.name}
+            src={practitioner.avatar_url} 
+            alt={practitioner.name}
             class="w-32 h-32 rounded-full object-cover mx-auto md:mx-0"
             loading="lazy"
           />
         )}
         
         <div class="flex-1 text-center md:text-left">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">{practitioner.data.name}</h1>
-          <p class="text-xl text-gray-600 mb-2">{practitioner.data.title}</p>
-          {practitioner.data.company && (
-            <p class="text-lg text-gray-600 mb-4">{practitioner.data.company}</p>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">{practitioner.name}</h1>
+          <p class="text-xl text-gray-600 mb-2">{practitioner.title}</p>
+          {practitioner.company && (
+            <p class="text-lg text-gray-600 mb-4">{practitioner.company}</p>
           )}
           
           <div class="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-600 mb-4">
-            {practitioner.data.location && (
-              <span class="flex items-center">{practitioner.data.location}</span>
+            {practitioner.location && (
+              <span class="flex items-center">{practitioner.location}</span>
             )}
-            {practitioner.data.years_experience && (
-              <span class="flex items-center">{practitioner.data.years_experience} years experience</span>
+            {practitioner.years_experience && (
+              <span class="flex items-center">{practitioner.years_experience} years experience</span>
             )}
-            {practitioner.data.languages && practitioner.data.languages.length > 0 && (
-              <span class="flex items-center">Language(s): {practitioner.data.languages.join(', ')}</span>
+            {practitioner.languages && practitioner.languages.length > 0 && (
+              <span class="flex items-center">Language(s): {practitioner.languages.join(', ')}</span>
             )}
           </div>
           
           <div class="flex flex-wrap justify-center md:justify-start gap-2">
-            {practitioner.data.verified && (
+            {practitioner.verified && (
               <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                 Verified Practitioner
               </span>
             )}
-            {practitioner.data.accepts_pro_bono && (
+            {practitioner.accepts_pro_bono && (
               <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                 Pro Bono Available
               </span>
@@ -103,42 +104,21 @@ const { Content } = await practitioner.render();
         <!-- Bio -->
         <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
           <h2 class="text-xl font-bold text-gray-900 mb-4">About</h2>
-          <p class="text-gray-700 leading-relaxed">{practitioner.data.bio}</p>
-        </div>
-
-        <!-- Full Content -->
-        <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <div class="prose max-w-none">
-            <Content />
-          </div>
+          <div class="prose max-w-none" set:html={bioHtml}></div>
         </div>
 
         <!-- Notable Experience -->
-        {practitioner.data.notable_experience && practitioner.data.notable_experience.length > 0 && (
+        {practitioner.notable_experience && practitioner.notable_experience.length > 0 && (
           <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Notable Experience</h2>
             <ul class="space-y-3">
-              {practitioner.data.notable_experience.map((experience: string) => (
+              {practitioner.notable_experience.map((experience: string) => (
                 <li key={experience} class="text-gray-700 flex items-start">
                   <span class="text-gray-600 mr-3 mt-1">•</span>
                   <span>{experience}</span>
                 </li>
               ))}
             </ul>
-          </div>
-        )}
-
-        <!-- Specialties -->
-        {practitioner.data.specialties && practitioner.data.specialties.length > 0 && (
-          <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Specialties</h2>
-            <div class="flex flex-wrap gap-2">
-              {practitioner.data.specialties.map((specialty: string) => (
-                <span key={specialty} class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {specialty}
-                </span>
-              ))}
-            </div>
           </div>
         )}
       </div>
@@ -167,8 +147,26 @@ const { Content } = await practitioner.render();
                 LinkedIn
               </a>
             )}
-            {practitioner.data.mastodon && (
-              <a href={practitioner.data.mastodon} target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-700 hover:text-gray-600">
+      <!-- Sidebar -->
+      <div class="lg:col-span-1">
+        <!-- Contact -->
+        <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Connect</h3>
+          <div class="space-y-3">
+            {practitioner.github_username && (
+              <a href={`https://github.com/${practitioner.github_username}`} target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-700 hover:text-gray-600">
+                <svg class="w-5 h-5 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg>
+                GitHub
+              </a>
+            )}
+            {practitioner.linkedin && (
+              <a href={practitioner.linkedin} target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-700 hover:text-gray-600">
+                <svg class="w-5 h-5 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg>
+                LinkedIn
+              </a>
+            )}
+            {practitioner.mastodon && (
+              <a href={practitioner.mastodon} target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-700 hover:text-gray-600">
                 <svg class="w-5 h-5 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M21.94 11.338c-.154-1.14-1.13-2.18-2.38-2.38-1.13-.19-2.27-.19-3.4-.19s-2.27 0-3.4.19c-1.25.2-2.23 1.24-2.38 2.38-.19 1.13-.19 2.27-.19 3.4s0 2.27.19 3.4c.15 1.14 1.13 2.18 2.38 2.38 1.13.19 2.27.19 3.4.19s2.27 0 3.4-.19c1.25-.2 2.23-1.24 2.38-2.38.19-1.13.19-2.27.19-3.4s0-2.27-.19-3.4zm-9.94 3.4c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z"></path></svg>
                 Mastodon
               </a>
@@ -194,28 +192,12 @@ const { Content } = await practitioner.render();
           </div>
         )}
 
-        <!-- Service Categories -->
-        {practitioner.data.service_categories && practitioner.data.service_categories.length > 0 && (
-          <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Service Areas</h3>
-            <div class="space-y-2">
-              {practitioner.data.service_categories.map((category: string) => (
-                <span key={category} class="block bg-gray-100 text-gray-800 px-3 py-2 rounded text-sm">
-                  {category}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <!-- Pricing block removed -->
-
         <!-- Certifications -->
-        {practitioner.data.certifications && practitioner.data.certifications.length > 0 && (
+        {practitioner.certifications && practitioner.certifications.length > 0 && (
           <div class="bg-white rounded-lg shadow-sm border p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4">Certifications</h3>
             <ul class="space-y-1 text-sm text-gray-700">
-              {practitioner.data.certifications.map((cert: string) => (
+              {practitioner.certifications.map((cert: string) => (
                 <li key={cert}>{cert}</li>
               ))}
             </ul>
@@ -226,7 +208,7 @@ const { Content } = await practitioner.render();
 
     <!-- CTA -->
     <div class="bg-gray-50 rounded-lg p-6 mt-8 text-center border border-gray-200">
-      <h3 class="text-lg font-bold text-gray-900 mb-2">Ready to work with {practitioner.data.name.split(' ')[0]}?</h3>
+      <h3 class="text-lg font-bold text-gray-900 mb-2">Ready to work with {practitioner.name.split(' ')[0]}?</h3>
       <p class="text-gray-600 mb-4">Create a wishlist for your project. When a sponsor chooses to fulfill it, we'll match you with the right practitioners.</p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <a 

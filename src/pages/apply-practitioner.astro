@@ -4,12 +4,22 @@ const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
 import { getCollection } from 'astro:content';
+import { getPractitionersBySubmitter } from '../lib/db';
 
 // Get user from session
 const user = Astro.locals.user;
 
-// Note: We allow users to access this page even if they have a profile
-// The API will handle updates vs creates appropriately
+// Check if user already has a practitioner profile
+let existingPractitioner = null;
+if (user?.login) {
+  const practitioners = await getPractitionersBySubmitter(user.login);
+  existingPractitioner = practitioners.length > 0 ? practitioners[0] : null;
+}
+
+// If user has a profile, redirect them to edit page
+if (existingPractitioner) {
+  return Astro.redirect(`${basePath}edit-practitioner`);
+}
 
 // Get all services from the catalog (exclude resources)
 const allServices = await getCollection('services');

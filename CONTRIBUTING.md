@@ -184,18 +184,9 @@ See `copilot_notes/DEPLOYMENT_QUICK_TEST.md` for step-by-step testing guide:
 3. Check `all-wishlists.json` updates
 4. Verify wishlist appears on public page
 
-## Security
-
-- **No inline styles** - Prevents XSS via style injection
-- **Content moderation** - Uses `@2toad/profanity` library
-- **Input validation** - Zod schemas for all forms
-- **Authentication required** - For submitting wishlists and practitioner profiles
-- **Admin-only actions** - Approval/rejection requires admin privileges
-- **Rate limiting** - Be mindful of GitHub API rate limits
-
 ## Getting Help
 
-- **Questions?** Open a GitHub Discussion
+- **Questions?** Open a GitHub Issue
 - **Bugs?** Open a GitHub Issue with reproduction steps
 - **Feature Ideas?** Open an issue tagged "enhancement"
 - **Discord**: Join our community at https://discord.gg/9BY9P5FD
@@ -210,8 +201,6 @@ Before submitting:
 - [ ] Followed code style guidelines
 - [ ] Added/updated tests for new features
 - [ ] Updated documentation if needed
-- [ ] No inline styles (all in `global.css`)
-- [ ] Used `getBasePath()` for all links
 - [ ] Tested with authentication (logged in/out)
 
 ## License
