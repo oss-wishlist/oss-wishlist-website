@@ -128,7 +128,7 @@ technologies: ${JSON.stringify(data.technologies)}
 resources: []
 ${data.urgency ? `urgency: "${data.urgency}"` : ''}
 ${data.projectSize ? `projectSize: "${data.projectSize}"` : ''}
-${data.additionalNotes ? `additionalNotes: "${data.additionalNotes.replace(/"/g, '\\"')}"` : ''}
+${data.additionalNotes ? `additionalNotes: "${data.additionalNotes.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"` : ''}
 ${data.openToSponsorship !== undefined ? `openToSponsorship: ${data.openToSponsorship}` : ''}
 ${data.preferredPractitioner ? `preferredPractitioner: "${data.preferredPractitioner}"` : ''}
 ${data.organizationType ? `organizationType: "${data.organizationType}"` : ''}
