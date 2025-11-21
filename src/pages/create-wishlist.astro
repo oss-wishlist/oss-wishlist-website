@@ -4,7 +4,7 @@ import WishlistForm from '../components/WishlistForms.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
 import { fetchUserRepositories } from '../lib/github-oauth';
-import { getAllPractitioners } from '../lib/db';
+import { getAllPractitioners, getWishlistsBySubmitter } from '../lib/db';
 
 const services = await getCollection('services');
 
@@ -78,6 +78,18 @@ if (!user) {
 let userRepositories = [];
 try {
   userRepositories = await fetchUserRepositories(user.login);
+  
+  // Fetch user's existing wishlists to filter out repos that already have wishlists
+  const userWishlists = await getWishlistsBySubmitter(user.login);
+  const wishlistRepoUrls = new Set(userWishlists.map(w => w.repo_url.toLowerCase()));
+  
+  // Filter out repos that already have wishlists
+  userRepositories = userRepositories.filter(repo => {
+    const repoUrl = repo.html_url.toLowerCase();
+    return !wishlistRepoUrls.has(repoUrl);
+  });
+  
+  console.log(`[create-wishlist] User has ${userWishlists.length} existing wishlists, showing ${userRepositories.length} available repos`);
 } catch (error) {
   console.error('Error fetching repositories:', error);
 }
