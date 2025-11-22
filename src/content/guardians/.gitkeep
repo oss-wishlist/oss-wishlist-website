@@ -1,0 +1,19 @@
+# Guardians Directory
+
+This directory contains ecosystem guardian (sponsor) profiles.
+
+To add a guardian, create a markdown file with the following frontmatter:
+
+```yaml
+---
+name: "Organization Name"
+description: "Brief description of the organization"
+website: "https://example.com"
+logo_url: "https://example.com/logo.png"
+contact_email: "contact@example.com"
+sponsorship_level: "gold"  # platinum, gold, silver, or bronze
+active: true
+---
+
+Additional markdown content about the guardian organization...
+```

@@ -39,7 +39,7 @@ describe('404 Error Handling', () => {
   });
 
   it('should distinguish between valid and invalid content slugs', () => {
-    const validSlugs = ['about-us', 'code-of-conduct', 'how-it-works', '404'];
+    const validSlugs = ['about-us', 'code-of-conduct', '404'];
     const testSlug = 'nonexistent-content';
     
     const isValid = validSlugs.includes(testSlug);
@@ -50,7 +50,6 @@ describe('404 Error Handling', () => {
     const validPages = [
       'about-us',
       'code-of-conduct',
-      'how-it-works',
       'pricing',
       'privacy-policy',
       'terms'

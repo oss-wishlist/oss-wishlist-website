@@ -12,7 +12,7 @@ export interface Props {
 const { title, description = "Get the help your open source project needs", showHeader = true } = Astro.props as Props;
 // Use centralized path utility for consistent handling
 const basePath = getBasePath(); // Returns with trailing slash
-const logoUrl = `${basePath}logo.png`;
+const logoUrl = '/logo.png';
 ---
 
 <!DOCTYPE html>

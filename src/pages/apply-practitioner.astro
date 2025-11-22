@@ -29,7 +29,7 @@ const services = allServices.filter(s => s.data.type === 'service');
 const serviceCategories = [...new Set(services.map(s => s.data.service_category || 'Other'))].sort();
 ---
 
-<Layout title="Apply to be an Practitioner - OSS Wishlist" description="Join our community of verified open source practitioners. Help projects succeed while building your professional network.">
+<Layout title="Join as an Open Source Practitioner - OSS Wishlist" description="Join our community of verified open source practitioners. Help projects succeed while building your professional network.">
   <AuthenticatedForm client:load user={user} formType="practitioner application">
     <section class="py-16 bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
