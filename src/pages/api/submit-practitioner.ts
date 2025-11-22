@@ -231,7 +231,7 @@ To approve: Update status in database to 'approved' and set approved=true
     const confirmationSubject = 'Thank You for Your Practitioner Application';
     const confirmationBody = `Hi ${body.fullName},
 
-Thank you for applying to become a practitioner with OSS Wishlist!
+Thank you for joining as a practitioner with OSS Wishlist!
 
 We've received your application and will review it within 3-5 business days. We'll take a quick look to ensure everything is in order, and get back to you via email if we have any questions.
 

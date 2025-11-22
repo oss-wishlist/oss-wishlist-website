@@ -50,7 +50,7 @@ When you create a wishlist, we collect:
 
 ### 3. Practitioner Application Data
 
-When you apply to become a practitioner, we collect:
+When you join as a practitioner, we collect:
 - Full name
 - Contact email
 - Service expertise
