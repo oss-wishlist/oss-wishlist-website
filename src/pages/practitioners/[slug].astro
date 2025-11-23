@@ -20,16 +20,34 @@ if (!practitioner) {
   return Astro.redirect('/404');
 }
 
-// Fetch services to map slugs to titles
+console.log('[practitioner-detail] Full practitioner object:', JSON.stringify(practitioner, null, 2));
+console.log('[practitioner-detail] Services field type:', typeof practitioner.services);
+console.log('[practitioner-detail] Services field value:', practitioner.services);
+console.log('[practitioner-detail] Is services an array?', Array.isArray(practitioner.services));
+
+// Fetch services to map slugs to titles (same approach as edit page)
 const allServices = await getCollection('services');
-const practitionerServices = practitioner.services 
+const services = allServices.filter(s => s.data.type === 'service');
+
+console.log('[practitioner-detail] Practitioner services from DB:', practitioner.services);
+console.log('[practitioner-detail] Available service slugs:', services.map(s => s.slug));
+
+const practitionerServices = practitioner.services && Array.isArray(practitioner.services)
   ? practitioner.services
       .map(serviceSlug => {
-        const service = allServices.find(s => s.slug === serviceSlug);
-        return service ? { slug: serviceSlug, title: service.data.title } : null;
+        const service = services.find(s => s.slug === serviceSlug);
+        if (service) {
+          console.log('[practitioner-detail] Matched service:', serviceSlug, '->', service.data.title);
+          return { slug: serviceSlug, title: service.data.title };
+        } else {
+          console.log('[practitioner-detail] No match for service slug:', serviceSlug);
+          return null;
+        }
       })
       .filter(Boolean)
   : [];
+
+console.log('[practitioner-detail] Final practitionerServices:', practitionerServices);
 
 // Render bio as markdown
 const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';
@@ -126,9 +144,9 @@ const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';
       <!-- Sidebar -->
       <div class="lg:col-span-1">
         <!-- Services Offered -->
-        {practitionerServices.length > 0 && (
-          <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Services Offered</h3>
+        <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Services Offered</h3>
+          {practitionerServices.length > 0 ? (
             <div class="space-y-2">
               {practitionerServices.map((service: any) => (
                 <a 
@@ -140,8 +158,10 @@ const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';
                 </a>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p class="text-sm text-gray-600">No services specified yet.</p>
+          )}
+        </div>
 
         <!-- Connect -->
         <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
