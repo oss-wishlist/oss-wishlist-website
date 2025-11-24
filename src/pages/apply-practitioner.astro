@@ -152,7 +152,7 @@ const serviceCategories = [...new Set(services.map(s => s.data.service_category 
           <div class="grid md:grid-cols-2 gap-3 mb-3">
             {services.map((service) => (
               <label class="flex items-start" key={service.slug}>
-                <input type="checkbox" name="specialties" value={service.data.title} class="mr-2 rounded mt-1" />
+                <input type="checkbox" name="specialties" value={service.slug} class="mr-2 rounded mt-1" />
                 <span class="text-sm">
                   <a href={`${basePath}services/${service.slug}`} target="_blank" class="text-gray-700 hover:text-gray-900 underline">
                     {service.data.title}
