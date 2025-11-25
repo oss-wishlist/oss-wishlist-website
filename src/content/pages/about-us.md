@@ -32,7 +32,7 @@ We are an volunteer project intended to push the conversation about how we fund 
 
 At `Open Source Wishlist`, we're bringing together a community of helpers: practitioners, sponsors, and other contributors who are ready to make a real difference for open source sustainability using tools, resources,  metrics and standards that already exist.
 
-**[Meet the Helpers →](/oss-wishlist-website/helpers)**
+**[Meet the Helpers →](/helpers)**
 
 ---
 

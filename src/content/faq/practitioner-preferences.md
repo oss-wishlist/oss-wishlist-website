@@ -38,7 +38,7 @@ If a maintainer knows someone from their community who they'd like to work with 
 
 **Nominee vetting process:**
 - All nominees must meet OSS Wishlist's practitioner criteria
-- We evaluate against our [practitioner rubric](/practitioners#criteria)
+- We evaluate against our practitioner rubric
 - Nominees who qualify will be invited to create a practitioner profile
 - Once verified, they can be matched with wishlists
 

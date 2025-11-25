@@ -1,0 +1,51 @@
+name: Link Checker
+
+on:
+  pull_request:
+    branches: [main, staging]
+    paths:
+      - '**.md'
+      - '**.astro'
+      - '**.tsx'
+      - '**.ts'
+  workflow_dispatch:
+
+jobs:
+  linkChecker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Check all markdown and astro files
+          args: |
+            --verbose
+            --no-progress
+            --accept 200,204,301,429
+            --timeout 20
+            --max-retries 3
+            --exclude-mail
+            --exclude 'localhost'
+            --exclude 'oss-wishlist-website'
+            '**/*.md'
+            '**/*.astro'
+            '**/*.tsx'
+            '**/*.ts'
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Link Check Failed**\n\nSome links in this PR are broken. Please check the action logs for details.'
+            })

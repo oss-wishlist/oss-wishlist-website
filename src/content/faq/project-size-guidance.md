@@ -26,4 +26,4 @@ Notes:
 - See the Catalogue Pricing page for example deliverables and outcomes by tier.
 
 Related:
-- [Catalogue Pricing](/oss-wishlist-website/pricing)
+- [Catalogue Pricing](/pricing)
