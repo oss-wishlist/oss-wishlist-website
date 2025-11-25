@@ -5,7 +5,7 @@
     "role": "owner",
     "name": "Emma Irwin",
     "email": "info@oss-wishlist.com",
-    "description": "Building community infrastructure for open source sustainability. Focused on creating standardized ways for maintainers to express needs, for funders to discover impact opportunities, and for practitioners to contribute meaningfully beyond code.",
+    "description": "Building community infrastructure for open source sustainability. Focused on creating standardized ways for maintainers to express needs, paying skilled practitioners to solve sustainability problems, and making that impact systematically visible to funders through shared standards. Delivering end-to-end ecosystem impact where people are paid, sustainability problems are solved, and outcomes become discoverable signals that drive further investment.",
     "webpageUrl": {
       "url": "https://oss-wishlist.org"
     }
@@ -14,7 +14,7 @@
     {
       "guid": "open-source-wishlist",
       "name": "Open Source Wishlist",
-      "description": "Open Source Wishlist is community-driven infrastructure that standardizes how open source maintainers express sustainability needs and how those needs become discoverable across the ecosystem. Maintainers create validated wishlists from standardized categories known to impact sustainability—funding strategy, governance, leadership continuity, security, documentation, and more. These wishes become available via API and integrate into ecosyste.ms, the comprehensive open dataset covering millions of open source projects. The project addresses a structural gap: despite years of discussion about open source sustainability, no clear pathway exists for maintainers to express what they need and receive appropriate help. We provide the connective infrastructure that allows existing tools (Open Collective, GitHub Sponsors, Tidelift, etc.) to interoperate through shared standards.",
+      "description": "Open Source Wishlist is community-driven infrastructure that standardizes how open source maintainers express sustainability needs and how paid practitioners solve those problems with systematically visible outcomes. Maintainers create validated wishlists from standardized categories—funding strategy, governance, leadership continuity, security, documentation, and more. Skilled practitioners are compensated to fulfill wishes, with outcomes documented as ground-truth data for AI benchmarks and OER playbooks. This creates end-to-end ecosystem impact: maintainers receive help, practitioners are paid for their expertise, sustainability problems are solved, and funders gain systematic visibility into impact through standardized signals. Wishlist data integrates into ecosyste.ms, making sustainability needs and outcomes discoverable across millions of open source projects. We provide the connective infrastructure that allows existing funding tools to interoperate through shared standards while building the data foundations for AI-assisted sustainability work.",
       "webpageUrl": {
         "url": "https://oss-wishlist.org"
       },
