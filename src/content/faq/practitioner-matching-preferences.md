@@ -65,4 +65,4 @@ All practitioners (preferred, nominated, or employee-based) must:
 
 ### Questions or Concerns?
 
-If you have questions about practitioner matching for your specific wishlist, please [contact us](/about#contact). We're here to facilitate the best possible outcomes for both maintainers and sponsors.
+If you have questions about practitioner matching for your specific wishlist, please [contact us](/about-us#contact). We're here to facilitate the best possible outcomes for both maintainers and sponsors.
