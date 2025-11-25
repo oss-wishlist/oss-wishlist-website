@@ -27,9 +27,9 @@ jobs:
             --accept 200,204,301,429
             --timeout 20
             --max-retries 3
-            --exclude-mail
             --exclude 'localhost'
             --exclude 'oss-wishlist-website'
+            --exclude '^mailto:'
             '**/*.md'
             '**/*.astro'
             '**/*.tsx'
