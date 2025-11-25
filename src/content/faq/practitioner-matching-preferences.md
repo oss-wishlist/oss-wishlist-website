@@ -61,7 +61,7 @@ All practitioners (preferred, nominated, or employee-based) must:
 - Meet OSS Wishlist quality standards
 - Have appropriate expertise for the service
 - Be available for the project timeline
-- Align with our [practitioner criteria](/practitioners#criteria)
+- Align with our practitioner criteria
 
 ### Questions or Concerns?
 

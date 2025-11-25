@@ -20,34 +20,18 @@ if (!practitioner) {
   return Astro.redirect('/404');
 }
 
-console.log('[practitioner-detail] Full practitioner object:', JSON.stringify(practitioner, null, 2));
-console.log('[practitioner-detail] Services field type:', typeof practitioner.services);
-console.log('[practitioner-detail] Services field value:', practitioner.services);
-console.log('[practitioner-detail] Is services an array?', Array.isArray(practitioner.services));
-
 // Fetch services to map slugs to titles (same approach as edit page)
 const allServices = await getCollection('services');
 const services = allServices.filter(s => s.data.type === 'service');
-
-console.log('[practitioner-detail] Practitioner services from DB:', practitioner.services);
-console.log('[practitioner-detail] Available service slugs:', services.map(s => s.slug));
 
 const practitionerServices = practitioner.services && Array.isArray(practitioner.services)
   ? practitioner.services
       .map(serviceSlug => {
         const service = services.find(s => s.slug === serviceSlug);
-        if (service) {
-          console.log('[practitioner-detail] Matched service:', serviceSlug, '->', service.data.title);
-          return { slug: serviceSlug, title: service.data.title };
-        } else {
-          console.log('[practitioner-detail] No match for service slug:', serviceSlug);
-          return null;
-        }
+        return service ? { slug: serviceSlug, title: service.data.title } : null;
       })
       .filter(Boolean)
   : [];
-
-console.log('[practitioner-detail] Final practitionerServices:', practitionerServices);
 
 // Render bio as markdown
 const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';

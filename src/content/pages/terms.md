@@ -61,7 +61,7 @@ OSS Wishlist does not provide tax advice. We strongly recommend consulting with 
 
 ## Privacy
 
-For information about how we collect and use your data, please see our [Privacy Policy](/oss-wishlist-website/privacy-policy).
+For information about how we collect and use your data, please see our [Privacy Policy](/privacy-policy).
 
 ## Changes to Terms
 

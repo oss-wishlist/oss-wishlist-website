@@ -145,19 +145,19 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
     }
 
-    // Email subject
-    const subject = isUpdate 
-      ? `Practitioner Profile Updated: ${body.fullName}`
-      : `New Practitioner Application: ${body.fullName}`;
-    
-    // Create simple email body with application details
-    const emailBody = `
-${isUpdate ? 'Practitioner profile updated' : 'New practitioner application received'} from ${body.fullName}.
+    // Only send emails for new applications, not updates
+    if (!isUpdate) {
+      // Email subject
+      const subject = `New Practitioner Application: ${body.fullName}`;
+      
+      // Create simple email body with application details
+      const emailBody = `
+New practitioner application received from ${body.fullName}.
 
 **Database ID:** ${practitioner.id}
 **Slug:** ${slug}
 **Submitter:** @${username}
-${isUpdate ? '**Action:** Profile update' : '**Action:** New application'}
+**Action:** New application
 
 ## Contact Information
 - **Name:** ${body.fullName}
@@ -200,36 +200,36 @@ ${body.additionalInfo || 'None provided'}
 To approve: Update status in database to 'approved' and set approved=true
 `;
 
-    // Check email configuration first
-  const emailConfig = getEmailConfig();
-    
-    if (!emailConfig.adminEmail) {
-      console.error('[Practitioner API] ADMIN_EMAIL not configured');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Email not configured: ADMIN_EMAIL missing',
-        code: 'EMAIL_CONFIG_MISSING',
-        emailConfig
-      }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-    }
+      // Check email configuration first
+      const emailConfig = getEmailConfig();
+        
+      if (!emailConfig.adminEmail) {
+        console.error('[Practitioner API] ADMIN_EMAIL not configured');
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Email not configured: ADMIN_EMAIL missing',
+          code: 'EMAIL_CONFIG_MISSING',
+          emailConfig
+        }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
 
-    // Send email using centralized mail service
-    const emailResult = await sendAdminEmail(subject, emailBody);
-    
-    if (!emailResult.success) {
-      console.error('Failed to send practitioner admin email:', emailResult.error);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Failed to send notification email: ' + emailResult.error 
-      }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+      // Send email using centralized mail service
+      const emailResult = await sendAdminEmail(subject, emailBody);
+      
+      if (!emailResult.success) {
+        console.error('Failed to send practitioner admin email:', emailResult.error);
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Failed to send notification email: ' + emailResult.error 
+        }), { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
 
-    // Send confirmation email to applicant
-    const confirmationSubject = 'Thank You for Your Practitioner Application';
-    const confirmationBody = `Hi ${body.fullName},
+      // Send confirmation email to applicant
+      const confirmationSubject = 'Thank You for Your Practitioner Application';
+      const confirmationBody = `Hi ${body.fullName},
 
 Thank you for joining as a practitioner with OSS Wishlist!
 
@@ -250,15 +250,18 @@ The OSS Wishlist Team
 ---
 This is an automated confirmation email.`;
 
-    const confirmationResult = await sendEmail({
-      to: body.email,
-      subject: confirmationSubject,
-      text: confirmationBody
-    });
+      const confirmationResult = await sendEmail({
+        to: body.email,
+        subject: confirmationSubject,
+        text: confirmationBody
+      });
 
-    console.log(`[submit-practitioner] ✓ Admin notification email sent for practitioner #${practitioner.id}`);
-    if (confirmationResult.success) {
-      console.log(`[submit-practitioner] ✓ Confirmation email sent to ${body.email}`);
+      console.log(`[submit-practitioner] ✓ Admin notification email sent for practitioner #${practitioner.id}`);
+      if (confirmationResult.success) {
+        console.log(`[submit-practitioner] ✓ Confirmation email sent to ${body.email}`);
+      }
+    } else {
+      console.log(`[submit-practitioner] ✓ Profile update - no emails sent for practitioner #${practitioner.id}`);
     }
 
     return new Response(JSON.stringify({ 
