@@ -52,4 +52,4 @@ If a maintainer knows someone from their community who they'd like to work with 
 
 Neither preferences nor nominations guarantee assignment. Our goal is to make the best match for your project's needs while respecting your input and ensuring practitioner quality standards.
 
-**Have questions?** [Contact us](/about#contact) for more information.
+**Have questions?** [Contact us](/about-us#contact) for more information.

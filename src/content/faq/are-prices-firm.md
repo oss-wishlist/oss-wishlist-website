@@ -15,4 +15,4 @@ Kind of. We maintain set prices for each service to ensure fair compensation and
 
 We will likely adjust prices as we go, but we'll maintain the set-price structure overall. This ensures practitioners are compensated fairly while giving sponsors predictable costs.
 
-If you have questions about pricing for a specific service, please [contact us](/about#contact).
+If you have questions about pricing for a specific service, please [contact us](/about-us#contact).
