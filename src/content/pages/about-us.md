@@ -6,6 +6,9 @@ date: 2025-10-27
 
 # <span class="text-accent">About</span> <span class="text-accent">Us</span>
 
+> Community Infrastructure for Open Source Sustainability
+
+
 `Open Source Wishlist`  Open Source Wishlist is an open source, open content platform where maintainers can express specific sustainability needs, and the ecosystem can discover, contribute to, and fund solutions for those risks.
 
 This project created by [Emma Irwin](https://github.com/emmairwin) with help from long-time open source collaborator [Christos Bacharakis](https://github.com/bacharakis) and with feedback from many of our peers, maintainers and potential funders . 
