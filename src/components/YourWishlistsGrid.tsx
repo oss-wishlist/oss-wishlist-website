@@ -305,7 +305,7 @@ function WishlistCard({
       {/* Actions */}
       <div className="flex items-center gap-2 flex-wrap">
         <a
-          href={`${basePath}wishlist/${wishlist.id}`}
+          href={`${basePath}/wishlist/${wishlist.id}`}
           className="btn-primary inline-flex items-center text-sm px-4 py-2"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
