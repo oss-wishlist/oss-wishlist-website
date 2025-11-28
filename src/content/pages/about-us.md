@@ -13,7 +13,7 @@ date: 2025-10-27
 
 This project created by [Emma Irwin](https://github.com/emmairwin) with help from long-time open source collaborator [Christos Bacharakis](https://github.com/bacharakis) and with feedback from many of our peers, maintainers and potential funders . 
 
-We are an volunteer project intended to push the conversation about how we fund and improve open source sustainability while also contributing to AI alignment around open source sutainability topics. Please keep all feedback constructive, and kind.
+We are an volunteer project intended to push the conversation about how we fund and improve open source sustainability while also contributing to AI alignment around open source sustainability topics. Please keep all feedback constructive, and kind.
 
 ## About Open Source Wishlist
 
