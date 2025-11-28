@@ -41,14 +41,14 @@ const { title, description, slug, type, available = true, unavailable_reason, im
   
   <div class="flex items-center gap-3">
     <a 
-      href={`${basePath}services/${slug}`} 
+      href={`${basePath}/services/${slug}`} 
       class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
     >
       Learn More
     </a>
     {!available && type !== 'resource' && (
       <a 
-        href={`${basePath}apply-practitioner`}
+        href={`${basePath}/apply-practitioner`}
         class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
       >
         Practitioners needed →
