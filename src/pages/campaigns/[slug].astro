@@ -23,7 +23,7 @@ const { Content } = await entry.render();
       <div class="flex items-start gap-6 mb-6">
         {entry.data.organization && (
           <img 
-            src={`${basePath}/images/${entry.slug}.png`}
+            src={`/images/${entry.slug}.png`}
             alt={`${entry.data.organization} logo`}
             class="w-24 h-24 rounded-full border-2 border-gray-200 object-cover flex-shrink-0"
             onerror="this.style.display='none'"
