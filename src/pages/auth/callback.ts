@@ -6,7 +6,7 @@ import {
 } from '../../lib/github-oauth';
 import type { SessionData as OldSessionData } from '../../lib/github-oauth';
 import type { SessionData, OAuthProviderName } from '../../lib/oauth/types';
-import { getOAuthProvider } from '../../lib/oauth/registry';
+import { getOAuthProvider } from '../../lib/oauth/registry.js';
 import { withBasePath, withBaseUrl } from '../../lib/paths';
 
 export const prerender = false;
