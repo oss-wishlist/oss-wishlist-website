@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { verifySession } from '../../lib/github-oauth';
-import { getOAuthProvider } from '../../lib/oauth/registry';
+import { getOAuthProvider } from '../../lib/oauth/registry.js';
 import type { OAuthProviderName } from '../../lib/oauth/types';
 
 export const prerender = false;
