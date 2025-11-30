@@ -2,7 +2,7 @@
  * Centralized Authentication Library
  * 
  * This module provides a unified authentication interface that:
- * 1. Works with any OAuth provider (currently GitHub, extensible to others)
+ * 1. Works with any OAuth provider (GitHub, GitLab, Google, etc.)
  * 2. Handles both server-side (Astro) and client-side (React) contexts
  * 3. Provides consistent session management across the app
  * 4. Uses secure, httpOnly cookies for server auth
@@ -10,19 +10,14 @@
  */
 
 import type { AstroCookies } from 'astro';
-import { verifySession, type SessionData } from './github-oauth';
+import { verifySession } from './github-oauth';
+import type { SessionData as OldSessionData } from './github-oauth';
+import type { UserProfile, OAuthProviderName, SessionData } from './oauth/types';
 
 /**
- * User interface - provider-agnostic
+ * User interface - re-export from OAuth types for backwards compatibility
  */
-export interface User {
-  id: number | string;
-  username: string;  // login/username from provider
-  name: string | null;
-  email: string | null;
-  avatar_url: string;
-  provider: 'github' | 'gitlab' | 'google'; // Extensible for future providers
-}
+export type User = UserProfile;
 
 /**
  * Session interface - what we store and return
@@ -38,24 +33,37 @@ export interface AuthSession {
  * Auth configuration
  */
 export const AUTH_CONFIG = {
-  SESSION_COOKIE_NAME: 'github_session', // Use existing cookie name from OAuth system
+  SESSION_COOKIE_NAME: 'oss_session', // Renamed from github_session to be provider-agnostic
   SESSION_STORAGE_KEY: 'oss_auth_cache',
   SESSION_MAX_AGE: 60 * 60 * 24, // 24 hours in seconds
   SESSION_STORAGE_MAX_AGE: 60 * 60 * 24 * 1000, // 24 hours in milliseconds
 } as const;
 
 /**
- * Convert provider-specific session data to our unified User format
+ * Convert old GitHub-specific session data to new format (backwards compatibility)
  */
-function sessionDataToUser(sessionData: SessionData): User {
+function oldSessionDataToUser(sessionData: OldSessionData): User {
   return {
     id: sessionData.user.id,
     username: sessionData.user.login,
     name: sessionData.user.name,
     email: sessionData.user.email,
     avatar_url: sessionData.user.avatar_url,
-    provider: 'github', // Currently only GitHub, but ready for extension
+    provider: 'github', // Old sessions are always GitHub
   };
+}
+
+/**
+ * Convert new provider-agnostic session data to User format
+ */
+function sessionDataToUser(sessionData: SessionData | OldSessionData): User {
+  // Check if it's the new format (has provider field)
+  if ('provider' in sessionData) {
+    return sessionData.user;
+  }
+  
+  // Fall back to old GitHub format
+  return oldSessionDataToUser(sessionData as OldSessionData);
 }
 
 /**
@@ -64,14 +72,21 @@ function sessionDataToUser(sessionData: SessionData): User {
  */
 export function getSession(cookies: AstroCookies): AuthSession | null {
   try {
-    const sessionCookie = cookies.get(AUTH_CONFIG.SESSION_COOKIE_NAME);
+    // Try new cookie name first, then fall back to old github_session for backwards compatibility
+    let sessionCookie = cookies.get(AUTH_CONFIG.SESSION_COOKIE_NAME);
+    let isLegacyCookie = false;
+    
+    if (!sessionCookie?.value) {
+      // Check for old GitHub session cookie
+      sessionCookie = cookies.get('github_session');
+      isLegacyCookie = true;
+    }
     
     if (!sessionCookie?.value) {
       return null;
     }
 
     // Get session secret from environment
-    // Using import.meta.env (Astro standard for build-time env vars)
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
     
     if (!sessionSecret) {
@@ -84,7 +99,7 @@ export function getSession(cookies: AstroCookies): AuthSession | null {
     
     if (!sessionData || !sessionData.authenticated) {
       // Invalid session, clear the cookie
-      cookies.delete(AUTH_CONFIG.SESSION_COOKIE_NAME, { path: '/' });
+      cookies.delete(isLegacyCookie ? 'github_session' : AUTH_CONFIG.SESSION_COOKIE_NAME, { path: '/' });
       return null;
     }
 
@@ -211,14 +226,15 @@ export async function fetchSession(): Promise<AuthSession | null> {
     }
 
     // Convert provider data to our format
+    // Support both new multi-provider format and old GitHub-only format
     const session: AuthSession = {
       user: {
         id: data.user.id,
-        username: data.user.login,
+        username: data.user.login || data.user.username,  // Support both field names
         name: data.user.name,
         email: data.user.email,
         avatar_url: data.user.avatar_url,
-        provider: 'github',
+        provider: data.user.provider || 'github',  // Default to GitHub for backwards compat
       },
       authenticated: true,
       accessToken: data.accessToken,
@@ -248,14 +264,29 @@ export function clearSessionCache(): void {
 /**
  * Get login URL for a provider
  */
-export function getLoginUrl(provider: 'github' = 'github'): string {
-  // Currently only GitHub, but ready for extension
+export function getLoginUrl(provider: OAuthProviderName = 'github', returnTo?: string): string {
+  let url: string;
+  
   switch (provider) {
     case 'github':
-      return withBasePath('api/auth/github');
+      url = withBasePath('api/auth/github');
+      break;
+    case 'gitlab':
+      url = withBasePath('api/auth/gitlab');
+      break;
+    case 'google':
+      url = withBasePath('api/auth/google'); // Future implementation
+      break;
     default:
       throw new Error(`Unknown auth provider: ${provider}`);
   }
+  
+  // Add returnTo parameter if provided
+  if (returnTo) {
+    url += `?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+  
+  return url;
 }
 
 /**

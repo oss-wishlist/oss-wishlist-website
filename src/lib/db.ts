@@ -9,6 +9,12 @@ import * as path from 'path';
 
 const { Pool } = pg;
 
+// Disable SSL certificate validation for development/staging with self-signed certs
+// This must be set before any SSL connections are made
+if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' || import.meta.env?.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 // Load DATABASE_URL from .env file if not in environment
 let DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL && typeof import.meta.env?.DATABASE_URL !== 'undefined') {
@@ -79,7 +85,8 @@ export async function query<T extends pg.QueryResultRow = any>(text: string, par
   try {
     const res = await pool.query<T>(text, params);
     const duration = Date.now() - start;
-    console.log('[Database] Executed query', { text: text.substring(0, 100), duration, rows: res.rowCount });
+    // Query logging disabled - uncomment if needed for debugging
+    // console.log('[Database] Executed query', { text: text.substring(0, 100), duration, rows: res.rowCount });
     return res;
   } catch (error) {
     console.error('[Database] Query error', { text, params, error });

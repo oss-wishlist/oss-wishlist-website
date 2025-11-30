@@ -13,6 +13,7 @@ interface WishlistData {
 
 /**
  * Parse owner and repo from GitHub URL
+ * Validates that the URL is specifically from GitHub (not GitLab or other providers)
  */
 function parseRepoUrl(repoUrl: string): { owner: string; repo: string } {
   const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
@@ -20,6 +21,14 @@ function parseRepoUrl(repoUrl: string): { owner: string; repo: string } {
     throw new Error(`Invalid GitHub repository URL: ${repoUrl}`);
   }
   return { owner: match[1], repo: match[2].replace(/\.git$/, '') };
+}
+
+/**
+ * Validate that repository URL is from GitHub (not GitLab or other providers)
+ * FUNDING.yml is a GitHub-specific feature
+ */
+function isGitHubRepository(repoUrl: string): boolean {
+  return /^https?:\/\/(www\.)?github\.com\//.test(repoUrl);
 }
 
 /**
@@ -342,6 +351,18 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     console.log(`[funding-pr] Wishlist data: approved=${wishlist.approved}, funding_yml=${wishlist.funding_yml}, funding_yml_processed=${wishlist.funding_yml_processed}`);
+
+    // Validate repository is from GitHub (FUNDING.yml is GitHub-specific)
+    if (!isGitHubRepository(wishlist.repository_url)) {
+      console.log(`[funding-pr] Repository is not from GitHub: ${wishlist.repository_url}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'FUNDING.yml is only supported for GitHub repositories', 
+          status: 'skipped' 
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Check conditions
     if (!wishlist.approved) {

@@ -1,13 +1,12 @@
 import type { APIRoute } from 'astro';
 import { 
   verifyState, 
-  exchangeCodeForToken, 
-  fetchGitHubUser, 
-  fetchUserRepositories,
   createSession,
   verifySession,
-  type SessionData
 } from '../../lib/github-oauth';
+import type { SessionData as OldSessionData } from '../../lib/github-oauth';
+import type { SessionData, OAuthProviderName } from '../../lib/oauth/types';
+import { getOAuthProvider } from '../../lib/oauth/registry';
 import { withBasePath, withBaseUrl } from '../../lib/paths';
 
 export const prerender = false;
@@ -45,7 +44,8 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const error = url.searchParams.get('error');
   
   // Check if we already have a VALID session to prevent double processing
-  const existingSessionCookie = cookies.get('github_session')?.value;
+  // Check both new and old cookie names
+  const existingSessionCookie = cookies.get('oss_session')?.value || cookies.get('github_session')?.value;
   if (existingSessionCookie && code) {
     // Verify if the session is actually valid
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
@@ -54,12 +54,14 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     // If session exists but doesn't have accessToken, clear it (old format)
     if (sessionData && !sessionData.accessToken) {
       cookies.delete('github_session', { path: '/' });
+      cookies.delete('oss_session', { path: '/' });
     } else if (sessionData) {
         const normalized = resolveNormalizedReturnPath();
         return redirect(withBasePath(normalized));
     } else {
-      // Clear the invalid cookie
+      // Clear the invalid cookies
       cookies.delete('github_session', { path: '/' });
+      cookies.delete('oss_session', { path: '/' });
     }
   }
   
@@ -78,8 +80,8 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   
   // Check if this code was already used (prevents duplicate processing)
   if (usedCodes.has(code)) {
-    // Check if user has a valid session
-    const existingSession = cookies.get('github_session')?.value;
+    // Check if user has a valid session (check both new and old cookie names)
+    const existingSession = cookies.get('oss_session')?.value || cookies.get('github_session')?.value;
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
     
     if (existingSession) {
@@ -108,11 +110,12 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   
   // Verify state parameter
   const storedState = cookies.get('oauth_state')?.value;
+  const providerName = (cookies.get('oauth_provider')?.value || 'github') as OAuthProviderName;
   
   // If no stored state, this might be a duplicate/refresh of the callback
   if (!storedState) {
     // Check if user has a valid session
-    const existingSession = cookies.get('github_session')?.value;
+    const existingSession = cookies.get('oss_session')?.value || cookies.get('github_session')?.value;
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
     
     if (existingSession) {
@@ -133,36 +136,57 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     return redirect(withBasePath(normalized));
   }
   
-  // Clear the state cookie
+  // Clear the state and provider cookies
   cookies.delete('oauth_state');
+  cookies.delete('oauth_provider');
   
   try {
-    const clientId = import.meta.env.GITHUB_CLIENT_ID;
-    const clientSecret = import.meta.env.GITHUB_CLIENT_SECRET;
-    const redirectUri = import.meta.env.GITHUB_REDIRECT_URI;
+    // Get the OAuth provider based on the stored provider name
+    const provider = getOAuthProvider(providerName);
     
-    if (!clientId || !clientSecret || !redirectUri) {
-      throw new Error('GitHub OAuth configuration missing');
+    if (!provider) {
+      throw new Error(`OAuth provider '${providerName}' not configured`);
     }
     
     // Exchange code for access token
-    const accessToken = await exchangeCodeForToken(clientId, clientSecret, code, redirectUri);
+    const accessToken = await provider.exchangeCodeForToken(code);
     
     // Get user information
-    const user = await fetchGitHubUser(accessToken);
+    const userProfile = await provider.fetchUserProfile(accessToken);
     
-    // Create session data with MINIMAL info to avoid cookie size limits
+    // Fetch repositories and store minimal info in session to avoid rate limits
+    // Only store essential fields to keep cookie size manageable
+    let repositories: Array<{
+      id: string | number;
+      name: string;
+      full_name: string;
+      html_url: string;
+      description: string | null;
+      private: boolean;
+    }> = [];
+    try {
+      const fullRepositories = await provider.fetchUserRepositories(accessToken);
+      // Store only essential fields to minimize session size (cookies have 4KB limit)
+      repositories = fullRepositories.map(repo => ({
+        id: repo.id,
+        name: repo.name,
+        full_name: repo.full_name,
+        html_url: repo.html_url,
+        description: repo.description,
+        private: repo.private,
+      }));
+    } catch (repoError) {
+      console.error(`[OAuth] Failed to fetch repositories during login:`, repoError);
+      // Continue without repositories - they can be fetched later if needed
+    }
+    
+    // Create session data with repositories to avoid rate limits on subsequent requests
     const sessionData: SessionData = {
-      user: {
-        id: user.id,
-        login: user.login,
-        name: user.name,
-        email: user.email,
-        avatar_url: user.avatar_url,
-      },
-      repositories: [], // Don't store repos in cookie - fetch via API instead!
+      user: userProfile,
       authenticated: true,
-      accessToken: accessToken, // Store token for API calls (small string, ~40 chars)
+      accessToken: accessToken,
+      provider: providerName,
+      repositories: repositories, // Include repos to avoid hitting rate limits
     };
     
     // Create signed session token
@@ -178,13 +202,25 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     const basePath = import.meta.env.BASE_URL || '/';
     const cookiePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
     
-    cookies.set('github_session', sessionToken, {
+    // Use new unified cookie name
+    cookies.set('oss_session', sessionToken, {
       path: cookiePath || '/',
       maxAge: maxAge,
       httpOnly: true,
       sameSite: 'lax',
       secure: import.meta.env.PROD
     });
+    
+    // Also set with old name for backwards compatibility (will be removed in future)
+    if (providerName === 'github') {
+      cookies.set('github_session', sessionToken, {
+        path: cookiePath || '/',
+        maxAge: maxAge,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: import.meta.env.PROD
+      });
+    }
     
     // Resolve desired return path and clear cookie if set
     const normalized = resolveNormalizedReturnPath();
@@ -193,10 +229,10 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     const redirectPath = withBasePath(normalized);
     return redirect(redirectPath);
   } catch (error) {
-    console.error('Error in GitHub OAuth callback:', error);
+    console.error(`Error in ${providerName} OAuth callback:`, error);
     
     // If we already have a session set, the error might be from a duplicate request
-    const existingSession = cookies.get('github_session')?.value;
+    const existingSession = cookies.get('oss_session')?.value || cookies.get('github_session')?.value;
     if (existingSession) {
       const normalized = resolveNormalizedReturnPath();
       return redirect(withBasePath(normalized));

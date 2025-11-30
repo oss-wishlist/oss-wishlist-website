@@ -130,7 +130,9 @@ if (user?.login) {
               <a href={`${basePath}terms`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">Terms & Conditions</a>
               <div class="border-t my-1"></div>
               {user ? (
-                <a href={`${basePath}api/auth/logout`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">Logout</a>
+                <a href={`${basePath}api/auth/logout`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">
+                  Logout of {user.provider === 'github' ? 'GitHub' : user.provider === 'gitlab' ? 'GitLab' : user.provider || 'Account'}
+                </a>
               ) : (
                 <a href={`${basePath}login`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">Login</a>
               )}
@@ -170,7 +172,9 @@ if (user?.login) {
         <a href={`${basePath}faq`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">FAQ</a>
         <div class="border-t border-gray-200 my-2"></div>
         {user ? (
-          <a href={`${basePath}api/auth/logout`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Logout</a>
+          <a href={`${basePath}api/auth/logout`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">
+            Logout of {user.provider === 'github' ? 'GitHub' : user.provider === 'gitlab' ? 'GitLab' : user.provider || 'Account'}
+          </a>
         ) : (
           <a href={`${basePath}login`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Login</a>
         )}

@@ -4,7 +4,10 @@ export const prerender = false;
 
 // Support both GET and POST for logout
 export const GET: APIRoute = async ({ cookies, redirect }) => {
-  // Clear the session cookie (standard logout - doesn't revoke OAuth)
+  // Clear both session cookies (multi-provider and legacy)
+  cookies.delete('oss_session', {
+    path: '/',
+  });
   cookies.delete('github_session', {
     path: '/',
   });
@@ -15,7 +18,10 @@ export const GET: APIRoute = async ({ cookies, redirect }) => {
 };
 
 export const POST: APIRoute = async ({ cookies, redirect }) => {
-  // Clear the session cookie (standard logout - doesn't revoke OAuth)
+  // Clear both session cookies (multi-provider and legacy)
+  cookies.delete('oss_session', {
+    path: '/',
+  });
   cookies.delete('github_session', {
     path: '/',
   });

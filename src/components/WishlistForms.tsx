@@ -81,6 +81,7 @@ interface GitHubUser {
   avatar_url: string;
   repositories: GitHubRepository[];
   authenticated: boolean;
+  provider?: 'github' | 'gitlab' | 'google';  // OAuth provider (default: github for backwards compat)
 }
 
 interface GitHubRepository {
@@ -1968,31 +1969,32 @@ ${repositories[0].url}
             </div>
           </div>
 
-          {/* FUNDING.yml Checkbox (still in Project Info section) */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className={`p-4 rounded-lg border ${manualRepoData || fundingYmlProcessed ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200'}`}>
-              <label className={`flex items-start space-x-3 ${manualRepoData || fundingYmlProcessed ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
-                <input
-                  type="checkbox"
-                  checked={createFundingPR && !manualRepoData && !fundingYmlProcessed}
-                  onChange={(e) => setCreateFundingPR(e.target.checked)}
-                  disabled={!!manualRepoData || fundingYmlProcessed}
-                  className="mt-0.5 h-5 w-5 text-gray-900 border-gray-300 rounded focus:ring-gray-500 disabled:cursor-not-allowed"
-                />
-                <div className="flex-1">
-                  <span className="text-gray-900 font-medium text-sm">Create a PR to add FUNDING.yml to this repository</span>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {fundingYmlProcessed 
-                      ? 'FUNDING.yml PR has already been created for this repository'
-                      : manualRepoData 
-                        ? 'Only available for GitHub repositories selected from your account' 
+          {/* FUNDING.yml Checkbox (GitHub-only feature) */}
+          {/* Only show for GitHub-authenticated users with GitHub-sourced repositories */}
+          {(!initialUser?.provider || initialUser.provider === 'github') && !manualRepoData && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className={`p-4 rounded-lg border ${fundingYmlProcessed ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200'}`}>
+                <label className={`flex items-start space-x-3 ${fundingYmlProcessed ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={createFundingPR && !fundingYmlProcessed}
+                    onChange={(e) => setCreateFundingPR(e.target.checked)}
+                    disabled={fundingYmlProcessed}
+                    className="mt-0.5 h-5 w-5 text-gray-900 border-gray-300 rounded focus:ring-gray-500 disabled:cursor-not-allowed"
+                  />
+                  <div className="flex-1">
+                    <span className="text-gray-900 font-medium text-sm">Create a PR to add FUNDING.yml to this repository</span>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {fundingYmlProcessed 
+                        ? 'FUNDING.yml PR has already been created for this repository'
                         : 'Automatically submit a pull request to add GitHub Sponsors funding information to your repo'
-                    }
-                  </p>
-                </div>
-              </label>
+                      }
+                    </p>
+                  </div>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ========== SECTION 4: WHO SHOULD DO THE WORK ========== */}
           {/* Helper Preferences and Nomination */}

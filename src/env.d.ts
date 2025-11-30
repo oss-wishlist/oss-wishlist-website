@@ -7,6 +7,10 @@ interface ImportMetaEnv {
   readonly GITHUB_CLIENT_ID: string;
   readonly GITHUB_CLIENT_SECRET: string;
   readonly GITHUB_REDIRECT_URI: string;
+  readonly GITLAB_CLIENT_ID: string;
+  readonly GITLAB_CLIENT_SECRET: string;
+  readonly GITLAB_REDIRECT_URI: string;
+  readonly GITLAB_BASE_URL: string;
   readonly OAUTH_STATE_SECRET: string;
   readonly STRIPE_SECRET_KEY: string;
   readonly STRIPE_PUBLISHABLE_KEY: string;

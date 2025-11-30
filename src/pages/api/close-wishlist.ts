@@ -8,7 +8,7 @@ export const prerender = false;
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     // Get and verify session
-    const sessionCookie = cookies.get('github_session');
+    const sessionCookie = cookies.get('oss_session') || cookies.get('github_session');
     
     if (!sessionCookie?.value) {
       return jsonError('Unauthorized', 'You must be logged in to close a wishlist', 401);
@@ -18,6 +18,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const session = verifySession(sessionCookie.value, sessionSecret);
     
     if (!session) {
+      cookies.delete('oss_session', { path: '/' });
       cookies.delete('github_session', { path: '/' });
       return jsonError('Unauthorized', 'Invalid session. Please log in again.', 401);
     }

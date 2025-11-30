@@ -138,13 +138,7 @@ export async function fetchGitHubUser(accessToken: string): Promise<GitHubUser> 
  * Fetch user's public repositories using their username
  * This uses the public API and doesn't require repo OAuth scopes
  */
-export async function fetchUserRepositories(username: string): Promise<GitHubRepository[]> {
-  // Accept an optional accessToken for authenticated requests
-  let accessToken = undefined;
-  if (arguments.length > 1 && typeof arguments[1] === 'string') {
-    accessToken = arguments[1];
-  }
-
+export async function fetchUserRepositories(username: string, accessToken?: string): Promise<GitHubRepository[]> {
   // Timeout helper
   function fetchWithTimeout(resource: RequestInfo, options: RequestInit = {}, timeout = 10000) {
     return Promise.race([
@@ -216,19 +210,21 @@ export async function revokeGitHubToken(
 }
 
 /**
- * Session data interface
+ * Session data interface (legacy - kept for backwards compatibility)
  */
 export interface SessionData {
   user: GitHubUser;
   repositories: GitHubRepository[];
   authenticated: boolean;
   accessToken?: string; // OAuth access token for API calls
+  provider?: string; // OAuth provider name (for multi-provider support)
 }
 
 /**
  * Create a signed session token
+ * Accepts both old format (with repositories) and new format (without repositories)
  */
-export function createSession(data: SessionData, secret: string): string {
+export function createSession(data: SessionData | any, secret: string): string {
   if (typeof window !== 'undefined') {
     throw new Error('Session creation must be done server-side');
   }
@@ -245,8 +241,9 @@ export function createSession(data: SessionData, secret: string): string {
 
 /**
  * Verify and decode a session token
+ * Returns both old format (with repositories) and new format (without repositories)
  */
-export function verifySession(sessionToken: string, secret?: string): SessionData | null {
+export function verifySession(sessionToken: string, secret?: string): SessionData | any | null {
   try {
     if (typeof window !== 'undefined') {
       throw new Error('Session verification must be done server-side');

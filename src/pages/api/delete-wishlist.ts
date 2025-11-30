@@ -13,7 +13,7 @@ export const prerender = false;
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     // Verify user authentication
-    const sessionCookie = cookies.get('github_session');
+    const sessionCookie = cookies.get('oss_session') || cookies.get('github_session');
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
 
     if (!sessionCookie?.value) {
