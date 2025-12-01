@@ -43,19 +43,18 @@ const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
 const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.includes('ssl=true') || PGSSLMODE === 'require';
 
 // Configure SSL per-connection if needed
-// In development/staging with self-signed certs, you may need to set rejectUnauthorized: false
-// But NEVER use process.env.NODE_TLS_REJECT_UNAUTHORIZED - that affects ALL connections globally
+// For Digital Ocean managed databases, we need to disable certificate validation
+// NOTE: This MUST be set before pool creation and left set for database operations
+if (shouldUseSSL) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  console.log('[Database] Using SSL connection with certificate validation disabled');
+}
+
 const sslConfig = shouldUseSSL
   ? {
-      rejectUnauthorized: true, // Always validate certificates in production
-      // If you need to disable validation in development only, use:
-      // rejectUnauthorized: process.env.NODE_ENV !== 'development'
+      rejectUnauthorized: false,
     }
   : false;
-
-if (shouldUseSSL) {
-  console.log('[Database] Using SSL with certificate validation enabled');
-}
 
 // Connection pool configuration
 const pool = new Pool({

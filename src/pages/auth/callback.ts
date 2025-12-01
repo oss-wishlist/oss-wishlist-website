@@ -154,39 +154,17 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     // Get user information
     const userProfile = await provider.fetchUserProfile(accessToken);
     
-    // Fetch repositories and store minimal info in session to avoid rate limits
-    // Only store essential fields to keep cookie size manageable
-    let repositories: Array<{
-      id: string | number;
-      name: string;
-      full_name: string;
-      html_url: string;
-      description: string | null;
-      private: boolean;
-    }> = [];
-    try {
-      const fullRepositories = await provider.fetchUserRepositories(accessToken);
-      // Store only essential fields to minimize session size (cookies have 4KB limit)
-      repositories = fullRepositories.map(repo => ({
-        id: repo.id,
-        name: repo.name,
-        full_name: repo.full_name,
-        html_url: repo.html_url,
-        description: repo.description,
-        private: repo.private,
-      }));
-    } catch (repoError) {
-      console.error(`[OAuth] Failed to fetch repositories during login:`, repoError);
-      // Continue without repositories - they can be fetched later if needed
-    }
+    // DON'T fetch or store repositories in session - cookies have 4KB limit!
+    // Repositories will be fetched on-demand via API when needed
+    // Only store the access token so we can make API calls later
     
-    // Create session data with repositories to avoid rate limits on subsequent requests
+    // Create session data WITHOUT repositories to keep cookie size small
     const sessionData: SessionData = {
       user: userProfile,
       authenticated: true,
       accessToken: accessToken,
       provider: providerName,
-      repositories: repositories, // Include repos to avoid hitting rate limits
+      repositories: [], // Empty - fetch on demand instead!
     };
     
     // Create signed session token
@@ -199,28 +177,22 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     
     // Set session cookie using Astro's API
     const maxAge = 60 * 60 * 24; // 24 hours
-    const basePath = import.meta.env.BASE_URL || '/';
-    const cookiePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
     
-    // Use new unified cookie name
-    cookies.set('oss_session', sessionToken, {
-      path: cookiePath || '/',
+    // IMPORTANT: In development, always use '/' as the path
+    // In production with base path, use the base path
+    const isDev = !import.meta.env.PROD;
+    const cookiePath = isDev ? '/' : (import.meta.env.BASE_URL || '/');
+    
+    const cookieOptions = {
+      path: cookiePath,
       maxAge: maxAge,
       httpOnly: true,
-      sameSite: 'lax',
-      secure: import.meta.env.PROD
-    });
+      sameSite: 'lax' as const,
+      secure: import.meta.env.PROD,
+    };
     
-    // Also set with old name for backwards compatibility (will be removed in future)
-    if (providerName === 'github') {
-      cookies.set('github_session', sessionToken, {
-        path: cookiePath || '/',
-        maxAge: maxAge,
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: import.meta.env.PROD
-      });
-    }
+    // Use new unified cookie name
+    cookies.set('oss_session', sessionToken, cookieOptions);
     
     // Resolve desired return path and clear cookie if set
     const normalized = resolveNormalizedReturnPath();
