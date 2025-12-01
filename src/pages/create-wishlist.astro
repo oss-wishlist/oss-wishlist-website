@@ -3,8 +3,10 @@ import Layout from '../components/Layout.astro';
 import WishlistForm from '../components/WishlistForms.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
-import { fetchUserRepositories } from '../lib/github-oauth';
 import { getAllPractitioners } from '../lib/db';
+import { getOAuthProvider } from '../lib/oauth/registry.js';
+import { verifySession } from '../lib/github-oauth';
+import type { OAuthProviderName } from '../lib/oauth/types';
 
 const services = await getCollection('services');
 
@@ -74,12 +76,51 @@ if (!user) {
   return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
 }
 
-// Fetch user's repositories server-side (client-side will filter out existing wishlists)
+// Fetch user's repositories server-side using the correct OAuth provider
 let userRepositories = [];
 try {
-  userRepositories = await fetchUserRepositories(user.login);
+  // Get the session data first to check if we have cached repositories
+  const sessionCookie = Astro.cookies.get('oss_session')?.value || Astro.cookies.get('github_session')?.value;
+  if (sessionCookie) {
+    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET || process.env.OAUTH_STATE_SECRET;
+    if (!sessionSecret) {
+      throw new Error('Session secret not configured');
+    }
+    
+    const sessionData = verifySession(sessionCookie, sessionSecret);
+    
+    // First, try to use cached repositories from session (avoids rate limits)
+    if (sessionData?.repositories && sessionData.repositories.length > 0) {
+      userRepositories = sessionData.repositories;
+      console.log(`[create-wishlist] Using ${userRepositories.length} cached repositories from session`);
+    } else {
+      // Fall back to fetching repositories if not in session (e.g., old sessions)
+      const providerName: OAuthProviderName = (user.provider as OAuthProviderName) || 'github';
+      const provider = getOAuthProvider(providerName);
+      
+      if (provider && sessionData?.accessToken) {
+        try {
+          const fullRepos = await provider.fetchUserRepositories(sessionData.accessToken);
+          // Convert to minimal format matching session storage
+          userRepositories = fullRepos.map(repo => ({
+            id: repo.id,
+            name: repo.name,
+            full_name: repo.full_name,
+            html_url: repo.html_url,
+            description: repo.description,
+            private: repo.private,
+          }));
+          console.log(`[create-wishlist] Fetched ${userRepositories.length} repositories from ${providerName}`);
+        } catch (fetchError) {
+          console.error('[create-wishlist] Error fetching repositories from provider:', fetchError);
+        }
+      } else {
+        console.error(`[create-wishlist] OAuth provider not available or no access token: ${providerName}`);
+      }
+    }
+  }
 } catch (error) {
-  console.error('Error fetching repositories:', error);
+  console.error('[create-wishlist] Error loading repositories:', error);
 }
 ---
 

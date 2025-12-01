@@ -5,7 +5,14 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ cookies }) => {
   try {
-    const sessionCookie = cookies.get('github_session');
+    // Try new unified cookie first, then fall back to old github_session
+    let sessionCookie = cookies.get('oss_session');
+    let cookieName = 'oss_session';
+    
+    if (!sessionCookie?.value) {
+      sessionCookie = cookies.get('github_session');
+      cookieName = 'github_session';
+    }
     
     if (!sessionCookie?.value) {
       return new Response(JSON.stringify({ authenticated: false }), {
@@ -16,13 +23,13 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
 
-  const sessionSecret = import.meta.env.OAUTH_STATE_SECRET || process.env.OAUTH_STATE_SECRET;
+    const sessionSecret = import.meta.env.OAUTH_STATE_SECRET || process.env.OAUTH_STATE_SECRET;
     
     const session = verifySession(sessionCookie.value, sessionSecret);
     
     if (!session) {
       // Clear invalid cookie
-      cookies.delete('github_session', { path: '/' });
+      cookies.delete(cookieName, { path: '/' });
       return new Response(JSON.stringify({ authenticated: false }), {
         status: 401,
         headers: {
@@ -32,7 +39,6 @@ export const GET: APIRoute = async ({ cookies }) => {
     }
     
     // Return session even if accessToken is missing (legacy sessions)
-
     return new Response(JSON.stringify(session), {
       status: 200,
       headers: {

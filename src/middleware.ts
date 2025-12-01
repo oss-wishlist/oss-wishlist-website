@@ -117,7 +117,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
   
   // Add security headers
-  // Content Security Policy - Allow same origin, GitHub OAuth, and necessary external resources
+  // Content Security Policy - Allow same origin, GitHub/GitLab OAuth, and necessary external resources
   response.headers.set(
     'Content-Security-Policy',
     [
@@ -126,7 +126,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
       "img-src 'self' data: https:", // Allow images from HTTPS and data URIs
       "font-src 'self'",
-      "connect-src 'self' https://api.github.com", // GitHub API for OAuth
+      "connect-src 'self' https://api.github.com https://gitlab.com", // GitHub and GitLab APIs for OAuth
       "frame-ancestors 'none'", // Prevent clickjacking
       "base-uri 'self'",
       "form-action 'self'"

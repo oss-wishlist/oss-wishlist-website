@@ -6,7 +6,7 @@ import { getCollection } from 'astro:content';
 import { verifySession } from '../lib/github-oauth';
 
 // Check if user is logged in
-const sessionCookie = Astro.cookies.get('github_session');
+const sessionCookie = Astro.cookies.get('oss_session') || Astro.cookies.get('github_session');
 const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
 let session = null;
 let userPractitioner = null;
@@ -19,7 +19,7 @@ if (sessionCookie?.value) {
     const origin = Astro.url.origin;
     const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
       headers: {
-        'Cookie': `github_session=${sessionCookie.value}`
+        'Cookie': `oss_session=${sessionCookie.value}`
       }
     });
     if (myPractitionerResponse.ok) {

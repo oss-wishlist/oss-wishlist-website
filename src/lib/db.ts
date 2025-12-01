@@ -39,18 +39,22 @@ if (!DATABASE_URL) {
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
 
 // SSL configuration for Digital Ocean managed PostgreSQL
-// Temporarily disabling certificate validation due to intermediate CA chain issues
-// TODO: Get complete certificate chain from Digital Ocean
+// Per-connection SSL configuration (not global process modification)
 const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.includes('ssl=true') || PGSSLMODE === 'require';
 
+// Configure SSL per-connection if needed
+// In development/staging with self-signed certs, you may need to set rejectUnauthorized: false
+// But NEVER use process.env.NODE_TLS_REJECT_UNAUTHORIZED - that affects ALL connections globally
 const sslConfig = shouldUseSSL
   ? {
-      rejectUnauthorized: false, // Temporarily disabled - cert chain incomplete
+      rejectUnauthorized: true, // Always validate certificates in production
+      // If you need to disable validation in development only, use:
+      // rejectUnauthorized: process.env.NODE_ENV !== 'development'
     }
   : false;
 
 if (shouldUseSSL) {
-  console.log('[Database] Using SSL with certificate validation temporarily disabled');
+  console.log('[Database] Using SSL with certificate validation enabled');
 }
 
 // Connection pool configuration
@@ -79,7 +83,8 @@ export async function query<T extends pg.QueryResultRow = any>(text: string, par
   try {
     const res = await pool.query<T>(text, params);
     const duration = Date.now() - start;
-    console.log('[Database] Executed query', { text: text.substring(0, 100), duration, rows: res.rowCount });
+    // Query logging disabled - uncomment if needed for debugging
+    // console.log('[Database] Executed query', { text: text.substring(0, 100), duration, rows: res.rowCount });
     return res;
   } catch (error) {
     console.error('[Database] Query error', { text, params, error });

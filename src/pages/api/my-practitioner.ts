@@ -7,7 +7,7 @@ export const prerender = false;
 export const GET: APIRoute = async ({ cookies }) => {
   try {
     // Verify user is logged in
-    const sessionCookie = cookies.get('github_session');
+    const sessionCookie = cookies.get('oss_session') || cookies.get('github_session');
     if (!sessionCookie?.value) {
       return new Response(JSON.stringify({
         success: false,

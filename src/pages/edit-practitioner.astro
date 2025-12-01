@@ -14,10 +14,10 @@ if (!user) {
 
 // Fetch user's practitioner profile
 const origin = Astro.url.origin;
-const sessionCookie = Astro.cookies.get('github_session');
+const sessionCookie = Astro.cookies.get('oss_session') || Astro.cookies.get('github_session');
 const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
   headers: {
-    'Cookie': `github_session=${sessionCookie?.value}`
+    'Cookie': `oss_session=${sessionCookie?.value}`
   }
 });
 

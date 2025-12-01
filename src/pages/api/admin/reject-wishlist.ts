@@ -6,12 +6,10 @@ import { triggerJsonUpdate } from '../../../lib/trigger-json-update';
 
 export const prerender = false;
 
-const ADMIN_USERNAMES = (process.env.ADMIN_USERNAMES || 'emmairwin').split(',');
-
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Verify admin session
-    const sessionCookie = cookies.get('github_session');
+    // Verify admin session (check both new and legacy cookies)
+    const sessionCookie = cookies.get('oss_session') || cookies.get('github_session');
     if (!sessionCookie?.value) {
       return jsonError('Unauthorized', 'Admin access required', 401);
     }
@@ -19,7 +17,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
     const session = verifySession(sessionCookie.value, sessionSecret);
     
-    if (!session?.user?.login || !ADMIN_USERNAMES.includes(session.user.login)) {
+    // Read admin usernames dynamically from environment
+    const ADMIN_USERNAMES = (import.meta.env.ADMIN_USERNAMES || 'emmairwin').split(',').map(u => u.trim());
+    
+    // Check both login (GitHub) and username (all providers) fields
+    const userIdentifier = session?.user?.login || session?.user?.username;
+    if (!userIdentifier || !ADMIN_USERNAMES.includes(userIdentifier)) {
       return jsonError('Forbidden', 'Admin access required', 403);
     }
 
@@ -35,7 +38,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return jsonError('Not Found', 'Wishlist not found', 404);
     }
 
-    console.log(`[admin] Rejected wishlist #${id} by @${session.user.login}`);
+    console.log(`[admin] Rejected wishlist #${id} by @${userIdentifier}`);
 
     // Trigger JSON feed update
     triggerJsonUpdate('rejected', id).catch(err => 

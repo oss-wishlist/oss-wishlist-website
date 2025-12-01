@@ -52,6 +52,15 @@ export const GET: APIRoute = async ({ cookies, redirect, locals, request }) => {
     maxAge: 60 * 10, // 10 minutes
     path: '/'
   });
+  
+  // Store provider name for callback to know which provider to use
+  cookies.set('oauth_provider', 'github', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 10, // 10 minutes
+    path: '/'
+  });
 
   // Redirect to GitHub OAuth
   const authUrl = getGitHubAuthUrl(clientId, redirectUri, state, forceLogin);
