@@ -9,12 +9,6 @@ import * as path from 'path';
 
 const { Pool } = pg;
 
-// Disable SSL certificate validation for development/staging with self-signed certs
-// This must be set before any SSL connections are made
-if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' || import.meta.env?.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
-
 // Load DATABASE_URL from .env file if not in environment
 let DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL && typeof import.meta.env?.DATABASE_URL !== 'undefined') {
@@ -45,18 +39,22 @@ if (!DATABASE_URL) {
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
 
 // SSL configuration for Digital Ocean managed PostgreSQL
-// Temporarily disabling certificate validation due to intermediate CA chain issues
-// TODO: Get complete certificate chain from Digital Ocean
+// Per-connection SSL configuration (not global process modification)
 const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.includes('ssl=true') || PGSSLMODE === 'require';
 
+// Configure SSL per-connection if needed
+// In development/staging with self-signed certs, you may need to set rejectUnauthorized: false
+// But NEVER use process.env.NODE_TLS_REJECT_UNAUTHORIZED - that affects ALL connections globally
 const sslConfig = shouldUseSSL
   ? {
-      rejectUnauthorized: false, // Temporarily disabled - cert chain incomplete
+      rejectUnauthorized: true, // Always validate certificates in production
+      // If you need to disable validation in development only, use:
+      // rejectUnauthorized: process.env.NODE_ENV !== 'development'
     }
   : false;
 
 if (shouldUseSSL) {
-  console.log('[Database] Using SSL with certificate validation temporarily disabled');
+  console.log('[Database] Using SSL with certificate validation enabled');
 }
 
 // Connection pool configuration
