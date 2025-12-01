@@ -230,6 +230,9 @@ export function createSession(data: SessionData | any, secret: string): string {
   }
   
   const payload = JSON.stringify(data);
+  // lgtm[js/insufficient-password-hash]
+  // Note: This is HMAC for session signing, not password hashing
+  // HMAC-SHA256 is appropriate for message authentication
   const signature = createHmac('sha256', secret)
     .update(payload)
     .digest('hex');
