@@ -1287,7 +1287,7 @@ ${repositories[0].url}
                     type="url"
                     value={manualRepoUrl}
                     onChange={(e) => setManualRepoUrl(e.target.value)}
-                    placeholder="https://github.com/owner/repo"
+                    placeholder="https://yourproject.com/repo"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   />
                 </div>
