@@ -52,9 +52,9 @@ export class GitLabOAuthProvider extends BaseOAuthProvider {
     
     const clientId = BaseOAuthProvider.requireEnvVar('GITLAB_CLIENT_ID', 'GitLab');
     const clientSecret = BaseOAuthProvider.requireEnvVar('GITLAB_CLIENT_SECRET', 'GitLab');
-    const redirectUri = BaseOAuthProvider.requireEnvVar('GITLAB_REDIRECT_URI', 'GitLab');
+    const redirectUri = BaseOAuthProvider.requireEnvVar('GITLAB_REDIRECT_URI', 'GitLab').trim();
     // Support self-hosted GitLab instances
-    const baseUrl = BaseOAuthProvider.getEnvVar('GITLAB_BASE_URL') ?? 'https://gitlab.com';
+    const baseUrl = BaseOAuthProvider.getEnvVar('GITLAB_BASE_URL')?.trim() ?? 'https://gitlab.com';
     
     this.baseUrl = baseUrl;
     this.config = {

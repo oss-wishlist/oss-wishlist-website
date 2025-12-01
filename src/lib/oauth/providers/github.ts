@@ -28,7 +28,7 @@ export class GitHubOAuthProvider extends BaseOAuthProvider {
     
     const clientId = BaseOAuthProvider.requireEnvVar('GITHUB_CLIENT_ID', 'GitHub');
     const clientSecret = BaseOAuthProvider.requireEnvVar('GITHUB_CLIENT_SECRET', 'GitHub');
-    const redirectUri = BaseOAuthProvider.requireEnvVar('GITHUB_REDIRECT_URI', 'GitHub');
+    const redirectUri = BaseOAuthProvider.requireEnvVar('GITHUB_REDIRECT_URI', 'GitHub').trim();
     
     this.config = {
       clientId,
