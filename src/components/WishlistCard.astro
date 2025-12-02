@@ -68,13 +68,6 @@ const projectNotes = wishlist.additionalNotes
         <a href={`https://github.com/${wishlist.maintainerUsername}`} target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-gray-900">@{wishlist.maintainerUsername}</a>
       </div>
     </div>
-    <div class="flex flex-col items-end space-y-1">
-      {wishlist.urgency && wishlist.urgency !== 'medium' && (
-        <span class="badge-pending px-2 py-1 text-xs rounded-full">
-          {wishlist.urgency}
-        </span>
-      )}
-    </div>
   </div>
 
   <!-- Project Details -->

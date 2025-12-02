@@ -89,11 +89,6 @@ export default function WishlistCard({ wishlist, basePath, mode, onEdit, onDelet
               {wishlist.approvalStatus === 'pending' ? 'Pending' : 'Approved'}
             </span>
           )}
-          {wishlist.urgency && wishlist.urgency !== 'medium' && (
-            <span className={`px-2 py-1 text-xs rounded-full ${urgencyColorClass}`}>
-              {wishlist.urgency}
-            </span>
-          )}
         </div>
       </div>
 

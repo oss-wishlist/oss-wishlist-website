@@ -145,6 +145,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
     }
 
+    // Initialize email result variables
+    let emailResult: any = { success: false, provider: 'none' };
+    let confirmationResult: any = { success: false };
+
     // Only send emails for new applications, not updates
     if (!isUpdate) {
       // Email subject
@@ -214,7 +218,7 @@ To approve: Update status in database to 'approved' and set approved=true
       }
 
       // Send email using centralized mail service
-      const emailResult = await sendAdminEmail(subject, emailBody);
+      emailResult = await sendAdminEmail(subject, emailBody);
       
       if (!emailResult.success) {
         console.error('Failed to send practitioner admin email:', emailResult.error);
@@ -250,7 +254,7 @@ The OSS Wishlist Team
 ---
 This is an automated confirmation email.`;
 
-      const confirmationResult = await sendEmail({
+      confirmationResult = await sendEmail({
         to: body.email,
         subject: confirmationSubject,
         text: confirmationBody
