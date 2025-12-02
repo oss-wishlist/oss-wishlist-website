@@ -22,7 +22,9 @@ export const GET: APIRoute = async ({ cookies }) => {
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
     const session = verifySession(sessionCookie.value, sessionSecret);
     
-    if (!session || !session.user?.login) {
+    // Support both GitHub (login) and GitLab (username)
+    const userIdentifier = session?.user?.login || session?.user?.username;
+    if (!session || !userIdentifier) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Invalid session',
@@ -33,7 +35,7 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
 
-    const username = session.user.login;
+    const username = userIdentifier;
     const practitioners = await getPractitionersBySubmitter(username);
     
     if (practitioners.length === 0) {

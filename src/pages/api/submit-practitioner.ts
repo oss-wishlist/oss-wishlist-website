@@ -42,7 +42,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    const username = session.user?.login || session.user?.name || 'unknown';
+    // Support both GitHub (login) and GitLab (username)
+    const username = session.user?.login || session.user?.username || 'unknown';
 
     let body;
     try {

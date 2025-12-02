@@ -13,8 +13,9 @@ const user = Astro.locals.user;
 
 // Check if user already has a practitioner profile
 let existingPractitioner = null;
-if (user?.login) {
-  const practitioners = await getPractitionersBySubmitter(user.login);
+const userIdentifier = user?.login || user?.username;
+if (userIdentifier) {
+  const practitioners = await getPractitionersBySubmitter(userIdentifier);
   existingPractitioner = practitioners.length > 0 ? practitioners[0] : null;
 }
 
