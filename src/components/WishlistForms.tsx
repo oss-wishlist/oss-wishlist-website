@@ -138,8 +138,9 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
 
   // Check cache only if we don't have server-provided data
   const initializeFromCache = () => {
-    // If we have server-provided repos, use those
-    if (initialRepositories && initialRepositories.length > 0) {
+    // If we have server-provided repos (even if empty array), use those
+    // Empty array from server means "fetched but user has no repos"
+    if (initialRepositories !== undefined) {
       return { repos: initialRepositories, loading: false };
     }
     
@@ -147,7 +148,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     if (typeof window === 'undefined') return { repos: [], loading: true };
     
     // Use user-specific cache keys to prevent cross-user data leakage
-    const username = initialUser?.login || '';
+    const username = initialUser?.login || initialUser?.username || '';
     if (!username) return { repos: [], loading: true };
     
     const cacheKey = `github_repositories_${username}`;
@@ -251,9 +252,11 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   useEffect(() => {
     // If we have server-provided repos, cache them for future visits with user-specific key
     if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined' && initialUser) {
-      const username = initialUser.login;
-      sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(initialRepositories));
-      sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+      const username = initialUser.login || initialUser.username;
+      if (username) {
+        sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(initialRepositories));
+        sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+      }
     }
     
     // If we have cached repos, check for existing wishlists
@@ -344,9 +347,11 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         
         // Cache repositories in sessionStorage with user-specific key
         if (user) {
-          const username = user.login;
-          sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(repos));
-          sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+          const username = user.login || user.username;
+          if (username) {
+            sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(repos));
+            sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+          }
         }
         
         // Check for existing wishlists for these repositories
