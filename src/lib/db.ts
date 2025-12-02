@@ -173,6 +173,7 @@ export interface Practitioner {
   email?: string;
   website?: string;
   github?: string;
+  gitlab?: string;
   github_sponsors?: string;
   mastodon?: string;
   linkedin?: string;
@@ -472,11 +473,11 @@ export async function createPractitioner(practitioner: Partial<Practitioner>): P
   const result = await query<Practitioner>(
     `INSERT INTO practitioners (
       slug, name, title, company, bio, avatar_url, location, languages,
-      email, website, github, github_sponsors, mastodon, linkedin,
+      email, website, github, gitlab, github_sponsors, mastodon, linkedin,
       services, availability, accepts_pro_bono, pro_bono_criteria, pro_bono_hours_per_month,
       years_experience, notable_experience, certifications,
       approved, verified, submitter_username
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
     RETURNING *`,
     [
       practitioner.slug,
@@ -490,6 +491,7 @@ export async function createPractitioner(practitioner: Partial<Practitioner>): P
       practitioner.email || null,
       practitioner.website || null,
       practitioner.github || null,
+      practitioner.gitlab || null,
       practitioner.github_sponsors || null,
       practitioner.mastodon || null,
       practitioner.linkedin || null,
@@ -527,19 +529,20 @@ export async function updatePractitioner(id: number, updates: Partial<Practition
       email = COALESCE($8, email),
       website = COALESCE($9, website),
       github = COALESCE($10, github),
-      github_sponsors = COALESCE($11, github_sponsors),
-      mastodon = COALESCE($12, mastodon),
-      linkedin = COALESCE($13, linkedin),
-      services = COALESCE($14, services),
-      availability = COALESCE($15, availability),
-      accepts_pro_bono = COALESCE($16, accepts_pro_bono),
-      pro_bono_criteria = COALESCE($17, pro_bono_criteria),
-      pro_bono_hours_per_month = COALESCE($18, pro_bono_hours_per_month),
-      years_experience = COALESCE($19, years_experience),
-      notable_experience = COALESCE($20, notable_experience),
-      certifications = COALESCE($21, certifications),
+      gitlab = COALESCE($11, gitlab),
+      github_sponsors = COALESCE($12, github_sponsors),
+      mastodon = COALESCE($13, mastodon),
+      linkedin = COALESCE($14, linkedin),
+      services = COALESCE($15, services),
+      availability = COALESCE($16, availability),
+      accepts_pro_bono = COALESCE($17, accepts_pro_bono),
+      pro_bono_criteria = COALESCE($18, pro_bono_criteria),
+      pro_bono_hours_per_month = COALESCE($19, pro_bono_hours_per_month),
+      years_experience = COALESCE($20, years_experience),
+      notable_experience = COALESCE($21, notable_experience),
+      certifications = COALESCE($22, certifications),
       updated_at = NOW()
-    WHERE id = $22
+    WHERE id = $23
     RETURNING *`,
     [
       updates.name,
@@ -552,6 +555,7 @@ export async function updatePractitioner(id: number, updates: Partial<Practition
       updates.email,
       updates.website,
       updates.github,
+      updates.gitlab,
       updates.github_sponsors,
       updates.mastodon,
       updates.linkedin,

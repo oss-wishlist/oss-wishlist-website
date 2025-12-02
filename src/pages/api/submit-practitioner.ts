@@ -108,13 +108,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       title: body.title,
       company: body.company || '',
       bio: body.bio,
-      // Avatar: Use GitHub avatar if GitHub username provided, otherwise use default logo
-      avatar_url: body.github ? `https://github.com/${body.github.replace('https://github.com/', '')}.png` : '/images/oss-wishlist-logo.jpg',
+      // Avatar: Use GitHub/GitLab avatar if username provided, otherwise use default logo
+      avatar_url: body.github 
+        ? `https://github.com/${body.github.replace('https://github.com/', '')}.png` 
+        : body.gitlab
+        ? `https://gitlab.com/${body.gitlab.replace('https://gitlab.com/', '')}/avatar?size=200`
+        : '/images/oss-wishlist-logo.jpg',
       location: body.location || '',
       languages: body.languages || ['English'],
       email: body.email,
       website: body.website || undefined,
-      github: body.github || undefined, // Optional: User's GitHub profile URL
+      github: body.github || undefined,
+      gitlab: body.gitlab || undefined,
       github_sponsors: body.githubSponsors || undefined,
       mastodon: body.mastodon || undefined,
       linkedin: body.linkedin || undefined,
