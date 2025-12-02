@@ -42,7 +42,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    const username = session.user?.login || session.user?.name || 'unknown';
+    // Support both GitHub (login) and GitLab (username)
+    const username = session.user?.login || session.user?.username || 'unknown';
 
     let body;
     try {
@@ -108,13 +109,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       title: body.title,
       company: body.company || '',
       bio: body.bio,
-      // Avatar: Use GitHub avatar if GitHub username provided, otherwise use default logo
-      avatar_url: body.github ? `https://github.com/${body.github.replace('https://github.com/', '')}.png` : '/images/oss-wishlist-logo.jpg',
+      // Avatar: Use GitHub/GitLab avatar if username provided, otherwise use default logo
+      avatar_url: body.github 
+        ? `https://github.com/${body.github.replace('https://github.com/', '')}.png` 
+        : body.gitlab
+        ? `https://gitlab.com/${body.gitlab.replace('https://gitlab.com/', '')}/avatar?size=200`
+        : '/images/oss-wishlist-logo.jpg',
       location: body.location || '',
       languages: body.languages || ['English'],
       email: body.email,
       website: body.website || undefined,
-      github: body.github || undefined, // Optional: User's GitHub profile URL
+      github: body.github || undefined,
+      gitlab: body.gitlab || undefined,
       github_sponsors: body.githubSponsors || undefined,
       mastodon: body.mastodon || undefined,
       linkedin: body.linkedin || undefined,
@@ -144,6 +150,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       practitioner = await createPractitioner(practitionerData);
       console.log(`[submit-practitioner] ✓ Created database record for practitioner #${practitioner.id} (${body.fullName})`);
     }
+
+    // Initialize email result variables
+    let emailResult: any = { success: false, provider: 'none' };
+    let confirmationResult: any = { success: false };
 
     // Only send emails for new applications, not updates
     if (!isUpdate) {
@@ -214,7 +224,7 @@ To approve: Update status in database to 'approved' and set approved=true
       }
 
       // Send email using centralized mail service
-      const emailResult = await sendAdminEmail(subject, emailBody);
+      emailResult = await sendAdminEmail(subject, emailBody);
       
       if (!emailResult.success) {
         console.error('Failed to send practitioner admin email:', emailResult.error);
@@ -250,7 +260,7 @@ The OSS Wishlist Team
 ---
 This is an automated confirmation email.`;
 
-      const confirmationResult = await sendEmail({
+      confirmationResult = await sendEmail({
         to: body.email,
         subject: confirmationSubject,
         text: confirmationBody

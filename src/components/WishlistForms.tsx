@@ -138,8 +138,9 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
 
   // Check cache only if we don't have server-provided data
   const initializeFromCache = () => {
-    // If we have server-provided repos, use those
-    if (initialRepositories && initialRepositories.length > 0) {
+    // If we have server-provided repos (even if empty array), use those
+    // Empty array from server means "fetched but user has no repos"
+    if (initialRepositories !== undefined) {
       return { repos: initialRepositories, loading: false };
     }
     
@@ -147,7 +148,7 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     if (typeof window === 'undefined') return { repos: [], loading: true };
     
     // Use user-specific cache keys to prevent cross-user data leakage
-    const username = initialUser?.login || '';
+    const username = initialUser?.login || initialUser?.username || '';
     if (!username) return { repos: [], loading: true };
     
     const cacheKey = `github_repositories_${username}`;
@@ -251,9 +252,11 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
   useEffect(() => {
     // If we have server-provided repos, cache them for future visits with user-specific key
     if (initialRepositories && initialRepositories.length > 0 && typeof window !== 'undefined' && initialUser) {
-      const username = initialUser.login;
-      sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(initialRepositories));
-      sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+      const username = initialUser.login || initialUser.username;
+      if (username) {
+        sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(initialRepositories));
+        sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+      }
     }
     
     // If we have cached repos, check for existing wishlists
@@ -344,9 +347,11 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         
         // Cache repositories in sessionStorage with user-specific key
         if (user) {
-          const username = user.login;
-          sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(repos));
-          sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+          const username = user.login || user.username;
+          if (username) {
+            sessionStorage.setItem(`github_repositories_${username}`, JSON.stringify(repos));
+            sessionStorage.setItem(`github_repositories_timestamp_${username}`, Date.now().toString());
+          }
         }
         
         // Check for existing wishlists for these repositories
@@ -1018,7 +1023,7 @@ ${repositories[0].url}
       );
     }
 
-    // Authenticated user - show repositories and manual entry
+    // Authenticated user - show repositories (or manual entry if no repos)
     return (
       <div className="max-w-4xl mx-auto">
         {/* Success Message - Enhanced Confirmation Page */}
@@ -1095,6 +1100,15 @@ ${repositories[0].url}
               </div>
             )}
 
+            {repositories.length === 0 && !loadingRepos ? (
+              <div className="text-center py-8">
+                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <p className="text-gray-600 mb-1">No repositories found in your account</p>
+                <p className="text-sm text-gray-500">Use the manual entry form below to create a wishlist</p>
+              </div>
+            ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto mb-6">
               {repositories
                 .filter((repo) => !existingWishlists[repo.html_url]) // Filter out repos with existing wishlists
@@ -1211,6 +1225,7 @@ ${repositories[0].url}
                 </div>
               )}
             </div>
+            )}
 
             {selectedRepo && selectedAction && (
               <button

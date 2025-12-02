@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS practitioners (
   email TEXT,
   website TEXT,
   github TEXT,
+  gitlab TEXT,
   github_sponsors TEXT,
   mastodon TEXT,
   linkedin TEXT,

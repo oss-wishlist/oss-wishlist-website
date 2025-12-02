@@ -268,11 +268,6 @@ function WishlistCard({
           <span className="badge-pending px-2 py-1 text-xs rounded-full font-semibold">
             {wishlist.approvalStatus === 'pending' ? 'Pending' : 'Approved'}
           </span>
-          {wishlist.urgency && wishlist.urgency !== 'medium' && (
-            <span className="badge-pending px-2 py-1 text-xs rounded-full">
-              {wishlist.urgency}
-            </span>
-          )}
         </div>
       </div>
 

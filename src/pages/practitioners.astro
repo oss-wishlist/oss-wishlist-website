@@ -15,7 +15,8 @@ if (sessionCookie?.value) {
   session = verifySession(sessionCookie.value, sessionSecret);
   
   // Check if logged-in user has a practitioner profile
-  if (session?.user?.login) {
+  const userIdentifier = session?.user?.login || session?.user?.username;
+  if (userIdentifier) {
     const origin = Astro.url.origin;
     const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
       headers: {

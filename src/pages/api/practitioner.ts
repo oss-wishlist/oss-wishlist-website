@@ -60,6 +60,7 @@ export const GET: APIRoute = async ({ url }) => {
         email: practitioner.email,
         website: practitioner.website,
         github: practitioner.github,
+        gitlab: practitioner.gitlab,
         github_sponsors: practitioner.github_sponsors,
         mastodon: practitioner.mastodon,
         linkedin: practitioner.linkedin,

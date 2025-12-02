@@ -141,14 +141,6 @@ const urgencyColors = {
           
           <!-- Quick Details -->
           <div class="mb-6 space-y-2 text-sm">
-            {wishlistData.urgency && (
-              <div class="flex justify-between">
-                <span class="text-gray-600">Priority</span>
-                <span class={`px-2 py-1 text-xs rounded-full ${urgencyColors[wishlistData.urgency] || urgencyColors.medium}`}>
-                  {wishlistData.urgency}
-                </span>
-              </div>
-            )}
             {wishlistData.projectSize && (
               <div class="flex justify-between">
                 <span class="text-gray-600">Project Size</span>
