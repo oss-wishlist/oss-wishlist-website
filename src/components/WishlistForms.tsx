@@ -1089,7 +1089,8 @@ ${repositories[0].url}
         {/* Only show the form if NOT showing success message */}
         {!success && (
           <>
-        {/* Repositories Section */}
+        {/* Repositories Section - only show if user has repositories */}
+        {repositories.length > 0 && (
         <div className="bg-white p-8 rounded-lg shadow-sm border mb-8">
           <div className="max-w-2xl mx-auto">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Select a Repository</h3>
@@ -1100,15 +1101,6 @@ ${repositories[0].url}
               </div>
             )}
 
-            {repositories.length === 0 && !loadingRepos ? (
-              <div className="text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
-                <p className="text-gray-600 mb-1">No repositories found in your account</p>
-                <p className="text-sm text-gray-500">Use the manual entry form below to create a wishlist</p>
-              </div>
-            ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto mb-6">
               {repositories
                 .filter((repo) => !existingWishlists[repo.html_url]) // Filter out repos with existing wishlists
@@ -1225,7 +1217,6 @@ ${repositories[0].url}
                 </div>
               )}
             </div>
-            )}
 
             {selectedRepo && selectedAction && (
               <button
@@ -1275,6 +1266,7 @@ ${repositories[0].url}
             )}
           </div>
         </div>
+        )}
 
         {/* Manual Entry Form */}
         <div className="bg-white p-8 rounded-lg shadow-sm border mb-8">
@@ -1285,12 +1277,6 @@ ${repositories[0].url}
             <p className="text-gray-600 text-sm mb-4 text-center">
               This can be anywhere.
             </p>
-            
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                <p className="text-red-800 text-sm">{error}</p>
-              </div>
-            )}
             
             <div className="space-y-4">
               <div>
