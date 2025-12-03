@@ -2143,12 +2143,11 @@ ${repositories[0].url}
                 )}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-3 text-center">
-              {isEditingExisting 
-                ? `This will update the existing wishlist (Issue #${existingIssueNumber})` 
-                : 'This will create a GitHub issue with your wishlist details'
-              }
-            </p>
+            {isEditingExisting && (
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                This will update the existing wishlist (Issue #{existingIssueNumber})
+              </p>
+            )}
           </div>
         </form>
       </div>

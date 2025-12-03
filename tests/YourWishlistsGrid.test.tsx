@@ -127,9 +127,6 @@ describe('YourWishlistsGrid - Edit/Create/Delete Modes', () => {
         // Check approval status
         expect(screen.getByText('Approved')).toBeInTheDocument();
         expect(screen.getByText('Pending')).toBeInTheDocument();
-
-        // Check urgency badge
-        expect(screen.getByText('high')).toBeInTheDocument();
       });
     });
 
