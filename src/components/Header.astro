@@ -1,6 +1,6 @@
 ---
 import { getBasePath } from '../lib/paths';
-import { getApprovedPractitioners } from '../lib/db';
+import { getPractitionerByUsername } from '../lib/db';
 
 // This is a standalone header component extracted from Layout.astro
 // It contains the navigation menu with dropdowns for:
@@ -16,15 +16,13 @@ const basePath = getBasePath(); // Returns with trailing slash
 const logoUrl = '/logo.png';
 const user = Astro.locals.user;
 
-// Check if the logged-in user has a practitioner profile
+// Check if the logged-in user has a practitioner profile (optimized query)
 let userPractitionerSlug = null;
-if (user?.login) {
-  const practitioners = await getApprovedPractitioners();
-  const userPractitioner = practitioners.find(p => 
-    p.github_username?.toLowerCase() === user.login.toLowerCase()
-  );
+if (user?.login || user?.username) {
+  const username = user.login || user.username;
+  const userPractitioner = await getPractitionerByUsername(username);
   if (userPractitioner) {
-    userPractitionerSlug = userPractitioner.github_username;
+    userPractitionerSlug = userPractitioner.github || userPractitioner.gitlab;
   }
 }
 ---

@@ -27,8 +27,6 @@ export const prerender = false;
 
 async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
   try {
-    console.log('[wishlists] Fetching from database');
-    
     // Load approved wishlists from database
     const dbWishlists = await getApprovedWishlists();
     
@@ -56,7 +54,6 @@ async function fetchWishlistsFromDatabase(): Promise<Wishlist[]> {
       wishlistUrl: `https://oss-wishlist.com/fulfill?issue=${wishlist.id}`,
     }));
     
-    console.log(`[wishlists] Loaded ${approvedWishlists.length} approved wishlists from database`);
     return approvedWishlists;
   } catch (error) {
     console.error('[wishlists] Error fetching from database:', error);
@@ -68,8 +65,6 @@ export const GET: APIRoute = async () => {
   try {
     // Fetch approved wishlists from database with full data
     const approvedWishlists = await fetchWishlistsFromDatabase();
-    
-    console.log(`[wishlists] Returning ${approvedWishlists.length} approved wishlists`);
 
     // Build response object with full data
     const response = {
@@ -85,7 +80,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60',
+        'Cache-Control': 'public, max-age=300, s-maxage=600',
       },
     });
   } catch (error) {

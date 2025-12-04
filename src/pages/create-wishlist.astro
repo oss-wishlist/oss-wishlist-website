@@ -14,7 +14,6 @@ const services = await getCollection('services');
 let practitioners = [];
 try {
   practitioners = await getApprovedPractitioners();
-  console.log(`[create-wishlist] Fetched ${practitioners.length} practitioners from database`);
 } catch (error) {
   console.error('[create-wishlist] Error fetching practitioners:', error);
 }
@@ -92,7 +91,6 @@ try {
     // First, try to use cached repositories from session (avoids rate limits)
     if (sessionData?.repositories && sessionData.repositories.length > 0) {
       userRepositories = sessionData.repositories;
-      console.log(`[create-wishlist] Using ${userRepositories.length} cached repositories from session`);
     } else {
       // Fall back to fetching repositories if not in session (e.g., old sessions)
       const providerName: OAuthProviderName = (user.provider as OAuthProviderName) || 'github';
@@ -110,7 +108,6 @@ try {
             description: repo.description,
             private: repo.private,
           }));
-          console.log(`[create-wishlist] Fetched ${userRepositories.length} repositories from ${providerName}`);
         } catch (fetchError) {
           console.error('[create-wishlist] Error fetching repositories from provider:', fetchError);
         }
