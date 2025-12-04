@@ -13,7 +13,7 @@ const services = await getCollection('services');
 // Fetch practitioners from database with error handling
 let practitioners = [];
 try {
-  practitioners = await getAllPractitioners();
+  practitioners = await getApprovedPractitioners();
   console.log(`[create-wishlist] Fetched ${practitioners.length} practitioners from database`);
 } catch (error) {
   console.error('[create-wishlist] Error fetching practitioners:', error);
