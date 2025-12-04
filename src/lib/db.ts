@@ -436,6 +436,21 @@ export async function getPractitionerBySlug(slug: string): Promise<Practitioner 
 }
 
 /**
+ * Get practitioner by GitHub/GitLab username (optimized for auth check)
+ */
+export async function getPractitionerByUsername(username: string): Promise<Practitioner | null> {
+  const result = await query<Practitioner>(
+    `SELECT id, slug, name, github, gitlab 
+     FROM practitioners 
+     WHERE (LOWER(github) = LOWER($1) OR LOWER(gitlab) = LOWER($1)) 
+     AND approved = true 
+     LIMIT 1`,
+    [username]
+  );
+  return result.rows[0] || null;
+}
+
+/**
  * Get all approved practitioners
  */
 export async function getApprovedPractitioners(): Promise<Practitioner[]> {
