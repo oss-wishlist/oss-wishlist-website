@@ -3,7 +3,7 @@ import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
 import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
-import { getAllPractitioners } from '../lib/db';
+import { getApprovedPractitioners } from '../lib/db';
 
 export const prerender = false;
 
@@ -37,7 +37,7 @@ if (!user) {
 }
 
 // Get practitioners for the dropdown
-const practitioners = await getAllPractitioners();
+const practitioners = await getApprovedPractitioners();
 
 // Get services for detailed display
 const services = await getCollection('services');
