@@ -123,13 +123,13 @@ export default function WishlistCard({ wishlist, basePath, mode, onEdit, onDelet
         <div className="flex items-center justify-between">
           <div className="flex space-x-2">
             <a 
-              href={wishlist.wishlistUrl || `${normalizedBasePath}wishlist/${wishlist.id}`}
+              href={wishlist.wishlistUrl || `${basePath}wishlist/${wishlist.id}`}
               className="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
             >
               View details
             </a>
             <a 
-              href={`${normalizedBasePath}fulfill?issue=${wishlist.id}`}
+              href={`${basePath}fulfill?issue=${wishlist.id}`}
               className="btn-sparkle"
             >
               <svg className="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -19,7 +19,7 @@ const user = Astro.locals.user;
 // Check if the logged-in user has a practitioner profile
 let userPractitionerSlug = null;
 if (user?.login) {
-  const practitioners = await getAllPractitioners();
+  const practitioners = await getApprovedPractitioners();
   const userPractitioner = practitioners.find(p => 
     p.github_username?.toLowerCase() === user.login.toLowerCase()
   );
