@@ -197,8 +197,11 @@ if (!wishlistData) {
                   
                   const serviceSlug = serviceDetails?.slug || serviceName.toLowerCase().replace(/\s+/g, '-');
                   
-                  // Filter practitioners who offer this service
-                  const availablePractitioners = practitioners.filter(p => 
+                  // Check if this is a resource (no practitioner needed) or service (needs practitioner)
+                  const isResource = serviceDetails?.data?.type === 'resource';
+                  
+                  // Filter practitioners who offer this service (only for services, not resources)
+                  const availablePractitioners = isResource ? [] : practitioners.filter(p => 
                     p.services && p.services.includes(serviceSlug)
                   );
 
@@ -242,7 +245,8 @@ if (!wishlistData) {
                             </div>
                           )}
                           
-                          <!-- Per-service practitioner selection -->
+                          <!-- Per-service practitioner selection (only for services, not resources) -->
+                          {!isResource && (
                           <div class="mt-3 pl-4 border-l-2 border-gray-300">
                             <label class="block text-xs font-medium text-gray-700 mb-2">
                               Practitioner for this service:
@@ -299,6 +303,7 @@ if (!wishlistData) {
                               />
                             </div>
                           </div>
+                          )}
                         </div>
                         <div class="flex-shrink-0 text-right">
                           <div class="inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs border border-gray-200" title={`Estimated price for ${sizeForPricing} project`}>

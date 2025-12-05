@@ -3,7 +3,7 @@ import Layout from '../components/Layout.astro';
 import WishlistForm from '../components/WishlistForms.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
-import { getAllPractitioners } from '../lib/db';
+import { getApprovedPractitioners } from '../lib/db';
 import { getOAuthProvider } from '../lib/oauth/registry.js';
 import { verifySession } from '../lib/github-oauth';
 import type { OAuthProviderName } from '../lib/oauth/types';
