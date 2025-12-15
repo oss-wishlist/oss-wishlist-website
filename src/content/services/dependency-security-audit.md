@@ -1,100 +1,112 @@
 ---
-title: "Security Audit"
-description: "Comprehensive security assessment including dependencies, repository configuration, and OpenSSF Scorecard alignment"
+title: "EU Cyber Resilience Act (CRA) Compliance"
+description: "Comprehensive CRA compliance assessment and implementation support for open source projects with digital components"
 type: "service"
 target_audience: "both"
 service_type: "audit"
 available: false
 pricing:
-  small: 4500
-  medium: 8000
-  large: 14000
-impact: "Strong security practices protect the integrity and reliability of the software supply chain your products and services depend on."
+  small: 6000
+  medium: 12000
+  large: 20000
+impact: "CRA compliance is mandatory for digital products sold in the EU market. Ensure your open source project meets cybersecurity requirements and supports downstream commercial adoption."
 ---
 playbook: security-audit
 
 ## Overview
 
-A comprehensive security audit evaluates your project's overall security posture, including dependency management, repository configurations, and alignment with OpenSSF best practices. Our practitioners use industry-standard tools and manual review to identify vulnerabilities and provide actionable recommendations.
+The EU Cyber Resilience Act (CRA) introduces mandatory cybersecurity requirements for products with digital elements sold in the EU market, effective from 2027. This service helps open source maintainers understand their CRA obligations, assess current compliance status, and implement necessary security practices to support commercial adoption of their software.
 
 ## What's Included
 
-### Repository Security
-- Branch protection rules assessment and setup
-- Code review requirements evaluation
-- Access control and permissions audit
-- Secret scanning configuration
-- Security policy and SECURITY.md review
+### CRA Compliance Assessment
+- Determination of whether your project falls under CRA scope
+- Product classification (important vs. critical digital components)
+- Commercial use case analysis and downstream obligations
+- Gap analysis against CRA essential cybersecurity requirements
+- Open source steward vs. manufacturer liability assessment
 
-### Dependency Management
-- Automated vulnerability scanning across all dependencies
-- Dependabot configuration and optimization
-- Analysis of transitive dependencies
-- License compliance check
-- Unmaintained package identification
-- Supply chain attack surface evaluation
+### Vulnerability Management Framework
+- Coordinated Vulnerability Disclosure (CVD) process implementation
+- Security incident response procedures
+- SBOM (Software Bill of Materials) generation and automation
+- Vulnerability tracking and remediation workflows
+- Security advisory publication process (GitHub Security Advisories)
 
-### OpenSSF Scorecard Alignment
-- Complete Scorecard evaluation
-- Gap analysis against security best practices
-- Recommendations to improve score
-- Implementation guidance for missing checks
-- Continuous monitoring setup
+### Secure Development Practices
+- Secure-by-design and secure-by-default architecture review
+- Security risk assessment methodology
+- Code review and testing requirements implementation
+- Security documentation (SECURITY.md, vulnerability disclosure policy)
+- Security update delivery mechanisms
 
-### Security Automation
-- GitHub Actions security workflows
-- Automated security testing setup
-- CI/CD pipeline security review
-- Security notification configuration
+### Technical Documentation
+- EU Declaration of Conformity preparation guidance
+- CE marking requirements for digital components
+- Technical documentation package assembly
+- Conformity assessment procedures
+- Record-keeping and compliance evidence management
 
-### Remediation Plan
-- Prioritized security fixes by severity
-- Repository configuration improvements
-- Dependency upgrade path recommendations
-- Breaking change impact assessment
-- Timeline for addressing critical issues
+### Supply Chain Security
+- Dependency SBOM generation and validation
+- Third-party component security assessment
+- Transitive dependency vulnerability tracking
+- Update and patching strategy for dependencies
+- Open source license compliance verification
+
+### Ongoing Compliance Support
+- Security monitoring and update obligations
+- Incident reporting requirements (ENISA notification)
+- Post-market surveillance recommendations
+- Market surveillance authority cooperation guidance
+- End-of-support lifecycle communication
 
 ## Common Use Cases
 
-- **OpenSSF Best Practices**: Improve your OpenSSF Scorecard score and security posture
-- **Pre-acquisition due diligence**: Comprehensive security assessment before M&A
-- **Regulatory compliance**: Meet requirements for SOC 2, ISO 27001, or industry standards
-- **Incident response**: Complete security review after a breach or supply chain compromise
-- **New project setup**: Establish security best practices from the start
-- **Periodic review**: Annual or quarterly security audits to maintain readiness
+- **Commercial product integration**: Support downstream companies integrating your OSS into EU-market products
+- **Steward liability reduction**: Minimize open source maintainer exposure under CRA manufacturer definitions
+- **Pre-compliance preparation**: Get ready before CRA enforcement (2027 deadlines)
+- **Foundation compliance**: Help OSS foundations support their hosted projects
+- **Corporate OSS programs**: Enable companies to maintain CRA-compliant open source projects
+- **Critical infrastructure**: Meet enhanced requirements for critical products (Class I/II)
+- **Procurement requirements**: Satisfy EU public sector cybersecurity procurement mandates
 
 ## Why This Matters
 
-- **OpenSSF Scorecard** is becoming the industry standard for measuring open source security
-- **85% of codebases** contain known security vulnerabilities in dependencies
-- **Supply chain attacks** have increased 650% in recent years
-- **Branch protection** and code review prevent 70% of security issues
-- **Regulatory requirements** increasingly mandate comprehensive security audits
+- **CRA applies from 2027**: All products with digital elements sold in the EU must comply
+- **Open source is in scope**: Commercial distribution of OSS may trigger manufacturer obligations
+- **Downstream liability**: Your users need compliant components to sell their products in EU
+- **Foundation exposure**: OSS foundations may be classified as manufacturers under certain conditions
+- **€15M or 2.5% revenue fines**: Non-compliance penalties are severe for economic operators
+- **Market access**: CRA compliance is a prerequisite for EU market entry
+- **Competitive advantage**: CRA-ready projects enable faster commercial adoption
 
 ## What You'll Receive
 
-1. **Executive Summary**: High-level findings, risk assessment, and OpenSSF score
-2. **OpenSSF Scorecard Report**: Detailed analysis of all Scorecard checks with improvement recommendations
-3. **Repository Security Assessment**: Evaluation of branch protection, access controls, and security settings
-4. **Dependency Analysis**: Complete vulnerability scan with remediation priorities
-5. **Remediation Roadmap**: Step-by-step implementation plan with effort estimates
-6. **Configuration Templates**: Ready-to-use branch protection rules, workflow files, and security policies
-7. **Follow-up Consultation**: 30-60 minute session to review findings and answer questions
+1. **CRA Applicability Report**: Determination of whether and how CRA applies to your project
+2. **Compliance Gap Analysis**: Assessment against CRA essential cybersecurity requirements (Annex I)
+3. **SBOM Implementation**: Automated SBOM generation setup (SPDX or CycloneDX format)
+4. **Vulnerability Management Plan**: CVD process, security advisory workflows, and incident response
+5. **Technical Documentation Package**: Templates and guidance for conformity documentation
+6. **Remediation Roadmap**: Prioritized implementation plan with CRA deadline milestones
+7. **Open Source Best Practices**: Alignment with OpenSSF Scorecard and secure development standards
+8. **Follow-up Consultation**: 60-90 minute session covering implementation questions and CRA updates
 
 ## Ideal For
 
-- Projects seeking to improve their OpenSSF Scorecard score
-- Organizations with compliance and audit requirements
-- Teams preparing for security certifications (SOC 2, ISO 27001)
-- Companies conducting M&A due diligence
-- Critical infrastructure projects requiring high security standards
-- Projects that haven't had a security review in 6+ months
-- New projects establishing security best practices
+- Open source projects with significant commercial downstream adoption
+- OSS foundations supporting portfolio projects with CRA obligations
+- Corporate-sponsored open source projects sold or integrated into products
+- Critical infrastructure software components (Linux kernels, databases, web servers)
+- Security and cryptography libraries used in commercial products
+- Developer tools and frameworks distributed with EU-market products
+- Projects seeking to differentiate through proactive CRA compliance
+- Maintainers concerned about manufacturer liability exposure
 
 ## Delivery Timeline
 
-- **Small Projects**: 1-2 weeks
-- **Medium Projects**: 2-4 weeks  
-- **Large Projects**: 4-6 weeks
+- **Small Projects**: 2-3 weeks
+- **Medium Projects**: 4-6 weeks  
+- **Large Projects**: 6-10 weeks
 
-Delivery includes OpenSSF Scorecard evaluation, repository configuration review, dependency analysis, and comprehensive remediation planning.
+Delivery includes CRA scope analysis, compliance gap assessment, SBOM and vulnerability management setup, technical documentation guidance, and comprehensive implementation roadmap.
