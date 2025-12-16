@@ -9,7 +9,7 @@ pricing:
   small: 6000
   medium: 12000
   large: 20000
-impact: "CRA compliance is mandatory for digital products sold in the EU market. Ensure your open source project meets cybersecurity requirements and supports downstream commercial adoption."
+impact: "The Cyber Resilience Act introduces mandatory cybersecurity requirements for digital products entering the EU market beginning in December 2027, and preparing now positions your project as a secure, trusted component in global supply chains."
 ---
 playbook: security-audit
 
