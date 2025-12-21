@@ -1,0 +1,67 @@
+---
+import { getBasePath } from '../lib/paths';
+const basePath = getBasePath();
+import Layout from '../components/Layout.astro';
+
+export const prerender = false;
+---
+
+<Layout title="Practitioner Community Calendar" description="Join us for upcoming workshops, office hours, and community events">
+  <div class="max-w-7xl mx-auto px-4 py-10">
+    
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <h1 class="text-5xl font-bold text-gray-900 mb-6">
+        Practitioner Community <span class="text-accent">Calendar</span>
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+        Join us for workshops, office hours, and community events. Connect with practitioners and maintainers in real-time.
+      </p>
+      <a 
+        href={`${basePath}practitioners`}
+        class="inline-flex items-center text-gray-600 hover:text-purple-600 font-medium transition-colors"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Practitioners
+      </a>
+    </div>
+
+    <!-- Calendar Embed -->
+    <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+      <div class="mb-6 text-center">
+        <p class="text-gray-600 mb-4">
+          View and register for upcoming community events.
+        </p>
+        <a 
+          href="https://lu.ma/cal-UKTU3T5iJaB28YN" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="inline-flex items-center px-6 py-3 text-base font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+        >
+          Open Calendar in Luma
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
+      <div class="flex justify-center">
+        <div class="w-full" style="max-width: 900px;">
+          <iframe
+            src="https://lu.ma/embed/calendar/cal-UKTU3T5iJaB28YN/events"
+            width="100%"
+            height="600"
+            frameborder="0"
+            style="border: 1px solid #d1d5db; border-radius: 8px;"
+            allowfullscreen=""
+            aria-hidden="false"
+            tabindex="0"
+            title="OSS Wishlist Community Calendar"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</Layout>

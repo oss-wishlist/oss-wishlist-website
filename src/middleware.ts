@@ -122,11 +122,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'", // unsafe-inline needed for Astro hydration
+      "script-src 'self' 'unsafe-inline' https://www.statcounter.com", // unsafe-inline needed for Astro hydration, StatCounter for analytics
       "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
       "img-src 'self' data: https:", // Allow images from HTTPS and data URIs
       "font-src 'self'",
-      "connect-src 'self' https://api.github.com https://gitlab.com", // GitHub and GitLab APIs for OAuth
+      "connect-src 'self' https://api.github.com https://gitlab.com https://c.statcounter.com", // GitHub/GitLab APIs, StatCounter tracking
+      "frame-src https://lu.ma https://luma.com", // Allow Luma calendar embeds
       "frame-ancestors 'none'", // Prevent clickjacking
       "base-uri 'self'",
       "form-action 'self'"
