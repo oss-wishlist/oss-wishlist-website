@@ -75,9 +75,36 @@ const relatedWithContent = await Promise.all(
 );
 
 const { Content } = await service.render();
+
+// Build structured data for the service
+const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com';
+const serviceUrl = new URL(`${basePath}services/${service.slug}`, siteUrl).toString();
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": service.data.title,
+  "description": service.data.description,
+  "provider": {
+    "@type": "Organization",
+    "name": "Open Source Wish List"
+  },
+  "serviceType": service.data.category,
+  "url": serviceUrl,
+  "audience": {
+    "@type": "Audience",
+    "audienceType": service.data.target_audience === 'maintainer' ? 'Open Source Maintainers' : 'Open Source Projects'
+  }
+};
 ---
 
-<Layout title={`${service.data.title} - OSS Wishlist`} description={service.data.description}>
+<Layout 
+  title={`${service.data.title} - Professional Service for Open Source | OSS Wishlist`} 
+  description={`${service.data.description} Connect with verified practitioners offering ${service.data.title.toLowerCase()} services for open source projects.`}
+  type="article">
+  
+  <!-- Service Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   <section class="py-16 bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Back Button -->

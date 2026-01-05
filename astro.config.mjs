@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
 import node from '@astrojs/node';
+import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
@@ -43,7 +44,22 @@ export default defineConfig({
       noExternal: ['@astrojs/react']
     }
   },
-  integrations: [tailwind(), react()],
+  integrations: [
+    tailwind(), 
+    react(),
+    sitemap({
+      filter: (page) => {
+        // Exclude auth and API endpoints from sitemap
+        return !page.includes('/auth/') && 
+               !page.includes('/api/') && 
+               !page.includes('/admin') &&
+               !page.includes('/dependency-action');
+      },
+      changefreq: 'weekly',
+      priority: 0.7,
+      lastmod: new Date(),
+    })
+  ],
   markdown: {
     shikiConfig: {
       theme: 'github-dark'

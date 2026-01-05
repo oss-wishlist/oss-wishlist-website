@@ -7,26 +7,91 @@ export interface Props {
   title: string;
   description?: string;
   showHeader?: boolean;
+  image?: string;
+  type?: 'website' | 'article';
+  noindex?: boolean;
 }
 
-const { title, description = "Get the help your open source project needs", showHeader = true } = Astro.props as Props;
+const { 
+  title, 
+  description = "Get the help your open source project needs", 
+  showHeader = true,
+  image = '/logo.png',
+  type = 'website',
+  noindex = false
+} = Astro.props as Props;
+
 // Use centralized path utility for consistent handling
 const basePath = getBasePath(); // Returns with trailing slash
 const logoUrl = '/logo.png';
+
+// Build canonical URL
+const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com';
+const canonicalURL = new URL(Astro.url.pathname, siteUrl);
+
+// Full image URL for Open Graph
+const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toString();
 ---
 
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {import.meta.env.PUBLIC_SITE_MODE === 'placeholder' && (
+    
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Robots -->
+    {(import.meta.env.DISABLE_INDEXING === 'true' || noindex) && (
       <meta name="robots" content="noindex, nofollow" />
     )}
+    {!(import.meta.env.DISABLE_INDEXING === 'true' || noindex) && (
+      <meta name="robots" content="index, follow" />
+    )}
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content="Open Source Wish List" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={ogImage} />
+    
+    <!-- Favicons -->
     <link rel="icon" type="image/png" href={logoUrl} />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- Generator -->
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    
+    <!-- Structured Data for Organization -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Open Source Wish List",
+        "url": "https://oss-wishlist.com",
+        "logo": "https://oss-wishlist.com/logo.png",
+        "description": "Community infrastructure connecting open source maintainers with professional practitioners for sustainability services",
+        "sameAs": [
+          "https://github.com/oss-wishlist",
+          "https://www.linkedin.com/company/110187652",
+          "https://mastodon.social/@osswishlist",
+          "https://bsky.app/profile/oss-wishlist.bsky.social"
+        ]
+      }
+    </script>
   </head>
   <body class="bg-gray-50 min-h-screen overflow-x-hidden">
     <!-- Skip to main content link for keyboard users -->

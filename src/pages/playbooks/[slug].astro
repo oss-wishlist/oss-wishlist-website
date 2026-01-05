@@ -9,7 +9,7 @@ export const prerender = false;
 // Server-rendered: resolve content dynamically at request time
 const { playbook: propsPlaybook } = Astro.props;
 const { slug } = Astro.params;
-const playbook = propsPlaybook || await getEntry('playbooks', slug);
+const playbook = propsPlaybook || await getEntry('playbooks-external', slug);
 
 // Check if playbook exists
 if (!playbook) {
@@ -23,11 +23,15 @@ const { Content } = await playbook.render();
 const githubRepoUrl = 'https://github.com/oss-wishlist/wishlist-playbooks';
 const githubEditUrl = `${githubRepoUrl}/edit/main/${playbook.data.github_folder}/playbook.md`;
 const githubViewUrl = `${githubRepoUrl}/tree/main/${playbook.data.github_folder}`;
+
+// Build SEO description
+const seoDescription = playbook.data.description || `Professional playbook guide for ${playbook.data.title}. Step-by-step guidance for open source practitioners.`;
 ---
 
 <Layout 
-  title={`${playbook.data.title} - Practitioner Playbook`}
-  description={playbook.data.description}
+  title={`${playbook.data.title} - Professional Playbook Guide | OSS Wishlist`}
+  description={seoDescription}
+  type="article"
 >
   <!-- Breadcrumb -->
   <nav class="bg-gray-50 border-b">
