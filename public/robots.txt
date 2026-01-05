@@ -1,0 +1,12 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and auth pages
+Disallow: /admin
+Disallow: /auth/
+Disallow: /api/
+Disallow: /dependency-action
+
+# Sitemap location (dynamic sitemap includes all content from submodules)
+Sitemap: https://oss-wishlist.com/sitemap.xml

@@ -4,7 +4,7 @@ description: "Comprehensive CRA compliance assessment and implementation support
 type: "service"
 target_audience: "both"
 service_type: "audit"
-available: false
+available: true
 pricing:
   small: 6000
   medium: 12000

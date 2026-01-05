@@ -20,7 +20,9 @@ const companyServices = services.filter(service =>
 );
 ---
 
-<Layout title="Open Source Wish List - Community Infrastructure for Open Source Sustainability" showHeader={!isPlaceholder}>
+<Layout 
+  title="Open Source Wish List - Community Infrastructure for Open Source Sustainability" 
+  description="Connect open source maintainers with professional practitioners for sustainability services: security audits, governance, funding strategy, succession planning. Free platform supporting OSS health.">
   {isPlaceholder ? (
     <PlaceholderPage />
   ) : (
@@ -79,7 +81,7 @@ const companyServices = services.filter(service =>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
             <h2 class="text-xl font-semibold text-gray-950 mb-2">Helper Community</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Join as a practitioner, contribute to playbooks, propose a campaign or shape AI alignment around open source sustainability.</p>
+            <p class="text-gray-700 mb-4 flex-grow"><a href={`${basePath}practitioners`} class="text-gray-900 underline hover:text-purple-600">Join as a practitioner</a>, contribute to playbooks, propose a campaign or shape AI alignment around open source sustainability.</p>
             <a 
               href={`${basePath}helpers`} 
               class="btn-sparkle w-full"

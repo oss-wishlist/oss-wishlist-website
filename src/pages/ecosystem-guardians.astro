@@ -8,7 +8,9 @@ const guardians = await getCollection('guardians');
 const sortedGuardians = guardians.sort((a, b) => a.data.name.localeCompare(b.data.name));
 ---
 
-<Layout title="Wishlist Sponsors - Open Source Wishlist" description="Organizations and individuals protecting and supporting the open source ecosystem">
+<Layout 
+  title="Open Source Sponsors & Ecosystem Guardians | OSS Wishlist" 
+  description="Meet organizations, foundations, and individuals protecting open source projects. Sponsors providing funding, security audits, and sustainability programs.">
   <!-- Hero Section -->
   <section class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,0 +1,128 @@
+---
+import Layout from '../components/Layout.astro';
+import { getBasePath } from '../lib/paths';
+import { getCollection } from 'astro:content';
+
+const basePath = getBasePath();
+
+// Get all content collections for sitemap
+const services = await getCollection('services');
+const playbooks = await getCollection('playbooks-external');
+const practitioners = await getCollection('practitioners');
+const guardians = await getCollection('guardians');
+const faq = await getCollection('faq');
+
+export const prerender = false;
+---
+
+<Layout 
+  title="Site Map - Navigate OSS Wishlist | Open Source Wish List" 
+  description="Complete directory of all pages, services, resources, and content on Open Source Wish List platform. Find exactly what you're looking for.">
+  
+  <div class="max-w-7xl mx-auto px-4 py-16">
+    <header class="text-center mb-16">
+      <h1 class="text-5xl font-bold text-gray-900 mb-4">Site Map</h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Complete directory of all pages and resources on Open Source Wish List
+      </p>
+    </header>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      
+      <!-- Main Pages -->
+      <section class="bg-white p-6 rounded-lg border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Main Pages</h2>
+        <ul class="space-y-2">
+          <li><a href={`${basePath}`} class="text-gray-700 hover:text-gray-900 underline">Home</a></li>
+          <li><a href={`${basePath}catalog`} class="text-gray-700 hover:text-gray-900 underline">Service Catalog</a></li>
+          <li><a href={`${basePath}wishlists`} class="text-gray-700 hover:text-gray-900 underline">Project Wishlists</a></li>
+          <li><a href={`${basePath}helpers`} class="text-gray-700 hover:text-gray-900 underline">Helpers & Community</a></li>
+          <li><a href={`${basePath}practitioners`} class="text-gray-700 hover:text-gray-900 underline">Practitioners Directory</a></li>
+          <li><a href={`${basePath}ecosystem-guardians`} class="text-gray-700 hover:text-gray-900 underline">Ecosystem Sponsors</a></li>
+          <li><a href={`${basePath}faq`} class="text-gray-700 hover:text-gray-900 underline">FAQ</a></li>
+        </ul>
+      </section>
+
+      <!-- For Maintainers -->
+      <section class="bg-white p-6 rounded-lg border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">For Maintainers</h2>
+        <ul class="space-y-2">
+          <li><a href={`${basePath}maintainers`} class="text-gray-700 hover:text-gray-900 underline">Maintainer Hub</a></li>
+          <li><a href={`${basePath}create-wishlist`} class="text-gray-700 hover:text-gray-900 underline">Create Wishlist</a></li>
+          <li><a href={`${basePath}calendar`} class="text-gray-700 hover:text-gray-900 underline">Events Calendar</a></li>
+          <li><a href={`${basePath}campaigns`} class="text-gray-700 hover:text-gray-900 underline">Community Campaigns</a></li>
+        </ul>
+      </section>
+
+      <!-- For Practitioners -->
+      <section class="bg-white p-6 rounded-lg border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">For Practitioners</h2>
+        <ul class="space-y-2">
+          <li><a href={`${basePath}apply-practitioner`} class="text-gray-700 hover:text-gray-900 underline">Apply as Practitioner</a></li>
+          <li><a href={`${basePath}pricing`} class="text-gray-700 hover:text-gray-900 underline">Pricing Information</a></li>
+        </ul>
+      </section>
+
+      <!-- Services -->
+      <section class="bg-white p-6 rounded-lg border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Services ({services.length})</h2>
+        <ul class="space-y-2 max-h-96 overflow-y-auto">
+          {services.sort((a, b) => a.data.title.localeCompare(b.data.title)).map(service => (
+            <li>
+              <a href={`${basePath}services/${service.slug}`} class="text-gray-700 hover:text-gray-900 underline">
+                {service.data.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- Playbooks -->
+      <section class="bg-white p-6 rounded-lg border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Playbooks ({playbooks.length})</h2>
+        <ul class="space-y-2 max-h-96 overflow-y-auto">
+          {playbooks.sort((a, b) => (a.data.title || '').localeCompare(b.data.title || '')).map(playbook => (
+            <li>
+              <a href={`${basePath}playbooks/${playbook.slug}`} class="text-gray-700 hover:text-gray-900 underline">
+                {playbook.data.title || playbook.slug}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- About & Legal -->
+      <section class="bg-white p-6 rounded-lg border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">About & Legal</h2>
+        <ul class="space-y-2">
+          <li><a href={`${basePath}code-of-conduct`} class="text-gray-700 hover:text-gray-900 underline">Code of Conduct</a></li>
+          <li><a href={`${basePath}privacy-policy`} class="text-gray-700 hover:text-gray-900 underline">Privacy Policy</a></li>
+          <li><a href="https://github.com/oss-wishlist" target="_blank" rel="noopener noreferrer" class="text-gray-700 hover:text-gray-900 underline">GitHub</a></li>
+          <li><a href="https://join.slack.com/t/opensourcewishlist/shared_invite/zt-3juhbwcte-w_yUyiZJTbqo5EzKbCGbiQ" target="_blank" rel="noopener noreferrer" class="text-gray-700 hover:text-gray-900 underline">Slack Community</a></li>
+        </ul>
+      </section>
+
+    </div>
+
+    <!-- Technical Sitemap Links -->
+    <div class="mt-16 p-6 bg-gray-100 rounded-lg">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">For Search Engines</h2>
+      <p class="text-gray-600 mb-4">
+        Machine-readable sitemap for search engine crawlers (includes all services and playbooks from submodule):
+      </p>
+      <ul class="space-y-2">
+        <li>
+          <a href="/sitemap.xml" class="text-gray-700 hover:text-gray-900 underline font-mono text-sm">
+            /sitemap.xml
+          </a>
+          <span class="text-gray-500 text-sm ml-2">(Dynamic - includes all content)</span>
+        </li>
+        <li>
+          <a href="/robots.txt" class="text-gray-700 hover:text-gray-900 underline font-mono text-sm">
+            /robots.txt
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</Layout>
