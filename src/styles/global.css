@@ -583,6 +583,20 @@
   }
 }
 
+  /* How It Works accordion styles */
+  .how-it-works-label {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgb(147, 51, 234);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+
 /* Page-specific styles */
 /* Code of Conduct page - purple h1 */
 [data-page="code-of-conduct"] .prose h1 {
