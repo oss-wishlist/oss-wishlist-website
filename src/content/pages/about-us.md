@@ -17,7 +17,7 @@ This project created by [Emma Irwin](https://github.com/emmairwin) with help fro
 
 `Open Source Wishlist` seeks to break down the silos of isolation between maintainers and funders by standardizing the way in which projects can express and receive meaningful support.  
 
-**From isolation to connection**: Instead of pleading into the void, maintainers can articulate need aligned with known sustainability risk and identify either fund community contribution, get matched with a pracitioner, or recieve corperate contribution (via designated employee time).
+**From isolation to connection**: Instead of pleading into the void, maintainers can articulate need aligned with known sustainability risk and identify either fund community contribution, get matched with a practitioner, or receive corporate contribution (via designated employee time).
 
 **From burden to support**: Instead of shouldering sustainability work alone, maintainers can access paid open source practitioners with proven experience and expertise.
 
