@@ -65,6 +65,8 @@ try {
       approved: wishlist.approved,
       created_at: wishlist.created_at.toISOString(),
       updated_at: wishlist.updated_at.toISOString(),
+      generalNeedShortDescription: wishlist.general_need_short_description,
+      generalNeedFullDescription: wishlist.general_need_full_description,
     };
   }
 } catch (error) {
@@ -229,15 +231,55 @@ const urgencyColors = {
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {wishlistData.services.map((serviceSlug: string) => {
             const service = serviceMap.get(serviceSlug);
+            const isGeneralNeed = serviceSlug === 'general-need';
+            
             return service ? (
-              <a 
-                href={`${basePath}services/${service.slug}`}
-                class="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow block"
+              <div 
+                class={`p-6 rounded-lg border shadow-sm transition-shadow ${
+                  isGeneralNeed ? 'bg-purple-50 md:col-span-2 lg:col-span-3' : 'bg-white hover:shadow-md'
+                }`}
               >
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">{service.data.title}</h3>
-                <p class="text-sm text-gray-600 mb-3">{service.data.description}</p>
-                <span class="text-sm text-gray-700 underline hover:text-gray-900">Learn more →</span>
-              </a>
+                <div class="flex items-start justify-between mb-4">
+                  <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{service.data.title}</h3>
+                    <p class="text-sm text-gray-600 mb-3">{service.data.description}</p>
+                  </div>
+                  <a 
+                    href={`${basePath}services/${service.slug}`}
+                    class="text-sm text-gray-700 underline hover:text-gray-900 whitespace-nowrap ml-4"
+                  >
+                    Learn more →
+                  </a>
+                </div>
+                
+                {/* Display general-need custom fields if present */}
+                {isGeneralNeed && (wishlistData.generalNeedShortDescription || wishlistData.generalNeedFullDescription) && (
+                  <div class="mt-4 pt-4 border-t border-purple-200">
+                    <div class="bg-white p-4 rounded-lg border border-purple-200">
+                      <div class="flex items-start gap-2 mb-2">
+                        <svg class="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <div class="flex-1">
+                          <h4 class="text-sm font-semibold text-purple-900 mb-1">Custom Need Details (Maintainer Input)</h4>
+                          {wishlistData.generalNeedShortDescription && (
+                            <div class="mb-3">
+                              <p class="text-xs text-purple-700 font-medium mb-1">Brief Summary:</p>
+                              <p class="text-sm text-gray-800">{wishlistData.generalNeedShortDescription}</p>
+                            </div>
+                          )}
+                          {wishlistData.generalNeedFullDescription && (
+                            <div>
+                              <p class="text-xs text-purple-700 font-medium mb-1">Detailed Requirements:</p>
+                              <p class="text-sm text-gray-800 whitespace-pre-wrap">{wishlistData.generalNeedFullDescription}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <div class="bg-white p-6 rounded-lg border shadow-sm">
                 <h3 class="text-lg font-semibold text-gray-900">{serviceSlug}</h3>
