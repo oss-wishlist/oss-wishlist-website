@@ -226,7 +226,10 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
     preferredPractitioner: '',
     nomineeName: '',
     nomineeEmail: '',
-    nomineeGithub: ''
+    nomineeGithub: '',
+    // General need fields
+    generalNeedShortDescription: '',
+    generalNeedFullDescription: ''
   });
   
   // Checkbox for FUNDING.yml PR
@@ -460,7 +463,9 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
         preferredPractitioner: cachedData.preferredPractitioner || '',
         nomineeName: cachedData.nomineeName || '',
         nomineeEmail: cachedData.nomineeEmail || '',
-        nomineeGithub: cachedData.nomineeGithub || ''
+        nomineeGithub: cachedData.nomineeGithub || '',
+        generalNeedShortDescription: cachedData.generalNeedShortDescription || '',
+        generalNeedFullDescription: cachedData.generalNeedFullDescription || ''
       };
       
       // Set original services for comparison
@@ -693,6 +698,18 @@ const WishlistForm = ({ services = [], practitioners = [], user: initialUser = n
       invalidFields.push('additionalNotes');
     }
 
+    // Validate general-need fields if general-need service is selected
+    if (wishlistData.selectedServices.includes('general-need')) {
+      if (!wishlistData.generalNeedShortDescription.trim()) {
+        setError('Please provide a short description for your custom need');
+        invalidFields.push('generalNeedShortDescription');
+      }
+      if (!wishlistData.generalNeedFullDescription.trim()) {
+        setError('Please provide a full description with success criteria for your custom need');
+        invalidFields.push('generalNeedFullDescription');
+      }
+    }
+
     // If there are validation errors, highlight fields and return
     if (invalidFields.length > 0) {
       highlightInvalidFields(invalidFields);
@@ -802,7 +819,9 @@ ${repositories[0].url}
             organizationType: wishlistData.organizationType,
             organizationName: wishlistData.organizationName,
             otherOrganizationType: wishlistData.otherOrganizationType,
-            maintainerEmail: wishlistData.maintainerEmail // Include maintainer email for admin notification (stored in database)
+            maintainerEmail: wishlistData.maintainerEmail, // Include maintainer email for admin notification (stored in database)
+            generalNeedShortDescription: wishlistData.generalNeedShortDescription || '',
+            generalNeedFullDescription: wishlistData.generalNeedFullDescription || ''
           }
         })
       });
@@ -1969,6 +1988,98 @@ ${repositories[0].url}
               <a href={`${getBasePath()}faq#service-availability-waitlist`} target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">Learn more</a>.
             </div>
           </div>
+
+          {/* General Need - Conditional Fields */}
+          {wishlistData.selectedServices.includes('general-need') && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Describe Your Custom Need
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Since you've selected a general/custom need, please describe what help you're looking for.
+              </p>
+
+              {/* Short Description */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Short Description <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="generalNeedShortDescription"
+                  id="generalNeedShortDescription"
+                  value={wishlistData.generalNeedShortDescription}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setWishlistData(prev => ({ ...prev, generalNeedShortDescription: newValue }));
+                    clearFieldError('generalNeedShortDescription');
+                    validateField('generalNeedShortDescription', newValue, 'text');
+                  }}
+                  onBlur={(e) => {
+                    validateField('generalNeedShortDescription', e.target.value, 'text');
+                  }}
+                  placeholder="Brief summary of your need (e.g., 'Need help migrating from Travis CI to GitHub Actions')"
+                  className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent ${getFieldBorderClass('generalNeedShortDescription')}`}
+                  required
+                />
+                {validationResults.generalNeedShortDescription && (
+                  <ValidationFeedback
+                    label="Short Description"
+                    value={wishlistData.generalNeedShortDescription}
+                    isValid={validationResults.generalNeedShortDescription.isValid}
+                    validationResult={validationResults.generalNeedShortDescription}
+                  />
+                )}
+                {fieldErrors.generalNeedShortDescription && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.generalNeedShortDescription}</p>
+                )}
+              </div>
+
+              {/* Full Description */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Description & Success Criteria <span className="text-red-500">*</span>
+                </label>
+                <p className="text-sm text-gray-600 mb-2">
+                  Describe what you need in detail and what success looks like. Include specific deliverables, constraints, and any relevant context.
+                </p>
+                <textarea
+                  name="generalNeedFullDescription"
+                  id="generalNeedFullDescription"
+                  value={wishlistData.generalNeedFullDescription}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setWishlistData(prev => ({ ...prev, generalNeedFullDescription: newValue }));
+                    clearFieldError('generalNeedFullDescription');
+                    validateField('generalNeedFullDescription', newValue, 'notes');
+                  }}
+                  onBlur={(e) => {
+                    validateField('generalNeedFullDescription', e.target.value, 'notes');
+                  }}
+                  rows={6}
+                  placeholder="Provide details about:
+- What work needs to be done
+- What success looks like
+- Any constraints or requirements
+- Expected deliverables"
+                  className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent ${getFieldBorderClass('generalNeedFullDescription')}`}
+                  required
+                />
+                {validationResults.generalNeedFullDescription && (
+                  <ValidationFeedback
+                    label="Full Description"
+                    value={wishlistData.generalNeedFullDescription}
+                    isValid={validationResults.generalNeedFullDescription.isValid}
+                    validationResult={validationResults.generalNeedFullDescription}
+                    helpText={`${wishlistData.generalNeedFullDescription.length}/2000`}
+                  />
+                )}
+                {fieldErrors.generalNeedFullDescription && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.generalNeedFullDescription}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* FUNDING.yml Checkbox (GitHub-only feature) */}
           {/* Only show for GitHub-authenticated users with GitHub-sourced repositories */}

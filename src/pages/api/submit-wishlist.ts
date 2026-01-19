@@ -167,6 +167,8 @@ export const POST: APIRoute = async ({ request }) => {
           nominee_name: formData.nomineeName,
           nominee_email: formData.nomineeEmail,
           nominee_github: formData.nomineeGithub,
+          general_need_short_description: formData.generalNeedShortDescription,
+          general_need_full_description: formData.generalNeedFullDescription,
         });
         console.log(`[submit-wishlist] ✓ Updated database record for wishlist #${issueNumber}`);
       } catch (dbError) {
@@ -252,6 +254,8 @@ export const POST: APIRoute = async ({ request }) => {
         nominee_name: formData.nomineeName,
         nominee_email: formData.nomineeEmail,
         nominee_github: formData.nomineeGithub,
+        general_need_short_description: formData.generalNeedShortDescription,
+        general_need_full_description: formData.generalNeedFullDescription,
       });
       console.log(`[submit-wishlist] ✓ Created database record for wishlist #${newId}`);
     } catch (dbError) {

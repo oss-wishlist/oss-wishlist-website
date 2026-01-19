@@ -4,7 +4,13 @@ const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
 
-const services = await getCollection('services');
+const servicesRaw = await getCollection('services');
+// Sort services: general-need first, then alphabetically
+const services = servicesRaw.sort((a, b) => {
+  if (a.slug === 'general-need') return -1;
+  if (b.slug === 'general-need') return 1;
+  return a.data.title.localeCompare(b.data.title);
+});
 const playbooks = await getCollection('playbooks-external');
 
 // Map service slugs to playbook slugs (fallbacks for legacy mismatches)
@@ -68,7 +74,9 @@ function getPlaybookForService(serviceSlug: string) {
         {services.map((service) => {
           const playbook = getPlaybookForService(service.slug);
           return (
-          <div class="service-card bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow" 
+          <div class={`service-card p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow ${
+            service.slug === 'general-need' ? 'bg-purple-50' : 'bg-white'
+          }`}
                data-type={service.data.type}>
             <div class="flex justify-between items-start mb-4">
               <div>
