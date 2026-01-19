@@ -52,6 +52,10 @@ CREATE TABLE IF NOT EXISTS wishlists (
   funding_yml BOOLEAN DEFAULT FALSE,
   funding_yml_processed BOOLEAN DEFAULT FALSE,
   
+  -- General/custom need fields
+  general_need_short_description TEXT,
+  general_need_full_description TEXT,
+  
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -87,6 +91,8 @@ COMMENT ON COLUMN wishlists.maintainer_email IS 'Email for internal coordination
 COMMENT ON COLUMN wishlists.nominee_email IS 'Nominee email for internal coordination only, not exposed publicly';
 COMMENT ON COLUMN wishlists.funding_yml IS 'Indicates if maintainer requested FUNDING.yml PR creation';
 COMMENT ON COLUMN wishlists.funding_yml_processed IS 'Indicates if FUNDING.yml PR has been created (prevents duplicates)';
+COMMENT ON COLUMN wishlists.general_need_short_description IS 'Brief summary of custom need (shown when general-need service is selected)';
+COMMENT ON COLUMN wishlists.general_need_full_description IS 'Detailed description with success criteria for custom need';
 
 -- Create services table
 CREATE TABLE IF NOT EXISTS services (

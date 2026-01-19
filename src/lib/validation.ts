@@ -84,7 +84,11 @@ export const wishlistFormDataSchema = z.object({
   otherOrganizationType: createOptionalModeratedString(),
   
   // Maintainer email (stored in database for coordination, not exposed in public API)
-  maintainerEmail: z.string().email('Invalid email address').optional().or(z.literal(''))
+  maintainerEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
+  
+  // General/custom need fields
+  generalNeedShortDescription: createOptionalModeratedString(),
+  generalNeedFullDescription: createOptionalModeratedString()
 });
 
 // Wishlist submission schema (database-driven, no GitHub Issues)

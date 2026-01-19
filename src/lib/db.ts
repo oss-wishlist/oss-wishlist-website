@@ -156,6 +156,8 @@ export interface Wishlist {
   nominee_github?: string;
   funding_yml: boolean;
   funding_yml_processed: boolean;
+  general_need_short_description?: string;
+  general_need_full_description?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -255,10 +257,11 @@ export async function createWishlist(wishlist: Partial<Wishlist>): Promise<Wishl
       organization_type, organization_name, other_organization_type,
       open_to_sponsorship, preferred_practitioner,
       nominee_name, nominee_email, nominee_github,
-      funding_yml, funding_yml_processed
+      funding_yml, funding_yml_processed,
+      general_need_short_description, general_need_full_description
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-      $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
+      $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29
     ) RETURNING *`,
     [
       wishlist.id,
@@ -288,6 +291,8 @@ export async function createWishlist(wishlist: Partial<Wishlist>): Promise<Wishl
       wishlist.nominee_github,
       wishlist.funding_yml || false,
       wishlist.funding_yml_processed || false,
+      wishlist.general_need_short_description,
+      wishlist.general_need_full_description,
     ]
   );
   return result.rows[0];
@@ -318,7 +323,9 @@ export async function updateWishlist(id: number, updates: Partial<Wishlist>): Pr
       nominee_email = COALESCE($18, nominee_email),
       nominee_github = COALESCE($19, nominee_github),
       approved = COALESCE($20, approved),
-      issue_state = COALESCE($21, issue_state)
+      issue_state = COALESCE($21, issue_state),
+      general_need_short_description = COALESCE($22, general_need_short_description),
+      general_need_full_description = COALESCE($23, general_need_full_description)
     WHERE id = $1
     RETURNING *`,
     [
@@ -343,6 +350,8 @@ export async function updateWishlist(id: number, updates: Partial<Wishlist>): Pr
       updates.nominee_github,
       updates.approved,
       updates.issue_state,
+      updates.general_need_short_description,
+      updates.general_need_full_description,
     ]
   );
   return result.rows[0] || null;

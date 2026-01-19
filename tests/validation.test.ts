@@ -39,6 +39,8 @@ describe('Validation Schemas', () => {
         organizationType: 'community-team',
         organizationName: 'My Team',
         otherOrganizationType: undefined,
+        generalNeedShortDescription: undefined,
+        generalNeedFullDescription: undefined,
       };
 
       const result = wishlistFormDataSchema.safeParse(validData);
@@ -245,6 +247,22 @@ describe('Validation Schemas', () => {
         urgency: 'high',
         nomineeName: 'Jane Smith',
         nomineeGithub: '',
+      };
+
+      const result = wishlistFormDataSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts valid general-need fields', () => {
+      const validData: WishlistFormData = {
+        projectTitle: 'My Custom Need Project',
+        projectUrl: 'https://github.com/user/project',
+        maintainer: 'john_doe',
+        services: ['general-need'],
+        projectSize: 'medium',
+        urgency: 'high',
+        generalNeedShortDescription: 'Need help with CI/CD migration',
+        generalNeedFullDescription: 'We need to migrate from Travis CI to GitHub Actions. Success looks like having all our workflows migrated and working properly.',
       };
 
       const result = wishlistFormDataSchema.safeParse(validData);
