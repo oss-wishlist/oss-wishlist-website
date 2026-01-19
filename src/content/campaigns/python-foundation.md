@@ -15,7 +15,7 @@ tags: ["python", "ecosystem", "foundation"]
 featured: true
 ---
 
-Please see [this statement from Python Software Foundation](https://pyfound.blogspot.com/2025/10/NSF-funding-statement.html) regarding withdrawl of $1.5 million proposal to US grant program and donation need.
+Please see [this statement from Python Software Foundation](https://pyfound.blogspot.com/2025/10/NSF-funding-statement.html) regarding withdrawal of $1.5 million proposal to US grant program and donation need.
 
 There are three ways to give to help make up the difference:
 
