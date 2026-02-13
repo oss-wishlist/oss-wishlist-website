@@ -8,8 +8,8 @@ goals:
   - "Fund security and supply chain audits for widely used libraries"
   - "Improve project governance and contributor onboarding"
   - "Expand documentation and accessibility across core projects"
-status: "active"
-start_date: 2024-01-01
+status: "archived"
+start_date: 2024-01-01T00:00:00.000Z
 banner_image_url: "https://www.python.org/static/community_logos/python-logo-master-v3-TM.png"
 tags: ["python", "ecosystem", "foundation"]
 featured: true

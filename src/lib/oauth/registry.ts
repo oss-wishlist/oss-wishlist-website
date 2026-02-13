@@ -8,6 +8,7 @@
 import type { OAuthProvider, OAuthProviderName } from './types.js';
 import { createGitHubProvider } from './providers/github.js';
 import { createGitLabProvider } from './providers/gitlab.js';
+// import { createCodebergProvider } from './providers/codeberg.js';
 
 /**
  * Registry of available OAuth providers
@@ -15,6 +16,7 @@ import { createGitLabProvider } from './providers/gitlab.js';
 const PROVIDER_FACTORIES = {
   github: createGitHubProvider,
   gitlab: createGitLabProvider,
+  // codeberg: createCodebergProvider,
   // Add more providers as needed:
   // google: createGoogleProvider,
 } as const;

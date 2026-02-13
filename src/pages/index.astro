@@ -30,27 +30,27 @@ const companyServices = services.filter(service =>
   <section class="bg-gradient-to-br from-gray-50 to-gray-100 py-20" aria-labelledby="hero-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <div class="max-w-4xl mx-auto">
-        <h1 id="hero-heading" class="text-5xl font-bold text-gray-950 mb-4">
+        <h1 id="hero-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-950 mb-4">
           Make open source <span class="text-accent">sustainability</span> a reality
         </h1>
-        <p class="text-2xl font-medium text-gray-700 mb-8">
+        <p class="text-base md:text-lg lg:text-xl font-medium text-gray-700 mb-8">
           See what your dependencies actually need. Sponsor the work. Track measurable impact.
         </p>
         
         <!-- Audience Selection -->
         <div class="grid md:grid-cols-3 gap-6 mb-8" role="list">
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-gray-950 mb-2">Open Source Maintainers</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Create a wishlist of available services to address current gaps and support your project's long-term sustainability.</p>
+            <h2 class="text-xl font-semibold text-purple-700 mb-2">Maintainers</h2>
+            <p class="text-gray-700 mb-4 flex-grow">Express need in ways that are discoverable and actionable by funders and other contributors.</p>
             <a 
               href={`${basePath}create-wishlist`} 
               class="btn-sparkle w-full"
-              aria-label="Create your wishlist as a maintainer"
+              aria-label="Declare your needs as a maintainer"
             >
               <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              <span class="btn-sparkle-text">Create Your Wishlist</span>
+              <span class="btn-sparkle-text">Declare Your Needs</span>
               <span class="btn-sparkle-particles">
                 <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
                 <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
@@ -60,17 +60,17 @@ const companyServices = services.filter(service =>
           </article>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-gray-950 mb-2">Wishlist Sponsors</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Strategically fund sustainabiltiy  in projects you depend on. See exactly how your support creates impact.</p>
+            <h2 class="text-xl font-semibold text-purple-700 mb-2">Service Offerings</h2>
+            <p class="text-gray-700 mb-4 flex-grow">Industry-validated solutions for open source sustainability. Create a wishlist or attend a workshop.</p>
             <a 
-              href={`${basePath}wishlists`}
+              href={`${basePath}take-action`}
               class="btn-sparkle w-full"
-              aria-label="Browse wishlists to fulfill"
+              aria-label="Explore services and take action"
             >
               <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span class="btn-sparkle-text">Fulfill a Wish</span>
+              <span class="btn-sparkle-text">Take Action</span>
               <span class="btn-sparkle-particles">
                 <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
                 <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
@@ -80,17 +80,17 @@ const companyServices = services.filter(service =>
           </article>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-gray-950 mb-2">Helper Community</h2>
-            <p class="text-gray-700 mb-4 flex-grow"><a href={`${basePath}practitioners`} class="text-gray-900 underline hover:text-purple-600">Join as a practitioner</a>, contribute to playbooks, propose a campaign or shape AI alignment around open source sustainability.</p>
+            <h2 class="text-xl font-semibold text-purple-700 mb-2">Community</h2>
+            <p class="text-gray-700 mb-4 flex-grow">Practitioners, contributors, anyone who wants to join in helping open source sustainability.</p>
             <a 
               href={`${basePath}helpers`} 
               class="btn-sparkle w-full"
-              aria-label="Join the helper community"
+              aria-label="Join the community effort"
             >
               <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span class="btn-sparkle-text">Join In</span>
+              <span class="btn-sparkle-text">Join the Effort</span>
               <span class="btn-sparkle-particles">
                 <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
                 <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>

@@ -8,11 +8,10 @@ goals:
   - "Maintain and improve the Network Time Protocol (NTP)"
   - "Ensure reliable time synchronization for critical infrastructure"
   - "Support the security and stability of global timekeeping systems"
-status: "active"
-start_date: 2024-01-01
+status: "archived"
+start_date: 2024-01-01T00:00:00.000Z
 tags: ["infrastructure", "protocol", "foundation"]
 featured: true
-goal_amount: 11000
 ---
 
 Network Time Protocol (NTP) is one of the internet's oldest and most critical protocols, dating back to 1985. According to cybersecurity research, [NTP "remains a cornerstone of modern computing synchronization, and it is crucial for maintaining the proper operation and security of computing devices"](https://www.beyondtrust.com/blog/entry/the-implications-of-network-time-protocol-ntp-for-cybersecurity).

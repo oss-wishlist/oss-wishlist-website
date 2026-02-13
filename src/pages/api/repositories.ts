@@ -36,9 +36,12 @@ export const GET: APIRoute = async ({ cookies }) => {
       ? session.provider as OAuthProviderName
       : 'github';
     
+    console.log(`[Repositories API] Using provider: ${providerName}`);
+    
     const provider = getOAuthProvider(providerName);
     
     if (!provider) {
+      console.error(`[Repositories API] Provider '${providerName}' not configured`);
       return new Response(JSON.stringify({ 
         error: `Provider '${providerName}' not configured`,
         message: 'OAuth provider is not available'
@@ -51,6 +54,7 @@ export const GET: APIRoute = async ({ cookies }) => {
     // Fetch repositories using the provider's method
     const accessToken = session.accessToken;
     if (!accessToken) {
+      console.error('[Repositories API] No access token in session');
       return new Response(JSON.stringify({ 
         error: 'No access token in session' 
       }), {
@@ -59,7 +63,9 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
     
+    console.log(`[Repositories API] Fetching repositories for user: ${session.user.username}`);
     const repositories = await provider.fetchUserRepositories(accessToken);
+    console.log(`[Repositories API] Successfully fetched ${repositories.length} repositories`);
 
     return new Response(JSON.stringify({ 
       repositories,
