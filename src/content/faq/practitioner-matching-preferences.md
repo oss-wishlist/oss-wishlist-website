@@ -1,7 +1,7 @@
 ---
 title: How are practitioner preferences from maintainers and sponsors handled?
 description: Understanding how we work with both maintainer and sponsor preferences to create the best match.
-category: Fulfillment
+category: "Fulfillment"
 order: 8
 ---
 

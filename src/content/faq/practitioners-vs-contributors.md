@@ -2,7 +2,7 @@
 title: "How are practitioners different than open source contributors?"
 description: "Understanding the specialized role of practitioners versus traditional open source contributors"
 category: "For Open Source Practitioners"
-order: 2
+order: 4
 ---
 
 Great question! While we absolutely encourage and value all types of open source contributions, practitioners serve a specialized and distinct role:
