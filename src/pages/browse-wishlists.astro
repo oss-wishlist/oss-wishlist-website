@@ -1,0 +1,517 @@
+---
+import { getBasePath } from '../lib/paths';
+import { SUPPORTED_ECOSYSTEMS } from '../lib/ecosystems';
+import Layout from '../components/Layout.astro';
+
+// Check authentication
+const user = Astro.locals.user;
+
+// We'll fetch wishlists client-side from our API endpoint
+const basePath = getBasePath();
+
+const urgencyColors = {
+  low: 'bg-gray-100 text-gray-700',
+  medium: 'bg-gray-200 text-gray-800', 
+  high: 'bg-gray-600 text-white',
+  critical: 'bg-gray-800 text-white'
+};
+---
+
+<Layout 
+  title="Open Source Project Wishlists - Find Projects to Support | OSS Wishlist" 
+  description="Discover open source maintainers seeking support. Find projects that need funding, security audits, governance help, and professional services. Support the ecosystem.">
+  
+  <!-- Compact Hero & Filters Section -->
+  <section class="bg-gradient-to-br from-gray-100 to-gray-200 py-8 border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="mb-6">
+        <h1 class="text-5xl font-bold text-gray-900 mb-4">
+          Project <span class="text-accent">Wishlists</span>
+        </h1>
+        <p class="text-xl text-gray-600 max-w-2xl">
+          Browse open source maintainers seeking support. <a href={`${basePath}create-wishlist`} class="text-gray-700 underline hover:text-gray-900">Create your wishlist</a>
+        </p>
+      </div>
+      
+      <!-- Search & Filter Inline -->
+      <div class="grid md:grid-cols-12 gap-4 items-center">
+        <!-- Search Bar -->
+        <div class="md:col-span-9">
+          <div class="relative">
+            <input 
+              type="text" 
+              id="searchInput"
+              placeholder="Search projects by name, maintainer, or repository..."
+              class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 pl-10"
+            />
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+        </div>
+        
+        <!-- Ecosystem Filter -->
+        <div class="md:col-span-3">
+          <div class="text-xs font-semibold text-gray-700 mb-1">Filter by Ecosystem</div>
+          <select id="ecosystem-filter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
+            <option value="">All Ecosystems</option>
+            <!-- Options will be populated by JavaScript -->
+          </select>
+        </div>
+      </div>
+      
+      <!-- Stats Bar -->
+      <div class="mt-4 flex items-center justify-between text-sm text-gray-600">
+        <div class="flex gap-6">
+          <span><strong id="wishlist-count" class="text-gray-900">Loading...</strong> active wishlists</span>
+        </div>
+        <div id="searchResults" class="hidden">
+          <span id="resultCount">0</span> project(s) found
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wishlists Grid -->
+  <section class="py-8 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- No Results Message (for filtered results) -->
+      <div id="noResults" class="text-center py-12 hidden">
+        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No matching wishlists</h3>
+        <p class="text-gray-600">Try adjusting your filters or search terms</p>
+      </div>
+
+      <div id="wishlistsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-base-path={basePath}>
+        <!-- Loading state -->
+        <div id="loading" class="col-span-full text-center py-12">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-600 mx-auto mb-3"></div>
+          <p class="text-sm text-gray-600">Loading wishlists...</p>
+        </div>
+        
+        <!-- Wishlists will be populated by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-16 bg-gray-600">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl font-bold text-white mb-4">Have a Project That Needs Support?</h2>
+      <p class="text-xl text-gray-200 mb-8">Create your wishlist and connect with supporters who want to help</p>
+      <div class="flex justify-center space-x-4">
+        <a href={`${basePath}create-wishlist`} class="bg-white text-gray-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+          Create Your Wishlist
+        </a>
+      </div>
+    </div>
+  </section>
+  
+
+<script>
+  // Wishlist data
+  let allWishlists = [];
+  let basePath = '';
+  let cleanBasePath = '';
+  
+  const urgencyColors = {
+    low: 'bg-gray-100 text-gray-700',
+    medium: 'bg-gray-200 text-gray-800', 
+    high: 'bg-gray-600 text-white',
+    critical: 'bg-gray-800 text-white'
+  };
+
+  // UI state for search and sorting
+  let searchQuery = '';
+  let sortBy = 'recent'; // 'recent' | 'oldest'
+
+  // Fetch wishlists from GitHub
+  async function fetchWishlists() {
+    try {
+      const grid = document.getElementById('wishlistsGrid');
+      basePath = grid?.dataset.basePath || '';
+      // Remove trailing slash if present to avoid double slashes
+      cleanBasePath = basePath.replace(/\/$/, '');
+      const apiUrl = `${cleanBasePath}/api/wishlists`;
+      
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch wishlists`);
+      }
+      
+      const data = await response.json();
+      allWishlists = Array.isArray(data.wishlists) ? data.wishlists : data;
+      
+      // Update stats
+      const wishlistCountEl = document.getElementById('wishlist-count');
+      if (wishlistCountEl) wishlistCountEl.textContent = allWishlists.length;
+      
+      // Populate ecosystem filter
+      if (data.ecosystems) {
+        populateEcosystemFilter(data.ecosystems);
+      } else {
+        const extracted = extractEcosystems(allWishlists);
+        populateEcosystemFilter(extracted);
+      }
+      
+      // Render initial list
+      applyFilters();
+      
+    } catch (error) {
+      console.error('[fetchWishlists] Error:', error);
+      const loading = document.getElementById('loading');
+      if (loading) {
+        // Safe: Clear and rebuild with DOM methods
+        loading.textContent = '';
+        
+        const container = document.createElement('div');
+        container.className = 'text-center py-12';
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'mx-auto h-12 w-12 text-gray-400 mb-4');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('d', 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z');
+        svg.appendChild(path);
+        
+        const heading = document.createElement('h3');
+        heading.className = 'text-lg font-medium text-gray-900 mb-2';
+        heading.textContent = 'Error loading wishlists';
+        
+        const msg = document.createElement('p');
+        msg.className = 'text-gray-600';
+        msg.textContent = 'Unable to fetch data from GitHub. Please try again later.';
+        
+        const detail = document.createElement('p');
+        detail.className = 'text-sm text-gray-500 mt-2';
+        detail.textContent = error instanceof Error ? error.message : String(error);
+        
+        container.appendChild(svg);
+        container.appendChild(heading);
+        container.appendChild(msg);
+        container.appendChild(detail);
+        loading.appendChild(container);
+      }
+    }
+  }
+
+  // Display wishlists
+  function displayWishlists(wishlists) {
+    const grid = document.getElementById('wishlistsGrid');
+    const loading = document.getElementById('loading');
+    
+    if (loading) {
+      loading.remove();
+    }
+    
+    if (wishlists.length === 0) {
+      // Safe: Clear and rebuild with DOM methods
+      grid.textContent = '';
+      
+      const container = document.createElement('div');
+      container.className = 'col-span-full text-center py-12';
+      
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'mx-auto h-12 w-12 text-gray-400 mb-4');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('d', 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4');
+      svg.appendChild(path);
+      
+      const heading = document.createElement('h3');
+      heading.className = 'text-lg font-medium text-gray-900 mb-2';
+      heading.textContent = 'No wishlists yet';
+      
+      const msg = document.createElement('p');
+      msg.className = 'text-gray-600 mb-4';
+      msg.textContent = 'Be the first to create a wishlist for your open source project!';
+      
+      const link = document.createElement('a');
+      link.href = `${cleanBasePath}/create-wishlist`;
+      link.className = 'btn-primary inline-block';
+      link.textContent = 'Create Your Wishlist';
+      
+      container.appendChild(svg);
+      container.appendChild(heading);
+      container.appendChild(msg);
+      container.appendChild(link);
+      grid.appendChild(container);
+      return;
+    }
+    
+    try {
+      // Note: createWishlistCard returns HTML string - this is safe as it's template-generated
+      grid.innerHTML = wishlists.map(wishlist => createWishlistCard(wishlist)).join('');
+    } catch (error) {
+      console.error('[displayWishlists] Error creating cards:', error);
+      // Safe: Clear and rebuild with DOM methods
+      grid.textContent = '';
+      
+      const container = document.createElement('div');
+      container.className = 'col-span-full text-center py-12';
+      
+      const heading = document.createElement('h3');
+      heading.className = 'text-lg font-medium text-gray-900 mb-2';
+      heading.textContent = 'Error displaying wishlists';
+      
+      const msg = document.createElement('p');
+      msg.className = 'text-gray-600 text-sm';
+      msg.textContent = error.message;
+      
+      container.appendChild(heading);
+      container.appendChild(msg);
+      grid.appendChild(container);
+    }
+  }
+
+  // Extract and count ecosystems from wishlists
+  function extractEcosystems(wishlists) {
+    const ecosystemStats = {};
+    wishlists.forEach(wishlist => {
+      if (wishlist.technologies && Array.isArray(wishlist.technologies)) {
+        wishlist.technologies.forEach(tech => {
+          if (!ecosystemStats[tech]) {
+            ecosystemStats[tech] = { count: 0, wishlists: [] };
+          }
+          ecosystemStats[tech].count++;
+          ecosystemStats[tech].wishlists.push(wishlist.id);
+        });
+      }
+    });
+    return ecosystemStats;
+  }
+
+  // Populate ecosystem filter dropdown with actual data
+  function populateEcosystemFilter(ecosystemStats) {
+    const select = document.getElementById('ecosystem-filter');
+    if (!select) return;
+
+    // Sort ecosystems by count (highest first)
+    const sortedEcosystems = Object.entries(ecosystemStats)
+      .sort(([, a], [, b]) => (b.count || 0) - (a.count || 0));
+
+    // Clear all options
+    while (select.options.length > 0) {
+      select.remove(0);
+    }
+
+    // Add "All Ecosystems" option
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = 'All Ecosystems';
+    select.appendChild(allOption);
+
+    // Add options for each ecosystem with count
+    sortedEcosystems.forEach(([ecosystem, stats]) => {
+      const option = document.createElement('option');
+      option.value = ecosystem;
+      option.textContent = `${ecosystem} (${stats.count || 0})`;
+      select.appendChild(option);
+    });
+  }
+
+  // Populate technologies dropdown dynamically
+  function sortWishlists(list) {
+    const arr = [...list];
+    if (sortBy === 'recent') {
+      arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    } else if (sortBy === 'oldest') {
+      arr.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+    return arr;
+  }
+
+  function applyFilters() {
+    let filtered = allWishlists;
+
+    // Ecosystem filter - apply first
+    const ecosystemFilter = document.getElementById('ecosystem-filter');
+    const selectedEcosystem = ecosystemFilter?.value;
+    if (selectedEcosystem) {
+      filtered = filtered.filter(w => 
+        w.technologies && w.technologies.includes(selectedEcosystem)
+      );
+    }
+
+    // Search filter - only search project name, maintainer username, and repo URL
+    const q = (searchQuery || '').toLowerCase().trim();
+    if (q) {
+      filtered = filtered.filter(w =>
+        (w.projectName || '').toLowerCase().includes(q) ||
+        (w.maintainerUsername || '').toLowerCase().includes(q) ||
+        (w.repositoryUrl || '').toLowerCase().includes(q)
+      );
+      
+    }
+
+    // Sort and display
+    const result = sortWishlists(filtered);
+
+    const resultCount = document.getElementById('resultCount');
+    const searchResults = document.getElementById('searchResults');
+    const noResults = document.getElementById('noResults');
+
+    if (resultCount) resultCount.textContent = String(result.length);
+    if (searchResults) {
+      if (q) {
+        searchResults.classList.remove('hidden');
+      } else {
+        searchResults.classList.add('hidden');
+      }
+    }
+
+    if (noResults) {
+      if (result.length === 0) noResults.classList.remove('hidden'); else noResults.classList.add('hidden');
+    }
+
+    displayWishlists(result);
+  }
+
+  // Create wishlist card HTML
+  function createWishlistCard(wishlist) {
+    const urgencyColorClass = urgencyColors[wishlist.urgency] || 'bg-gray-100 text-gray-700';
+    // Use local logo to avoid cross-site cookie errors with GitHub images
+    const maintainerAvatar = `${basePath}images/oss-wishlist-logo.jpg`;
+    
+    // Format services list
+    const servicesHtml = wishlist.wishes && wishlist.wishes.length > 0 
+      ? wishlist.wishes.slice(0, 3).map(service => `
+          <span class="inline-block badge-pending px-2 py-1 text-xs rounded">${service}</span>
+        `).join('')
+      : '<span class="text-sm text-gray-500 italic">No services specified</span>';
+    
+    const moreServices = wishlist.wishes && wishlist.wishes.length > 3 
+      ? `<span class="text-xs text-gray-600">+${wishlist.wishes.length - 3} more</span>` 
+      : '';
+    
+    // Truncate project notes
+    const projectNotes = wishlist.additionalNotes 
+      ? (wishlist.additionalNotes.length > 100 
+          ? wishlist.additionalNotes.substring(0, 100) + '...' 
+          : wishlist.additionalNotes)
+      : '';
+    
+    return `
+      <div class="wishlist-card bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow p-6" data-project="${(wishlist.projectName || '').toLowerCase()}" data-maintainer="${(wishlist.maintainerUsername || '').toLowerCase()}">
+        <!-- Project Header -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-start gap-3 flex-1">
+            <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+              <img src="${maintainerAvatar}" alt="${wishlist.maintainerUsername}" class="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors" />
+            </a>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-900">${wishlist.projectName}</h3>
+              <a href="https://github.com/${wishlist.maintainerUsername}" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-gray-900">@${wishlist.maintainerUsername}</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Details -->
+        ${projectNotes ? `
+          <div class="mb-4">
+            <p class="text-sm text-gray-600">${projectNotes}</p>
+          </div>
+        ` : ''}
+
+        <!-- Services Needed -->
+        <div class="mb-4">
+          <h4 class="text-xs font-semibold text-gray-700 mb-2">Services Needed:</h4>
+          <div class="flex flex-wrap gap-2 items-center">
+            ${servicesHtml}
+            ${moreServices}
+          </div>
+        </div>
+
+        <!-- Project Metadata -->
+        <div class="flex items-center gap-4 text-xs text-gray-500 mb-4 pb-4 border-b">
+          ${wishlist.projectSize ? `
+            <span class="capitalize">${wishlist.projectSize} project</span>
+          ` : ''}
+          ${wishlist.repositoryUrl ? `
+            <a href="${wishlist.repositoryUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 underline">
+              View repository
+            </a>
+          ` : ''}
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between">
+          <div class="flex space-x-2">
+            <a 
+              href="${basePath}wishlist/${wishlist.id}"
+              class="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
+            >
+              View details
+            </a>
+            <a 
+              href="${basePath}fulfill?issue=${wishlist.id}"
+              class="btn-sparkle"
+            >
+              <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+              <span class="btn-sparkle-text">Fulfill wish</span>
+              <span class="btn-sparkle-particles">
+                <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
+                <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
+                <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Search functionality integrated with filters
+  function performSearch() {
+    const input = document.getElementById('searchInput');
+    searchQuery = (input?.value || '');
+    applyFilters();
+  }
+
+  // Initialize ecosystem filter with supported ecosystems
+  function initializeEcosystemFilter() {
+    const select = document.getElementById('ecosystem-filter');
+    if (!select) return;
+
+    // Add event listener for filter changes
+    select.addEventListener('change', () => applyFilters());
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize ecosystem filter dropdown
+    initializeEcosystemFilter();
+    
+    // Fetch wishlists
+    fetchWishlists();
+    
+    // Set up search
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300);
+      });
+    }
+  });
+</script>
+</Layout>
