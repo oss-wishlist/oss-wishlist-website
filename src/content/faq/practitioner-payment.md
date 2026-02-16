@@ -1,8 +1,8 @@
 ---
 title: "How are practitioners paid?"
 description: "Payment structure and process for Open Source Practitioners"
-category: "For Open Source Practitioners"
-order: 2
+category: "OSS Wishlists"
+order: 6
 ---
 
 Practitioners are compensated directly by the Wishlist Sponsors via one of two platforms (Open Collective of GitHub Sponsors):

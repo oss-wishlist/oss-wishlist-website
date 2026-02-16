@@ -1,13 +1,13 @@
 ---
 title: "How are practitioners different than open source contributors?"
 description: "Understanding the specialized role of practitioners versus traditional open source contributors"
-category: "For Open Source Practitioners"
-order: 4
+category: "OSS Wishlists"
+order: 9
 ---
 
 Great question! While we absolutely encourage and value all types of open source contributions, practitioners serve a specialized and distinct role:
 
-**Traditional Open Source Contributors** typically engage through a project's standard contribution pathway — fixing bugs, adding features, writing documentation, or participating in community discussions. These contributions are often ongoing and integrated into the project's regular development workflow.
+**Traditional Open Source Contributors** typically engage through a project's standard contribution pathway: fixing bugs, adding features, writing documentation, or participating in community discussions. These contributions are often ongoing and integrated into the project's regular development workflow.
 
 **Open Source Practitioners**, on the other hand, are matched specifically for their expertise in areas that aren't always part of a typical project contribution pathway. These specialized services include:
 

@@ -1,7 +1,7 @@
 ---
 title: "What kind of help can I request?"
 description: "Types of assistance available for maintainers"
-category: "For Maintainers"
+category: "OSS Wishlists"
 order: 1
 ---
 

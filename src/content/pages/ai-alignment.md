@@ -1,16 +1,16 @@
 ---
-title: 'AI Alignment'
-description: 'Pioneering AI benchmarks for open source sustainability, governance, and human values'
-date: 2025-11-16
+title: 'AI Alignment for Open Source'
+description: 'Aligning AI with open source values and community knowledge'
+date: 2026-02-15
 ---
 
 ## What is AI Alignment?
 
-AI alignment is the effort to design Artificial Intelligence systems so their goals, behaviors, and decisions are consistent with human values and intentions, making them safe, helpful, and reliable. This is often called AI 'safety'. In the context of CHAOSS and open source, we are focused on alignment with open source (what we have built, know, value, expect).
+AI alignment is the effort to design AI systems so their goals, behaviors, and decisions are consistent with human values. In open source, we're focused on ensuring AI systems understand and respect what we have built, what we know, what we value, and what we expect from open source communities.
 
 ## CHAOSS AI Alignment Working Group
 
-The **CHAOSS AI Alignment Working Group** is focused on ensuring AI systems understand and support open source health metrics in ways that align with open source values, practices, and community knowledge. Join us to help shape how AI systems interact with and understand open source sustainability, governance, and community health.
+The **CHAOSS AI Alignment Working Group** ensures AI systems understand and support open source health metrics in ways that align with open source values, practices, and community knowledge.
 
 ## Get Involved
 

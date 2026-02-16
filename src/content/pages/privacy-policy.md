@@ -1,13 +1,13 @@
 ---
 title: Privacy Policy
 description: How OSS Wishlist collects, uses, and protects your data
-date: 2025-11-16
+date: 2026-02-15
 ---
 
 # Privacy <span class="text-accent">Policy</span>
 
 **Effective Date:** October 23, 2025  
-**Last Updated:** November 16, 2025
+**Last Updated:** February 15, 2026
 
 ## Our Commitment to Privacy
 

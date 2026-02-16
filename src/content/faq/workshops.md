@@ -1,8 +1,8 @@
 ---
 title: "What are the workshops?"
 description: "Learn about our participatory workshops focused on open source sustainability solutions"
-category: "General"
-order: 5
+category: "Workshops & Events"
+order: 1
 ---
 
 We offer one-hour participatory workshops designed to give maintainers and practitioners hands-on experience with sustainability solutions.

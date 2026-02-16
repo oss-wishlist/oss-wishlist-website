@@ -26,8 +26,8 @@ Object.keys(faqByCategory).forEach(category => {
   faqByCategory[category].sort((a, b) => (a.data.order || 999) - (b.data.order || 999));
 });
 
-// Define category order
-const categoryOrder = ['General', 'For Sponsors', 'For Maintainers', 'Wishlists'];
+// Define category order (matching main page structure)
+const categoryOrder = ['Community', 'Workshops & Events', 'OSS Wishlists'];
 const sortedCategories = Object.keys(faqByCategory).sort((a, b) => {
   const indexA = categoryOrder.indexOf(a);
   const indexB = categoryOrder.indexOf(b);
@@ -46,12 +46,12 @@ const sortedCategories = Object.keys(faqByCategory).sort((a, b) => {
 });
 ---
 
-<Layout title="FAQ - OSS Wishlist" description="Frequently asked questions about the Open Source Wishlist platform">
+<Layout title="FAQ - Open Future" description="Frequently asked questions about Open Future, the grassroots community of practitioners">
   <div class="max-w-4xl mx-auto px-4 py-12">
     <!-- Header -->
     <div class="text-center mb-12">
       <h1 class="text-5xl font-bold text-gray-900 mb-4">Frequently Asked <span class="text-accent">Questions</span></h1>
-      <p class="text-xl text-gray-600">Everything you need to know about the Open Source Wishlist platform</p>
+      <p class="text-xl text-gray-600">Everything you need to know about Open Future</p>
     </div>
 
     <!-- FAQ Content -->

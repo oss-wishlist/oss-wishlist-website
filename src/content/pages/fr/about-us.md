@@ -1,7 +1,7 @@
 ---
 title: À propos de nous
 description: À propos de l'initiative OSS Wishlist
-date: 2025-10-27
+date: 2026-02-15
 ---
 
 # À propos de nous

@@ -1,18 +1,16 @@
 ---
-title: "Are the service prices firm?"
-description: "Understanding our pricing structure and how it may evolve"
-category: "For Wishlist Sponsors"
-order: 9
+title: "Are service prices fixed?"
+description: "Understanding our pricing structure"
+category: "OSS Wishlists"
+order: 11
 ---
 
-Kind of. We maintain set prices for each service to ensure fair compensation and prevent practitioners from undercutting each other (this is not Upwork). However, we expect to adjust pricing as we learn from practitioners' experiences and better understand what properly honors their time and expertise.
+Yes, we maintain set prices to ensure fair practitioner compensation and prevent undercutting.
 
 **Our approach:**
-- **Set prices by project size** (small, medium, large) to provide clear expectations
-- **Fair baseline rates** based on industry standards and practitioner input
-- **Periodic adjustments** as we gather feedback from practitioners about scope and effort
-- **No negotiation or bidding** to protect practitioner compensation
+- Set prices by project size (small, medium, large)
+- Based on industry standards and practitioner input
+- No bidding or negotiation
+- Periodic adjustments as we learn and improve
 
-We will likely adjust prices as we go, but we'll maintain the set-price structure overall. This ensures practitioners are compensated fairly while giving sponsors predictable costs.
-
-If you have questions about pricing for a specific service, please [contact us](/about-us#contact).
+This protects practitioners while giving sponsors predictable costs.

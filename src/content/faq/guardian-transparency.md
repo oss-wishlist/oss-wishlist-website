@@ -1,14 +1,16 @@
 ---
-title: "How will Sponsors know how their money is spent?"
-description: "Transparency and accountability measures for Sponsor investments"
-category: "For Wishlist Sponsors"
-order: 11
+title: "How do sponsors track their investment?"
+description: "Transparency measures for sponsor investments"
+category: "OSS Wishlists"
+order: 13
 ---
 
-We provide transparency and accountability measures for Sponsor investments:
+We provide transparency throughout the process:
 
-- **Wish Onboarding**: Kickoff with maintainer, sponsor, and practitioner to set and manage expectations
-- **Milestone Reports**: Bi-weely reporting
-- **Impact Metrics**: Quantifiable outcomes and improvements achieved (rubrics in every playbook)
+- **Kickoff meeting** - Maintainer, sponsor, and practitioner align on expectations
+- **Bi-weekly reports** - Regular progress updates
+- **Impact metrics** - Quantifiable outcomes using rubrics from service playbooks
+
+Sponsors can see exactly how their investment translates into real impact.
 
 
