@@ -1,8 +1,8 @@
 ---
 title: "What is expected of practitioners?"
 description: "Responsibilities and expectations for Open Source Practitioners"
-category: "For Open Source Practitioners"
-order: 3
+category: "OSS Wishlists"
+order: 5
 ---
 
 Practitioners are expected to maintain high standards of professionalism and quality:

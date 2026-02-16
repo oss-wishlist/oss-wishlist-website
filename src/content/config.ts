@@ -81,22 +81,16 @@ const guardians = defineCollection({
   }),
 });
 
-// Community Campaigns (e.g., ecosystem-wide initiatives like "Python Foundation")
-const campaigns = defineCollection({
+// Upcoming Events (community calls, workshops, etc.)
+const events = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    organization: z.string().optional(),
-    website: z.string().url().optional(),
-    contact_email: z.string().email().optional(),
-    goals: z.array(z.string()).optional(),
-    status: z.enum(['active', 'paused', 'completed', 'archived']).default('active'),
-    start_date: z.date().optional(),
-    end_date: z.date().optional(),
-    banner_image_url: z.string().url().optional(),
-    tags: z.array(z.string()).optional(),
-    featured: z.boolean().default(false),
+    date: z.date(),
+    url: z.string().url(),
+    featured: z.boolean().default(true),
+    thumbnail: z.string().default('/images/wish.jpg'),
   }),
 });
 
@@ -104,7 +98,7 @@ export const collections = {
   services,
   faq,
   pages,
-  campaigns,
   guardians,
+  events,
   'playbooks-external': playbooksExternal,
 };

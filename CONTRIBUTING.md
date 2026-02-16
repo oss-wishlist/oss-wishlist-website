@@ -145,9 +145,6 @@ Practitioners apply via the website at `/apply-practitioner`. After admin approv
 
 **Do not add practitioner profiles manually** - they must go through the application and approval process.
 
-### Campaigns
-To feature a campaign, submit a pull request adding a markdown file to the `src/content/campaigns/` folder. Campaigns should be time-bound, sustainability-focused initiatives. See existing files in that directory for examples.
-
 ## Database Schema
 
 Key tables:

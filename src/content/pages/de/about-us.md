@@ -1,7 +1,7 @@
 ---
 title: Über uns
 description: Über die OSS Wishlist Initiative
-date: 2025-10-27
+date: 2026-02-15
 ---
 
 # Über uns

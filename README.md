@@ -1,6 +1,10 @@
-# OSS Wishlist Website
+# Open Future
 
-A platform connecting open source maintainers with supporters and practitioners who can help with project needs. Built with Astro, Tailwind CSS, and React.
+A grassroots community of practitioners.
+
+Connecting to drive impact through openness in AI, digital sovereignty, and beyond while supporting each other along the way.
+
+Built with Astro, Tailwind CSS, and React.
 
 ## 🚀 Setting up your dev environment
 
