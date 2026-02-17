@@ -5,6 +5,7 @@ date: 2026-03-06T16:00:00Z
 url: "https://luma.com/785dboag"
 featured: true
 thumbnail: "/images/leaf.jpg"
+buttonText: "Register"
 ---
 
 Join us for a discussion on digital sovereignty and the role of open source in Canada.

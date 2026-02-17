@@ -67,11 +67,8 @@ const companyServices = services.filter(service =>
         <h1 id="hero-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-950 mb-4">
           Open <span class="text-accent">Future</span>
         </h1>
-        <p class="text-base md:text-lg lg:text-xl text-gray-700 mb-2">
-          A grassroots community of practitioners.
-        </p>
         <p class="text-base md:text-lg lg:text-xl text-gray-700 mb-8">
-          Connecting to drive impact through openness in AI, digital sovereignty, and beyond while supporting each other along the way.
+          Independent community infrastructure for an open future
         </p>
         
         <!-- Community & Activities -->
@@ -97,7 +94,7 @@ const companyServices = services.filter(service =>
           </article>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-purple-700 mb-2">Popup Meetups and Workshops</h2>
+            <h2 class="text-xl font-semibold text-purple-700 mb-2">Meetups and Workshops</h2>
             <p class="text-gray-700 mb-4 flex-grow">Join discussions and workshops. Share knowledge, learn from peers.</p>
             <a 
               href={`${basePath}calendar`}
@@ -118,7 +115,7 @@ const companyServices = services.filter(service =>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
             <h2 class="text-xl font-semibold text-purple-700 mb-2">OSS Wishlists</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Get paid support on validated levers for sustainability with measureable impact</p>
+            <p class="text-gray-700 mb-4 flex-grow">Declare need as verified standards for sustainability; fulfill wishes through paid support</p>
             <a 
               href={`${basePath}wishlists`} 
               class="btn-sparkle w-full"
@@ -156,7 +153,7 @@ const companyServices = services.filter(service =>
                   <img 
                     src={`${basePath}${event.data.thumbnail.startsWith('/') ? event.data.thumbnail.slice(1) : event.data.thumbnail}`}
                     alt={event.data.title}
-                    class="w-full h-48 object-cover"
+                    class="w-full h-48 object-contain bg-gray-50 p-4"
                   />
                 )}
                 <div class="p-6 flex flex-col flex-grow">
@@ -176,7 +173,7 @@ const companyServices = services.filter(service =>
                     rel="noopener noreferrer"
                     class="inline-flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors mt-auto"
                   >
-                    Register for Event
+                    {event.data.buttonText}
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>

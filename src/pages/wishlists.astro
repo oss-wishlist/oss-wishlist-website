@@ -27,69 +27,69 @@ const user = Astro.locals.user;
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
       
       <!-- Browse All Wishlists -->
-      <article class="bg-white p-6 rounded-lg shadow-sm border-2 border-purple-200 flex flex-col hover:border-purple-400 hover:shadow-md transition-all duration-200">
+      <a 
+        href={`${basePath}browse-wishlists`}
+        class="bg-white p-6 rounded-lg shadow-sm border-2 border-purple-200 flex flex-col hover:border-purple-400 hover:shadow-md transition-all duration-200 no-underline group"
+        aria-label="Browse all wishlists"
+      >
         <h2 class="text-xl font-semibold text-purple-700 mb-2">Browse All Wishlists</h2>
         <p class="text-gray-700 mb-4 flex-grow">Discover open source projects seeking support for governance, funding, security, and more.</p>
-        <a 
-          href={`${basePath}browse-wishlists`}
-          class="text-gray-700 hover:text-gray-900 font-medium"
-          aria-label="Browse all wishlists"
-        >
+        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
           Learn more →
-        </a>
-      </article>
+        </span>
+      </a>
 
       <!-- My Wishlists -->
-      <article class="bg-gray-50 p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200">
+      <a 
+        href={`${basePath}maintainers`}
+        class="bg-gray-50 p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200 no-underline group"
+        aria-label="View my wishlists"
+      >
         <h2 class="text-xl font-semibold text-purple-700 mb-2">My Wishlists</h2>
         <p class="text-gray-700 mb-4 flex-grow">Manage your project wishlists. Create, edit, and track fulfillment of your wishes.</p>
-        <a 
-          href={`${basePath}maintainers`}
-          class="text-gray-700 hover:text-gray-900 font-medium"
-          aria-label="View my wishlists"
-        >
+        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
           Learn more →
-        </a>
-      </article>
+        </span>
+      </a>
 
       <!-- Create Wishlist -->
-      <article class="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-lg shadow-sm border-2 border-purple-300 flex flex-col hover:border-purple-500 hover:shadow-md transition-all duration-200">
+      <a 
+        href={`${basePath}create-wishlist`}
+        class="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-lg shadow-sm border-2 border-purple-300 flex flex-col hover:border-purple-500 hover:shadow-md transition-all duration-200 no-underline group"
+        aria-label="Create new wishlist"
+      >
         <h2 class="text-xl font-semibold text-purple-700 mb-2">Create Wishlist</h2>
         <p class="text-gray-700 mb-4 flex-grow">Start a new wishlist for your open source project. Express your needs to the community.</p>
-        <a 
-          href={`${basePath}create-wishlist`}
-          class="text-gray-700 hover:text-gray-900 font-medium"
-          aria-label="Create new wishlist"
-        >
+        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
           Learn more →
-        </a>
-      </article>
+        </span>
+      </a>
 
       <!-- Find Practitioners -->
-      <article class="bg-white p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200">
+      <a 
+        href={`${basePath}practitioners`}
+        class="bg-white p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200 no-underline group"
+        aria-label="View practitioners directory"
+      >
         <h2 class="text-xl font-semibold text-purple-700 mb-2">Find Practitioners</h2>
         <p class="text-gray-700 mb-4 flex-grow">Connect with talented practitioners who have availability to fulfill wishlist needs.</p>
-        <a 
-          href={`${basePath}practitioners`}
-          class="text-gray-700 hover:text-gray-900 font-medium"
-          aria-label="View practitioners directory"
-        >
+        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
           Learn more →
-        </a>
-      </article>
+        </span>
+      </a>
 
       <!-- Services Catalogue -->
-      <article class="bg-gray-50 p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200">
+      <a 
+        href={`${basePath}catalog`}
+        class="bg-gray-50 p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200 no-underline group"
+        aria-label="View services catalogue"
+      >
         <h2 class="text-xl font-semibold text-purple-700 mb-2">Services Catalogue</h2>
         <p class="text-gray-700 mb-4 flex-grow">Explore professional services available for open source projects and maintainers.</p>
-        <a 
-          href={`${basePath}catalog`}
-          class="text-gray-700 hover:text-gray-900 font-medium"
-          aria-label="View services catalogue"
-        >
+        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
           Learn more →
-        </a>
-      </article>
+        </span>
+      </a>
 
     </div>
   </section>
