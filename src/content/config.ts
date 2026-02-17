@@ -91,6 +91,7 @@ const events = defineCollection({
     url: z.string().url(),
     featured: z.boolean().default(true),
     thumbnail: z.string().default('/images/wish.jpg'),
+    buttonText: z.string().default('Register for Event'),
   }),
 });
 
