@@ -26,10 +26,10 @@ No one, although [sponsorship](https://github.com/sponsors/emmairwin) is greatly
 
 Join our community conversations across these channels:
 
-- **[GitHub](https://github.com/oss-wishlist)** - Contribute to our projects and track development
-- **[Slack](https://join.slack.com/t/opensourcewishlist/shared_invite/zt-3juhbwcte-w_yUyiZJTbqo5EzKbCGbiQ)** - Real-time chat and collaboration
-- **[LinkedIn](https://www.linkedin.com/company/110187652)** - Professional updates and networking
-- **[Mastodon](https://mastodon.social/@osswishlist)** - Open social announcements
-- **[Bluesky](https://bsky.app/profile/oss-wishlist.bsky.social)** - Community updates and discussions
+- **[GitHub](https://github.com/oss-wishlist)**
+- **[Slack](https://join.slack.com/t/opensourcewishlist/shared_invite/zt-3juhbwcte-w_yUyiZJTbqo5EzKbCGbiQ)**
+- **[LinkedIn](https://www.linkedin.com/company/110187652)**
+- **[Mastodon](https://mastodon.social/@osswishlist)**
+- **[Bluesky](https://bsky.app/profile/oss-wishlist.bsky.social)**
 
 **[Join the Community →](/helpers)**
