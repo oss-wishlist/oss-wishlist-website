@@ -14,7 +14,7 @@ export interface Props {
 
 const { 
   title, 
-  description = "Get the sustainability support your open source project needs", 
+  description = "Open Future: a focus on community as infrastructure for reclaiming open. Open source, open source AI, digital sovereignty, workshops, meetups, and community-led initiatives", 
   showHeader = true,
   image = '/logo.png',
   type = 'website',
@@ -59,7 +59,7 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
-    <meta property="og:site_name" content="Open Source Wish List" />
+    <meta property="og:site_name" content="Open Future" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
@@ -80,10 +80,10 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
       {
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "Open Source Wish List",
+        "name": "Open Future",
         "url": "https://oss-wishlist.com",
         "logo": "https://oss-wishlist.com/logo.png",
-        "description": "Community infrastructure connecting open source maintainers with professional practitioners for sustainability services",
+        "description": "Open Future: a focus on community as infrastructure for reclaiming open. Open source, open source AI, digital sovereignty, workshops, meetups, and community-led initiatives. Home of the OSS Wishlist project",
         "sameAs": [
           "https://github.com/oss-wishlist",
           "https://www.linkedin.com/company/110187652",
