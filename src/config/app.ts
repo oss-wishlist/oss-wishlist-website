@@ -4,8 +4,8 @@
  */
 
 // Site metadata
-export const SITE_TITLE = 'Open Source Wishlist';
-export const SITE_DESCRIPTION = 'Connecting open source projects with expert help and resources';
+export const SITE_TITLE = 'Open Future';
+export const SITE_DESCRIPTION = 'Open Future: a focus on community as infrastructure for reclaiming open. Open source, open source AI, digital sovereignty, workshops, meetups, and community-led initiatives';
 
 // Get the base path from Astro's built-in BASE_URL (set by astro.config.mjs)
 export const BASE_PATH = import.meta.env.BASE_URL || '/';
