@@ -1,0 +1,23 @@
+src/pages/index.astro
+  4391934b7fc36937 107,109-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "2fa0902a1ad40819ed3d9d861536d479e9a2426b",
+  "prompts": {
+    "4391934b7fc36937": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "53b2a382-ad6e-42cb-90df-ceea36b27ca8",
+        "model": "unknown"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 111,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
