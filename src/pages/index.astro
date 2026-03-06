@@ -12,39 +12,6 @@ const isPlaceholder = siteMode === 'placeholder';
 
 const services = await getCollection('services');
 
-// Get upcoming events from markdown collection
-const allEvents = await getCollection('events');
-const now = new Date();
-const upcomingEvents = allEvents
-  .filter(event => event.data.featured && new Date(event.data.date) >= now)
-  .sort((a, b) => new Date(a.data.date).getTime() - new Date(b.data.date).getTime())
-  .slice(0, 3);
-
-function formatEventDate(date: Date): string {
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const isToday = date.toDateString() === today.toDateString();
-  const isTomorrow = date.toDateString() === tomorrow.toDateString();
-  
-  if (isToday) return 'Today';
-  if (isTomorrow) return 'Tomorrow';
-  
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-  });
-}
-
-function formatEventTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    timeZoneName: 'short'
-  });
-}
 const featuredServices = [] as typeof services;
 const maintainerServices = services.filter(service => 
   service.data.target_audience === 'maintainer' || service.data.target_audience === 'both'
@@ -137,66 +104,18 @@ const companyServices = services.filter(service =>
       </div>
     </section>
 
-    <!-- Upcoming Events Section -->
-    {upcomingEvents.length > 0 && (
+    <!-- Events / Reach Out Section -->
     <section class="bg-gradient-to-br from-purple-50 to-violet-50 py-10" aria-labelledby="events-heading">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 id="events-heading" class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Upcoming Events</h2>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {upcomingEvents.map(event => {
-            const eventDate = new Date(event.data.date);
-            return (
-              <article class="bg-white rounded-lg overflow-hidden shadow-md border-t-4 border-purple-500 hover:shadow-lg transition-shadow flex flex-col">
-                {event.data.thumbnail && (
-                  <img 
-                    src={`${basePath}${event.data.thumbnail.startsWith('/') ? event.data.thumbnail.slice(1) : event.data.thumbnail}`}
-                    alt={event.data.title}
-                    class="w-full h-48 object-contain bg-gray-50 p-4"
-                  />
-                )}
-                <div class="p-6 flex flex-col flex-grow">
-                  <div class="mb-4">
-                    <h3 class="font-bold text-gray-900 text-lg mb-2">{event.data.title}</h3>
-                    <div class="flex items-center gap-2 text-sm text-purple-700 font-semibold">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {formatEventDate(eventDate)} • {formatEventTime(eventDate)}
-                    </div>
-                  </div>
-                  <p class="text-gray-600 text-sm mb-6 flex-grow leading-relaxed">{event.data.description}</p>
-                  <a 
-                    href={event.data.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors mt-auto"
-                  >
-                    {event.data.buttonText}
-                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </a>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        <div class="mt-12 text-center">
-          <a 
-            href={`${basePath}calendar`}
-            class="inline-flex items-center gap-2 text-purple-700 hover:text-purple-900 font-semibold text-lg"
-          >
-            View Full Calendar
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
-        </div>
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 id="events-heading" class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Upcoming Events</h2>
+        <p class="text-lg text-gray-600 leading-relaxed">
+          No upcoming events are scheduled right now, but if there's a topic you'd like to dig into, reach out!
+          Find Emma on <a href="https://join.slack.com/t/opensourcewishlist/shared_invite/zt-3juhbwcte-w_yUyiZJTbqo5EzKbCGbiQ" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-900">Slack</a> - she is always interested in creating connection and conversations around
+          <strong>open source</strong>, <strong>education</strong>, <strong>science</strong>,
+          <strong>AI</strong>, <strong>data</strong>, and <strong>digital sovereignty</strong>.
+        </p>
       </div>
     </section>
-    )}
         </div>
       </div>
     </div>
