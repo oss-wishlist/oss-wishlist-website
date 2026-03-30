@@ -7,88 +7,45 @@ const user = Astro.locals.user;
 ---
 
 <Layout 
-  title="OSS Wishlists | Open Future" 
-  description="Browse wishlists, create your own, find practitioners, and help fulfill needs in the open source community.">
+  title="Wishlists | Open Source Wishlist" 
+  description="Browse open source project wishlists or manage your own.">
   
   <!-- Hero Section -->
-  <section class="bg-gradient-to-br from-gray-50 to-gray-100 py-20">
+  <section class="bg-gradient-to-br from-gray-50 to-gray-100 py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <h1 class="text-5xl font-bold text-gray-900 mb-4">
         OSS <span class="text-accent">Wishlists</span>
       </h1>
       <p class="text-xl text-gray-700 max-w-3xl mx-auto">
-        Maintainers create validated wishlists from standardized categories. Skilled practitioners are compensated to fulfill wishes, with outcomes documented for community impact.
+        Maintainers declare their project needs. Funders make it possible. Practitioners do the work.
       </p>
     </div>
   </section>
 
-  <!-- Cards Grid -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+  <!-- Two Cards -->
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid md:grid-cols-2 gap-8">
       
-      <!-- Browse All Wishlists -->
+      <!-- Browse Wishlists -->
       <a 
         href={`${basePath}browse-wishlists`}
-        class="bg-white p-6 rounded-lg shadow-sm border-2 border-purple-200 flex flex-col hover:border-purple-400 hover:shadow-md transition-all duration-200 no-underline group"
+        class="bg-white p-8 rounded-lg shadow-sm border-2 border-purple-200 flex flex-col hover:border-purple-400 hover:shadow-md transition-all duration-200 no-underline group"
         aria-label="Browse all wishlists"
       >
-        <h2 class="text-xl font-semibold text-purple-700 mb-2">Browse All Wishlists</h2>
-        <p class="text-gray-700 mb-4 flex-grow">Discover open source projects seeking support for governance, funding, security, and more.</p>
-        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
-          Learn more →
-        </span>
+        <h2 class="text-2xl font-semibold text-purple-700 mb-3">Browse Wishlists</h2>
+        <p class="text-gray-700 mb-6 flex-grow">Discover open source projects seeking support for governance, funding, security, and more. Find a wish you can help fulfill.</p>
+        <span class="text-gray-700 group-hover:text-gray-900 font-medium">Browse all wishlists →</span>
       </a>
 
       <!-- My Wishlists -->
       <a 
         href={`${basePath}maintainers`}
-        class="bg-gray-50 p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200 no-underline group"
-        aria-label="View my wishlists"
+        class="bg-white p-8 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200 no-underline group"
+        aria-label="My wishlists"
       >
-        <h2 class="text-xl font-semibold text-purple-700 mb-2">My Wishlists</h2>
-        <p class="text-gray-700 mb-4 flex-grow">Manage your project wishlists. Create, edit, and track fulfillment of your wishes.</p>
-        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
-          Learn more →
-        </span>
-      </a>
-
-      <!-- Create Wishlist -->
-      <a 
-        href={`${basePath}create-wishlist`}
-        class="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-lg shadow-sm border-2 border-purple-300 flex flex-col hover:border-purple-500 hover:shadow-md transition-all duration-200 no-underline group"
-        aria-label="Create new wishlist"
-      >
-        <h2 class="text-xl font-semibold text-purple-700 mb-2">Create Wishlist</h2>
-        <p class="text-gray-700 mb-4 flex-grow">Start a new wishlist for your open source project. Express your needs to the community.</p>
-        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
-          Learn more →
-        </span>
-      </a>
-
-      <!-- Find Practitioners -->
-      <a 
-        href={`${basePath}practitioners`}
-        class="bg-white p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200 no-underline group"
-        aria-label="View practitioners directory"
-      >
-        <h2 class="text-xl font-semibold text-purple-700 mb-2">Find Practitioners</h2>
-        <p class="text-gray-700 mb-4 flex-grow">Connect with talented practitioners who have availability to fulfill wishlist needs.</p>
-        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
-          Learn more →
-        </span>
-      </a>
-
-      <!-- Services Catalogue -->
-      <a 
-        href={`${basePath}catalog`}
-        class="bg-gray-50 p-6 rounded-lg shadow-sm border-2 border-gray-200 flex flex-col hover:border-gray-400 hover:shadow-md transition-all duration-200 no-underline group"
-        aria-label="View services catalogue"
-      >
-        <h2 class="text-xl font-semibold text-purple-700 mb-2">Services Catalogue</h2>
-        <p class="text-gray-700 mb-4 flex-grow">Explore professional services available for open source projects and maintainers.</p>
-        <span class="text-gray-700 group-hover:text-gray-900 font-medium">
-          Learn more →
-        </span>
+        <h2 class="text-2xl font-semibold text-purple-700 mb-3">My Wishlists</h2>
+        <p class="text-gray-700 mb-6 flex-grow">Create a new wishlist for your open source project, or view and manage the ones you've already created.</p>
+        <span class="text-gray-700 group-hover:text-gray-900 font-medium">View or create wishlists →</span>
       </a>
 
     </div>

@@ -1895,7 +1895,7 @@ ${repositories[0].url}
               <span className={`font-medium ${wishlistData.selectedServices.length >= MAX_WISHES ? 'text-red-700' : 'text-gray-600'}`}>
                 Select up to {MAX_WISHES} services
               </span>
-              <span className="text-gray-500"> — {wishlistData.selectedServices.length} selected</span>
+              <span className="text-gray-500"> ({wishlistData.selectedServices.length} selected)</span>
             </p>
             {isEditingExisting && originalServices.length > 0 && (
               <p className="text-sm text-gray-600 mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
