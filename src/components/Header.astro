@@ -2,11 +2,11 @@
 import { getBasePath } from '../lib/paths';
 import { getPractitionerByUsername } from '../lib/db';
 
-// This is a standalone header component for Open Future
+// This is a standalone header component for Open Source Wishlist
 // It contains a simple navigation menu with:
-// - Open Future logo and home link
+// - Open Source Wishlist logo and home link
+// - Community top-level link
 // - About dropdown (About Us, FAQ, Terms & Conditions, Login/Logout)
-// All other navigation is handled through the homepage cards
 
 const basePath = getBasePath(); // Returns with trailing slash
 const logoUrl = '/logo.png';
@@ -27,13 +27,21 @@ if (user?.login || user?.username) {
   <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
     <div class="flex justify-between items-center h-16 gap-2">
       <div class="flex items-center gap-2 min-w-0">
-        <img src={logoUrl} alt="Open Future logo" class="h-8 w-8 flex-shrink-0" />
-        <a href={basePath} class="text-sm sm:text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded truncate">Open Future</a>
+        <img src={logoUrl} alt="Open Source Wishlist logo" class="h-8 w-8 flex-shrink-0" />
+        <a href={basePath} class="text-sm sm:text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded truncate">Open Source Wishlist</a>
       </div>
       
       <!-- Desktop Navigation -->
   <div class="hidden md:flex space-x-6 items-center">
         
+        <!-- Community Link -->
+        <a
+          href={`${basePath}helpers`}
+          class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 min-h-[44px] flex items-center"
+        >
+          Community
+        </a>
+
         <!-- About Dropdown -->
         <div class="relative" id="about-dropdown">
           <button 
@@ -90,6 +98,8 @@ if (user?.login || user?.username) {
     <!-- Mobile Navigation Menu -->
     <div id="mobile-menu" class="hidden md:hidden pb-4" role="navigation" aria-label="Mobile navigation">
       <div class="space-y-1">
+        <a href={`${basePath}helpers`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Community</a>
+        <div class="border-t border-gray-200 my-2"></div>
         <a href={`${basePath}about-us`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">About Us</a>
         <a href={`${basePath}faq`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">FAQ</a>
         <a href={`${basePath}terms`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Terms & Conditions</a>

@@ -1,6 +1,6 @@
 ---
 title: "Moderation Strategy"
-description: "Policies, workflows, and tooling to keep your community healthy, inclusive, and safe—clear guidance for moderators, predictable enforcement, and reduced maintainer load."
+description: "Policies, workflows, and tooling to keep your community healthy, inclusive, and safe. Clear guidance for moderators, predictable enforcement, and reduced maintainer load."
 type: "service"
 service_type: "consulting"
 playbook: moderation-strategy

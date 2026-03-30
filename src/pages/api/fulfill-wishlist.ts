@@ -118,7 +118,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
         const custom = sel && sel.customPractitioner ? ` (Custom details: ${sel.customPractitioner})` : '';
         const priceVal = getPriceForService(slug, fulfillmentData.projectSize, services as any);
         const priceText = priceVal ? formatPrice(priceVal) : 'Custom pricing';
-        perServiceLines.push(`- ${title}: ${choice}${custom} — Price: ${priceText}`);
+        perServiceLines.push(`- ${title}: ${choice}${custom} - Price: ${priceText}`);
       }
     } else {
       // Only names from fundedServices list
@@ -147,7 +147,7 @@ ${fulfillmentData.timeline ? `\n**Timeline:** ${fulfillmentData.timeline}` : ''}
 ${fulfillmentData.additionalItems || 'None specified'}
 
 ## HONORARIUM (Maintainer)
-${fulfillmentData.includeSponsorship ? '✅ Include one-time honorarium' : '—'}
+${fulfillmentData.includeSponsorship ? '✅ Include one-time honorarium' : 'No'}
 
 ## REASON FOR FULFILLMENT
 ${fulfillmentData.reason}
