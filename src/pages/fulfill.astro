@@ -3,7 +3,7 @@ import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
 import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
-import { getApprovedPractitioners } from '../lib/db';
+import { getApprovedPractitioners, getWishlistById } from '../lib/db';
 
 export const prerender = false;
 
@@ -60,62 +60,56 @@ let projectSize: 'small' | 'medium' | 'large' | null = null;
 issueNumber = url.searchParams.get('issue');
 
 if (issueNumber) {
-  // Fetch wishlist from database API
+  // Query database directly (avoids unreliable self-referential HTTP fetch in SSR)
   try {
-    const apiUrl = new URL(`${basePath}api/wishlist`, url.origin);
-    apiUrl.searchParams.set('id', issueNumber);
-    
-    const response = await fetch(apiUrl.toString());
-    
-    if (response.ok) {
-      const data = await response.json();
-      const wishlist = data.wishlist;
-      
-      if (wishlist) {
-        // Found in database - use this data
-        const projectName = wishlist.projectName;
-        projectSize = wishlist.projectSize as 'small' | 'medium' | 'large';
-        
+    const wishlistId = parseInt(issueNumber, 10);
+    if (!isNaN(wishlistId)) {
+      const wishlist = await getWishlistById(wishlistId);
+
+      if (wishlist && wishlist.approved) {
+        const projectName = wishlist.project_name;
+        projectSize = (wishlist.project_size as 'small' | 'medium' | 'large') || null;
+        const wishlistUrl = wishlist.issue_url || `https://oss-wishlist.com/wishlist/${wishlist.id}`;
+
         wishlistData = {
           issueNumber: wishlist.id,
           projectName,
-          repositoryUrl: wishlist.repositoryUrl,
-          maintainer: wishlist.maintainerUsername,
+          repositoryUrl: wishlist.repository_url,
+          maintainer: wishlist.maintainer_username,
           wishes: wishlist.wishes || [],
           services: wishlist.wishes || [],
           urgency: wishlist.urgency,
           technologies: wishlist.technologies || [],
-          projectSize: wishlist.projectSize,
-          additionalNotes: wishlist.additionalNotes,
-          url: wishlist.wishlistUrl,
-          openToSponsorship: wishlist.openToSponsorship,
-          preferredPractitioner: wishlist.preferredPractitioner || null,
-          nomineeName: wishlist.nomineeName || null,
-          nomineeEmail: wishlist.nomineeEmail || null,
-          nomineeGithub: wishlist.nomineeGithub || null
+          projectSize: wishlist.project_size,
+          additionalNotes: wishlist.additional_notes,
+          url: wishlistUrl,
+          openToSponsorship: wishlist.open_to_sponsorship,
+          preferredPractitioner: wishlist.preferred_practitioner || null,
+          nomineeName: wishlist.nominee_name || null,
+          nomineeEmail: wishlist.nominee_email || null,
+          nomineeGithub: wishlist.nominee_github || null
         };
-        
+
         // Also set githubIssue for compatibility
         githubIssue = {
           number: wishlist.id,
           title: `Wishlist: ${projectName}`,
-          html_url: wishlist.wishlistUrl,
+          html_url: wishlistUrl,
           user: {
-            login: wishlist.maintainerUsername,
-            // Use local logo to avoid cross-site cookie errors with GitHub images
+            login: wishlist.maintainer_username,
             avatar_url: '/images/oss-wishlist-logo.jpg',
           },
         };
       }
     }
   } catch (error) {
-    // Database fetch failed, will show error
+    console.error('[fulfill] Database query failed:', error);
   }
 }
 
-// If no wishlist data found, show error
+// If no wishlist data found, redirect to browse page
 if (!wishlistData) {
-  return Astro.redirect(`${basePath}error?message=${encodeURIComponent('Wishlist not found')}`);
+  return Astro.redirect(`${basePath}browse-wishlists`);
 }
 ---
 

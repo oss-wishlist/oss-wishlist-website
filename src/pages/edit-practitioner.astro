@@ -4,6 +4,7 @@ const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
 import { getCollection } from 'astro:content';
+import { getPractitionersBySubmitter } from '../lib/db';
 
 // Get user from session
 const user = Astro.locals.user;
@@ -12,22 +13,11 @@ if (!user) {
   return Astro.redirect(`${basePath}?error=login-required`);
 }
 
-// Fetch user's practitioner profile
-const origin = Astro.url.origin;
-const sessionCookie = Astro.cookies.get('oss_session') || Astro.cookies.get('github_session');
-const myPractitionerResponse = await fetch(`${origin}${basePath}api/my-practitioner`, {
-  headers: {
-    'Cookie': `oss_session=${sessionCookie?.value}`
-  }
-});
+// Fetch user's practitioner profile directly from DB
+const userIdentifier = (user as any).login || (user as any).username;
+const profiles = userIdentifier ? await getPractitionersBySubmitter(userIdentifier) : [];
 
-let practitioner = null;
-if (myPractitionerResponse.ok) {
-  const data = await myPractitionerResponse.json();
-  if (data.success) {
-    practitioner = data.practitioner;
-  }
-}
+let practitioner = profiles[0] || null;
 
 if (!practitioner) {
   return Astro.redirect(`${basePath}practitioners?error=no-profile`);
