@@ -64,6 +64,8 @@ const playbooksExternal = defineCollection({
   schema: z.object({
     title: z.string().optional(),
     description: z.string().optional(),
+    service: z.string().optional(),
+    github_folder: z.string().optional(),
   }),
 });
 
