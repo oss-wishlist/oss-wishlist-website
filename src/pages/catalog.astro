@@ -199,6 +199,31 @@ function getPlaybookForService(serviceSlug: string) {
       });
     }
 
+    function updateURL() {
+      const params = new URLSearchParams(window.location.search);
+      if (currentPractitioner) {
+        params.set('practitioner', currentPractitioner);
+      } else {
+        params.delete('practitioner');
+      }
+      const newURL = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      history.replaceState(null, '', newURL);
+    }
+
+    // Pre-populate practitioner filter from URL on load
+    const initialParams = new URLSearchParams(window.location.search);
+    const practitionerFromQuery = initialParams.get('practitioner');
+    if (practitionerFromQuery && practitionerSelect) {
+      const matchingOption = practitionerSelect.querySelector(`option[value="${CSS.escape(practitionerFromQuery)}"]`);
+      if (matchingOption) {
+        practitionerSelect.value = practitionerFromQuery;
+        currentPractitioner = practitionerFromQuery;
+        filterCards();
+      }
+    }
+
     // Type filtering
     typeFilterButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -219,6 +244,7 @@ function getPlaybookForService(serviceSlug: string) {
     if (practitionerSelect) {
       practitionerSelect.addEventListener('change', () => {
         currentPractitioner = practitionerSelect.value;
+        updateURL();
         filterCards();
       });
     }
