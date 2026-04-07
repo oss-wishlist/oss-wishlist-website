@@ -3,8 +3,17 @@ import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { getApprovedPractitioners } from '../lib/db';
 
 const servicesRaw = await getCollection('services');
+
+let practitioners: { name: string; slug: string; services: string[] }[] = [];
+try {
+  const allPractitioners = await getApprovedPractitioners();
+  practitioners = allPractitioners.map(p => ({ name: p.name, slug: p.slug, services: p.services }));
+} catch {
+  // db unavailable — dropdown will just be empty
+}
 // Sort services: general-need first, then alphabetically
 const services = servicesRaw.sort((a, b) => {
   if (a.slug === 'general-need') return -1;
@@ -47,7 +56,7 @@ function getPlaybookForService(serviceSlug: string) {
       <div class="mb-8 space-y-4">
         <!-- Type Filter -->
         <div class="text-center">
-          <div class="flex flex-wrap justify-center gap-2">
+          <div class="flex flex-wrap justify-center gap-2 items-center">
             <button class="type-filter-btn active badge-pending px-6 py-3 rounded-lg text-sm font-medium" 
                     data-type="all">
               All
@@ -60,6 +69,15 @@ function getPlaybookForService(serviceSlug: string) {
                     data-type="resource">
               Resources
             </button>
+            {practitioners.length > 0 && (
+              <select id="practitioner-filter"
+                      class="px-4 py-3 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 cursor-pointer">
+                <option value="">Filter by Practitioner</option>
+                {practitioners.map(p => (
+                  <option value={p.slug}>{p.name}</option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
@@ -73,7 +91,8 @@ function getPlaybookForService(serviceSlug: string) {
           <div class={`service-card p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow ${
             service.slug === 'general-need' ? 'bg-purple-50' : 'bg-white'
           }`}
-               data-type={service.data.type}>
+               data-type={service.data.type}
+               data-slug={service.slug}>
             <div class="flex justify-between items-start mb-4">
               <div>
                 <h3 class="text-xl font-semibold text-gray-900">
@@ -150,24 +169,33 @@ function getPlaybookForService(serviceSlug: string) {
   </section>
 </Layout>
 
-<script>
-  // Type filtering only
+<script define:vars={{ practitioners }}>
   document.addEventListener('DOMContentLoaded', function() {
     const typeFilterButtons = document.querySelectorAll('.type-filter-btn');
     const serviceCards = document.querySelectorAll('.service-card');
-    
+    const practitionerSelect = document.getElementById('practitioner-filter');
+
     let currentType = 'all';
+    let currentPractitioner = '';
+
+    // Build a map: serviceSlug -> array of practitioner slugs that offer it
+    const servicesPractitionerMap = {};
+    practitioners.forEach(p => {
+      p.services.forEach(serviceSlug => {
+        if (!servicesPractitionerMap[serviceSlug]) servicesPractitionerMap[serviceSlug] = [];
+        servicesPractitionerMap[serviceSlug].push(p.slug);
+      });
+    });
 
     function filterCards() {
       serviceCards.forEach(card => {
         const cardType = card.getAttribute('data-type');
+        const cardSlug = card.getAttribute('data-slug');
         const typeMatch = currentType === 'all' || cardType === currentType;
-        
-        if (typeMatch) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
+        const practitionerMatch = !currentPractitioner ||
+          (servicesPractitionerMap[cardSlug] || []).includes(currentPractitioner);
+
+        card.style.display = (typeMatch && practitionerMatch) ? 'block' : 'none';
       });
     }
 
@@ -175,17 +203,24 @@ function getPlaybookForService(serviceSlug: string) {
     typeFilterButtons.forEach(button => {
       button.addEventListener('click', () => {
         currentType = button.getAttribute('data-type');
-        
-        // Update active button
+
         typeFilterButtons.forEach(btn => {
           btn.classList.remove('active', 'badge-pending');
           btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
         });
         button.classList.add('active', 'badge-pending');
         button.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-        
+
         filterCards();
       });
     });
+
+    // Practitioner filtering
+    if (practitionerSelect) {
+      practitionerSelect.addEventListener('change', () => {
+        currentPractitioner = practitionerSelect.value;
+        filterCards();
+      });
+    }
   });
 </script>
