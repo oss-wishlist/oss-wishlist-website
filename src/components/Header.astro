@@ -42,6 +42,24 @@ if (user?.login || user?.username) {
           Community
         </a>
 
+        <!-- Practitioner shortcuts -->
+        {userPractitionerSlug && (
+          <>
+            <a
+              href={`${basePath}maintainers`}
+              class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 min-h-[44px] flex items-center"
+            >
+              Your Wishlists
+            </a>
+            <a
+              href={`${basePath}practitioners/${userPractitionerSlug}`}
+              class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 min-h-[44px] flex items-center"
+            >
+              Your Profile
+            </a>
+          </>
+        )}
+
         <!-- About Dropdown -->
         <div class="relative" id="about-dropdown">
           <button 
@@ -99,6 +117,12 @@ if (user?.login || user?.username) {
     <div id="mobile-menu" class="hidden md:hidden pb-4" role="navigation" aria-label="Mobile navigation">
       <div class="space-y-1">
         <a href={`${basePath}helpers`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Community</a>
+        {userPractitionerSlug && (
+          <>
+            <a href={`${basePath}maintainers`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Your Wishlists</a>
+            <a href={`${basePath}practitioners/${userPractitionerSlug}`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Your Profile</a>
+          </>
+        )}
         <div class="border-t border-gray-200 my-2"></div>
         <a href={`${basePath}about-us`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">About Us</a>
         <a href={`${basePath}faq`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">FAQ</a>
