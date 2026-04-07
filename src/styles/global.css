@@ -56,7 +56,16 @@
     display: flex;
     width: 100%;
   }
-  
+
+  /* Purple-always variant — starts purple, stays purple */
+  .btn-sparkle-purple {
+    background: linear-gradient(to right, rgb(147, 51, 234), rgb(109, 40, 217));
+  }
+
+  .btn-sparkle-purple:hover {
+    background: linear-gradient(to right, rgb(126, 34, 206), rgb(91, 33, 182));
+  }
+
   .btn-sparkle:hover {
     background: linear-gradient(to right, rgb(147, 51, 234), rgb(109, 40, 217));
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
