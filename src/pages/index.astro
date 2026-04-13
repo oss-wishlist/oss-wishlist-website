@@ -42,7 +42,7 @@ const companyServices = services.filter(service =>
         <div class="grid md:grid-cols-3 gap-6 mb-8" role="list">
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
             <h2 class="text-xl font-semibold text-purple-700 mb-2">Wishlists</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Browse open source project wishlists or create one for your own project.</p>
+            <p class="text-gray-700 mb-4 flex-grow">Maintainers can post specific needs and have them fulfilled through a practitioner, a funded contributor, or employee time from a supporting company.</p>
             <a 
               href={`${basePath}wishlists`} 
               class="btn-sparkle w-full"
@@ -62,7 +62,7 @@ const companyServices = services.filter(service =>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
             <h2 class="text-xl font-semibold text-purple-700 mb-2">Practitioners</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Find experienced practitioners ready to help open source projects with non-code needs.</p>
+            <p class="text-gray-700 mb-4 flex-grow">Independent open source experts ready to take on a wish from a project that needs their skills.</p>
             <a 
               href={`${basePath}practitioners`}
               class="btn-sparkle w-full"
@@ -81,17 +81,17 @@ const companyServices = services.filter(service =>
           </article>
           
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-purple-700 mb-2">Services</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Explore the range of services practitioners offer to help open source projects thrive.</p>
+            <h2 class="text-xl font-semibold text-purple-700 mb-2">Catalog of Services</h2>
+            <p class="text-gray-700 mb-4 flex-grow">Services with defined outcomes and rubrics, so projects know what they are getting and funders can see the impact of their investment.</p>
             <a 
               href={`${basePath}catalog`} 
               class="btn-sparkle w-full"
-              aria-label="Explore services catalogue"
+              aria-label="Explore services catalog"
             >
               <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              <span class="btn-sparkle-text">Explore Services Catalogue</span>
+              <span class="btn-sparkle-text">Explore Services Catalog</span>
               <span class="btn-sparkle-particles">
                 <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
                 <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
@@ -101,21 +101,20 @@ const companyServices = services.filter(service =>
           </article>
         </div>
 
+        <!-- Read More Link -->
+        <p class="text-sm text-gray-600 mt-2">
+          Read more about Open Source Wishlist &rarr;
+          <a
+            href="https://sunnydeveloper.com/open-source-wishlist-community-infrastructure-for-oss-sustainability/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link-secondary font-medium"
+          >Open Source Wishlist: Community Infrastructure for OSS Sustainability</a>
+        </p>
+
       </div>
     </section>
 
-    <!-- Events / Reach Out Section -->
-    <section class="bg-gradient-to-br from-purple-50 to-violet-50 py-10" aria-labelledby="events-heading">
-      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 id="events-heading" class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Upcoming Events</h2>
-        <p class="text-lg text-gray-600 leading-relaxed">
-          No upcoming events are scheduled right now, but if there's a topic you'd like to dig into, reach out!
-          Find Emma on <a href="https://join.slack.com/t/opensourcewishlist/shared_invite/zt-3juhbwcte-w_yUyiZJTbqo5EzKbCGbiQ" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-900">Slack</a> - she is always interested in creating connection and conversations around
-          <strong>open source</strong>, <strong>education</strong>, <strong>science</strong>,
-          <strong>AI</strong>, <strong>data</strong>, and <strong>digital sovereignty</strong>.
-        </p>
-      </div>
-    </section>
         </div>
       </div>
     </div>
