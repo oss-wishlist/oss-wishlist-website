@@ -29,7 +29,5 @@ Join our community conversations across these channels:
 - **[GitHub](https://github.com/oss-wishlist)**
 - **[Slack](https://join.slack.com/t/opensourcewishlist/shared_invite/zt-3juhbwcte-w_yUyiZJTbqo5EzKbCGbiQ)**
 - **[LinkedIn](https://www.linkedin.com/company/110187652)**
-- **[Mastodon](https://mastodon.social/@osswishlist)**
-- **[Bluesky](https://bsky.app/profile/oss-wishlist.bsky.social)**
 
 **[Join the Community →](/helpers)**
