@@ -14,10 +14,20 @@ try {
 } catch {
   // db unavailable — dropdown will just be empty
 }
-// Sort services: general-need first, then alphabetically
+// Sort services: featured first in defined order, then alphabetically
+const featuredOrder = [
+  'digital-sovereignty',
+  'leadership-onboarding',
+  'governance-setup',
+  'moderation-strategy',
+  'winding-down',
+];
 const services = servicesRaw.sort((a, b) => {
-  if (a.slug === 'general-need') return -1;
-  if (b.slug === 'general-need') return 1;
+  const aIdx = featuredOrder.indexOf(a.slug);
+  const bIdx = featuredOrder.indexOf(b.slug);
+  if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+  if (aIdx !== -1) return -1;
+  if (bIdx !== -1) return 1;
   return a.data.title.localeCompare(b.data.title);
 });
 const playbooks = await getCollection('playbooks-external');
