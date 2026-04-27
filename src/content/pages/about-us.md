@@ -1,6 +1,6 @@
 ---
 title: About Us
-description: About Open Future
+description: "Open Source Wishlist connects open source maintainers with expert practitioners for sustainability challenges: governance, funding, security audits, and community health."
 date: 2026-02-15
 ---
 
@@ -8,7 +8,7 @@ date: 2026-02-15
 
 ## What This Is
 
-Open Future is an independent, grassroots community of practitioners connecting to drive impact through sustainability, openness in AI, digital sovereignty, and beyond, while supporting each other along the way.
+Open Source Wishlist is an independent, grassroots community of practitioners connecting to drive impact through sustainability, openness in AI, digital sovereignty, and beyond, while supporting each other along the way.
 
 We support each other through workshops, events, and practical tools like wishlists, where maintainers express needs and the community helps fulfill them.
 

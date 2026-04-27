@@ -1,6 +1,6 @@
 ---
 title: "Leadership Continuity & Succession Planning"
-description: "Comprehensive onboarding program to establish, vet and setup for success - new trusted project leaders."
+description: "Succession planning and leadership onboarding for open source projects — establish, vet, and set up new trusted maintainers to ensure continuity and long-term sustainability."
 type: "service"
 service_type: "consulting"
 pricing:

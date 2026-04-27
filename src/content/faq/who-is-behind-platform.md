@@ -1,5 +1,5 @@
 ---
-title: "Who is behind Open Future?"
+title: "Who is behind Open Source Wishlist?"
 description: "Learn about who created and leads this community"
 category: "Community"
 order: 2

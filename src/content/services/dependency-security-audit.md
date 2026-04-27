@@ -10,8 +10,8 @@ pricing:
   medium: 12000
   large: 20000
 impact: "The Cyber Resilience Act introduces mandatory cybersecurity requirements for digital products entering the EU market beginning in December 2027, and preparing now positions your project as a secure, trusted component in global supply chains."
----
 playbook: security-audit
+---
 
 ## Overview
 
