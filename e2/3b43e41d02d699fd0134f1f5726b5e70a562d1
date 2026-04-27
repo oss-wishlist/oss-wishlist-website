@@ -1,0 +1,50 @@
+src/components/Layout.astro
+  f2944fb7288d1609 62,83,86
+src/pages/calendar.astro
+  f2944fb7288d1609 9
+src/content/services/dependency-security-audit.md
+  h_25392632ab7b53 14
+src/pages/services/[slug].astro
+  f2944fb7288d1609 102-103
+src/pages/helpers.astro
+  f2944fb7288d1609 10
+src/pages/catalog.astro
+  f2944fb7288d1609 54-55
+src/pages/faq.astro
+  f2944fb7288d1609 49,54
+src/content/services/leadership-onboarding.md
+  f2944fb7288d1609 3
+src/pages/sitemap.xml.ts
+  f2944fb7288d1609 28-31
+src/content/pages/about-us.md
+  f2944fb7288d1609 3,11
+src/pages/index.astro
+  f2944fb7288d1609 25-26
+src/content/services/moderation-strategy.md
+  f2944fb7288d1609 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "e23b43e41d02d699fd0134f1f5726b5e70a562d1",
+  "prompts": {
+    "f2944fb7288d1609": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a1c976a3-e2f2-4bba-ab0d-a5707ce12710",
+        "model": "unknown"
+      },
+      "human_author": "sunnydeveloper",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 18,
+      "accepted_lines": 21,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_25392632ab7b53": {
+      "author": "sunnydeveloper"
+    }
+  }
+}
