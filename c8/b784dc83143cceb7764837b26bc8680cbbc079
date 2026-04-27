@@ -1,0 +1,25 @@
+src/content/faq/what-is-oss-wishlist.md
+  f2944fb7288d1609 2-3,8
+src/content/faq/who-is-behind-platform.md
+  f2944fb7288d1609 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "c8b784dc83143cceb7764837b26bc8680cbbc079",
+  "prompts": {
+    "f2944fb7288d1609": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a1c976a3-e2f2-4bba-ab0d-a5707ce12710",
+        "model": "unknown"
+      },
+      "human_author": "sunnydeveloper",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
