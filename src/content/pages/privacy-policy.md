@@ -214,10 +214,10 @@ You have the right to:
 
 ### Data Deletion
 To delete your data:
-- **Wishlist:** You can close or delete your wishlist through your dashboard at `/wishlists/me`, or contact us at [info@oss-wishlist.com](mailto:info@oss-wishlist.com)
+- **Wishlist:** You can close or delete your wishlist through your dashboard at `/wishlists/me`, or [contact us](/contact)
   - **Close:** Marks wishlist as "closed" but keeps it in database (can be reopened)
   - **Delete:** Permanently removes wishlist from database (cannot be undone)
-- **Practitioner Profile:** Contact us at [info@oss-wishlist.com](mailto:info@oss-wishlist.com) to request deletion of your practitioner profile
+- **Practitioner Profile:** Use our [contact form](/contact) to request deletion of your practitioner profile
 - **Session Data:** Log out or clear your browser cookies
 - **Complete Account Deletion:** Contact us to request deletion of all your data from our database
 
@@ -232,7 +232,7 @@ You can withdraw your consent for data processing at any time by:
 - Note: Withdrawal does not affect the lawfulness of processing before withdrawal
 
 ### Opt-Out of Communications
-You can opt out of email communications by contacting us at [info@oss-wishlist.com](mailto:info@oss-wishlist.com)
+You can opt out of email communications by using our [contact form](/contact)
 
 ## Data Security
 
@@ -306,7 +306,7 @@ Your continued use of our services after changes constitutes acceptance of the u
 
 For privacy questions, concerns, or data requests:
 
-**Email:** [info@oss-wishlist.com](mailto:info@oss-wishlist.com)  
+**Contact Form:** [Get in Touch](/contact)  
 **GitHub Issues:** [Report a privacy concern](https://github.com/oss-wishlist/oss-wishlist-website/issues)
 
 We'll respond to privacy requests within 30 days.
@@ -324,5 +324,5 @@ This Privacy Policy complies with GDPR (EU), CCPA (California), and Canadian pri
 
 ---
 
-*Questions about this policy? Contact us at info@oss-wishlist.com*
+*Questions about this policy? [Get in touch](/contact)*
 
