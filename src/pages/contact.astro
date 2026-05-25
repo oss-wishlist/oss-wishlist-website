@@ -146,7 +146,7 @@ const basePath = getBasePath();
   document.getElementById('_ts').value = Date.now().toString();
 
   function clearFieldErrors() {
-    document.querySelectorAll('[id$="-error"]').forEach(el => {
+    form.querySelectorAll('[id$="-error"]').forEach(el => {
       el.textContent = '';
       el.classList.add('hidden');
     });
