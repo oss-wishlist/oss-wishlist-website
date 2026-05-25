@@ -1,0 +1,14 @@
+src/pages/contact.astro
+  h_2d84de832ff5e9 149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "279443ad4304d3099dff70b592ffab1e1ad25441",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
