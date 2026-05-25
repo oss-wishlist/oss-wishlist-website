@@ -250,7 +250,7 @@ In the meantime:
 • Browse our service catalogue: https://oss-wishlist.org/catalog
 • Check out our FAQ: https://oss-wishlist.org/faq
 
-If you have any questions, please contact us at info@oss-wishlist.com
+If you have any questions, please use our contact form at https://oss-wishlist.org/contact
 
 We're excited to have you join our community of practitioners helping open source projects thrive!
 

@@ -328,7 +328,8 @@ if (wishlistSlug) {
   if (deleteBtn) {
     deleteBtn.addEventListener('click', () => {
       if (confirm('Are you sure you want to delete your practitioner profile? This action cannot be undone.')) {
-        alert('Please contact info@oss-wishlist.com to request profile deletion.');
+        const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+        window.location.href = `${base}contact`;
       }
     });
   }

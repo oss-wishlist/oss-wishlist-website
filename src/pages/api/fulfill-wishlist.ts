@@ -188,7 +188,7 @@ Next steps:
 • We'll review your selections and reach out with any questions.
 • If practitioners were selected, we’ll coordinate introductions.
 
-Questions? Email us at info@oss-wishlist.com
+Questions? Use our contact form at https://oss-wishlist.org/contact
 
 Helpful links:
 • Community Discord: https://discord.gg/9BY9P5FD

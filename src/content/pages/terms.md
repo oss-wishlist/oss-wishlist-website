@@ -69,4 +69,4 @@ We may update these Terms & Conditions from time to time. We will notify you of 
 
 ## Contact
 
-For questions about these terms, please contact us at [info@oss-wishlist.com](mailto:info@oss-wishlist.com) or open an issue on our [GitHub repository](https://github.com/oss-wishlist/oss-wishlist-website/issues).
+For questions about these terms, please use our [contact form](/contact) or open an issue on our [GitHub repository](https://github.com/oss-wishlist/oss-wishlist-website/issues).

@@ -1,0 +1,172 @@
+---
+import Layout from '../components/Layout.astro';
+import { getBasePath } from '../lib/paths';
+
+const basePath = getBasePath();
+---
+
+<Layout title="Get in Touch - Open Source Wishlist" description="Contact the Open Source Wishlist team with questions, feedback, or partnership inquiries.">
+  <div class="max-w-2xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
+      <p class="text-lg text-gray-600">Have a question, feedback, or want to get involved? We'd love to hear from you.</p>
+    </div>
+
+    <!-- Status messages (shown/hidden by JS) -->
+    <div id="form-success" class="alert-success mb-8 hidden" role="alert">
+      <p class="font-semibold">Message sent!</p>
+      <p>Thanks for reaching out. We'll get back to you as soon as we can.</p>
+    </div>
+    <div id="form-error" class="alert-error mb-8 hidden" role="alert">
+      <p class="font-semibold">Something went wrong.</p>
+      <p id="form-error-text">We couldn't send your message. Please try again.</p>
+    </div>
+
+    <form
+      id="contact-form"
+      class="bg-white rounded-lg border border-gray-200 shadow-sm p-8 space-y-6"
+      novalidate
+    >
+      <div>
+        <label for="name" class="form-label">
+          Name <span class="field-required">*</span>
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          autocomplete="name"
+          class="form-input"
+          placeholder="Your name"
+        />
+      </div>
+
+      <div>
+        <label for="email" class="form-label">
+          Email <span class="field-required">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          autocomplete="email"
+          class="form-input"
+          placeholder="your@email.com"
+        />
+      </div>
+
+      <div>
+        <label for="subject" class="form-label">
+          Subject <span class="field-required">*</span>
+        </label>
+        <select id="subject" name="subject" required class="form-input">
+          <option value="">Select a topic…</option>
+          <option value="Workshops">Workshops &amp; Training</option>
+          <option value="Practitioners">Becoming a Practitioner</option>
+          <option value="Maintainers">Help for Maintainers</option>
+          <option value="Services">Services &amp; Offerings</option>
+          <option value="Something Else">Something Else</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="message" class="form-label">
+          Message <span class="field-required">*</span>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          required
+          rows="6"
+          class="form-input resize-y"
+          placeholder="Tell us how we can help…"
+        ></textarea>
+      </div>
+
+      <div class="pt-2">
+        <button type="submit" id="submit-btn" class="btn-sparkle w-full">
+          <svg class="btn-sparkle-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <span class="btn-sparkle-text" id="submit-label">Send Message</span>
+          <div class="btn-sparkle-particles">
+            <span class="sparkle-particle" style="top:20%;left:20%;background:rgb(196,181,253);animation:sparkle-burst-1 600ms ease-out forwards;"></span>
+            <span class="sparkle-particle" style="top:60%;left:70%;background:rgb(167,139,250);animation:sparkle-burst-2 600ms ease-out forwards;"></span>
+            <span class="sparkle-particle" style="top:80%;left:40%;background:rgb(217,213,254);animation:sparkle-burst-3 600ms ease-out forwards;"></span>
+          </div>
+        </button>
+      </div>
+    </form>
+  </div>
+</Layout>
+
+<script define:vars={{ basePath }}>
+  const form = document.getElementById('contact-form');
+  const successBox = document.getElementById('form-success');
+  const errorBox = document.getElementById('form-error');
+  const errorText = document.getElementById('form-error-text');
+  const submitBtn = document.getElementById('submit-btn');
+  const submitLabel = document.getElementById('submit-label');
+
+  function showError(msg) {
+    errorText.textContent = msg;
+    errorBox.classList.remove('hidden');
+    successBox.classList.add('hidden');
+    errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function showSuccess() {
+    successBox.classList.remove('hidden');
+    errorBox.classList.add('hidden');
+    form.reset();
+    successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const name = form.querySelector('#name').value.trim();
+    const email = form.querySelector('#email').value.trim();
+    const subject = form.querySelector('#subject').value;
+    const message = form.querySelector('#message').value.trim();
+
+    if (!name || !email || !subject || !message) {
+      showError('Please fill in all required fields.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitLabel.textContent = 'Sending…';
+
+    try {
+      const data = new FormData();
+      data.append('name', name);
+      data.append('email', email);
+      data.append('subject', subject);
+      data.append('message', message);
+
+      const res = await fetch(`${basePath}api/contact`, { method: 'POST', body: data });
+
+      // API redirects on success/error — follow the redirect URL to read the outcome
+      const finalUrl = new URL(res.url);
+      const success = finalUrl.searchParams.get('success');
+      const error = finalUrl.searchParams.get('error');
+
+      if (success === 'true') {
+        showSuccess();
+      } else if (error === 'moderation') {
+        showError('Your message contains content that could not be accepted. Please revise and try again.');
+      } else {
+        showError('We couldn\'t send your message. Please try again.');
+      }
+    } catch {
+      showError('A network error occurred. Please check your connection and try again.');
+    } finally {
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Send Message';
+    }
+  });
+</script>
