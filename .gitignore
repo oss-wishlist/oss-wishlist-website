@@ -116,3 +116,6 @@ Gemfile.lock
 # Copilot documentation and notes
 copilot_notes/
 CODE_REVIEW_FINDINGS.md
+
+# Database seed files (local use only)
+database/*-seed.sql
