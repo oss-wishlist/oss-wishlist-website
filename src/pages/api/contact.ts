@@ -6,6 +6,9 @@ import { z } from 'zod';
 
 export const prerender = false;
 
+const escHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 const json = (data: object, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -32,6 +35,19 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ success: false, code: 'invalid' }, 400);
   }
 
+  // Bot protection: honeypot field must be empty
+  const honeypot = formData.get('_hp')?.toString() ?? '';
+  if (honeypot) {
+    // Silently appear to succeed so bots don't retry
+    return json({ success: true });
+  }
+
+  // Bot protection: page must have been loaded at least 2 seconds before submit
+  const ts = parseInt(formData.get('_ts')?.toString() ?? '0', 10);
+  if (ts && Date.now() - ts < 2000) {
+    return json({ success: true });
+  }
+
   const raw = {
     name: formData.get('name')?.toString() ?? '',
     email: formData.get('email')?.toString() ?? '',
@@ -43,8 +59,9 @@ export const POST: APIRoute = async ({ request }) => {
 
   const parsed = contactSchema.safeParse(raw);
   if (!parsed.success) {
-    console.error('[contact API] validation failed:', parsed.error.flatten());
-    return json({ success: false, code: 'invalid' }, 400);
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    console.error('[contact API] validation failed:', fieldErrors);
+    return json({ success: false, code: 'validation', errors: fieldErrors }, 400);
   }
 
   const { name, email, subject, message } = parsed.data;
@@ -64,12 +81,12 @@ export const POST: APIRoute = async ({ request }) => {
   const html = `
     <h2>New Contact Form Submission</h2>
     <table style="border-collapse:collapse;width:100%">
-      <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee">Name</td><td style="padding:8px;border-bottom:1px solid #eee">${name}</td></tr>
-      <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee">Email</td><td style="padding:8px;border-bottom:1px solid #eee"><a href="mailto:${email}">${email}</a></td></tr>
-      <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee">Subject</td><td style="padding:8px;border-bottom:1px solid #eee">${subject}</td></tr>
+      <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee">Name</td><td style="padding:8px;border-bottom:1px solid #eee">${escHtml(name)}</td></tr>
+      <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee">Email</td><td style="padding:8px;border-bottom:1px solid #eee"><a href="mailto:${escHtml(email)}">${escHtml(email)}</a></td></tr>
+      <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee">Subject</td><td style="padding:8px;border-bottom:1px solid #eee">${escHtml(subject)}</td></tr>
     </table>
     <h3>Message</h3>
-    <p style="white-space:pre-wrap">${message}</p>
+    <p style="white-space:pre-wrap">${escHtml(message)}</p>
   `;
 
   try {
@@ -86,7 +103,7 @@ export const POST: APIRoute = async ({ request }) => {
     console.log('[contact API] confirmation email result:', JSON.stringify(confirmResult));
   } catch (err) {
     console.error('[contact API] email error:', err instanceof Error ? err.message : err);
-    return json({ success: false, code: 'send', detail: err instanceof Error ? err.message : 'unknown' }, 500);
+    return json({ success: false, code: 'send' }, 500);
   }
 
   return json({ success: true });

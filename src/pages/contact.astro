@@ -84,7 +84,16 @@ const basePath = getBasePath();
           class="form-input resize-y"
           placeholder="Tell us how we can help…"
         ></textarea>
+        <p id="message-error" class="hidden text-sm text-gray-500 mt-1" role="alert"></p>
       </div>
+
+      <!-- Honeypot: hidden from real users, bots fill it -->
+      <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+        <label for="_hp">Leave this empty</label>
+        <input type="text" id="_hp" name="_hp" tabindex="-1" autocomplete="off" />
+      </div>
+      <!-- Page-load timestamp for timing check -->
+      <input type="hidden" id="_ts" name="_ts" value="" />
 
       <div class="pt-2">
         <button type="submit" id="submit-btn" class="btn-sparkle w-full">
@@ -133,8 +142,27 @@ const basePath = getBasePath();
     successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
+  // Set page-load timestamp for server-side timing check
+  document.getElementById('_ts').value = Date.now().toString();
+
+  function clearFieldErrors() {
+    document.querySelectorAll('[id$="-error"]').forEach(el => {
+      el.textContent = '';
+      el.classList.add('hidden');
+    });
+  }
+
+  function showFieldError(fieldId, msg) {
+    const el = document.getElementById(fieldId + '-error');
+    if (el) {
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+  }
+
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
+    clearFieldErrors();
 
     const name = form.querySelector('#name').value.trim();
     const email = form.querySelector('#email').value.trim();
@@ -143,6 +171,11 @@ const basePath = getBasePath();
 
     if (!name || !email || !subject || !message) {
       showError('Please fill in all required fields.');
+      return;
+    }
+
+    if (message.length < 10) {
+      showFieldError('message', 'Please write a little more so we can help you (at least 10 characters).');
       return;
     }
 
@@ -170,6 +203,14 @@ const basePath = getBasePath();
         showSuccess();
       } else if (result.code === 'moderation') {
         showError('Your message contains content that could not be accepted. Please revise and try again.');
+      } else if (result.code === 'validation' && result.errors) {
+        // Show field-level messages instead of a generic error
+        const errors = result.errors;
+        if (errors.message) showFieldError('message', errors.message[0]);
+        else {
+          const first = Object.values(errors).flat()[0];
+          showError(first || 'Please check your entries and try again.');
+        }
       } else {
         showError('We couldn\'t send your message. Please try again.');
       }

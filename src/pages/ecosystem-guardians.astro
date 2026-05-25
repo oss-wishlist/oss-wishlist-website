@@ -1,11 +1,9 @@
 ---
+import Layout from '../components/Layout.astro';
 import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
-import Layout from '../components/Layout.astro';
-import { getCollection } from 'astro:content';
 
-const guardians = await getCollection('guardians');
-const sortedGuardians = guardians.sort((a, b) => a.data.name.localeCompare(b.data.name));
+const sortedGuardians: never[] = [];
 ---
 
 <Layout 

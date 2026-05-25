@@ -13,10 +13,17 @@
 
 import type { APIRoute } from 'astro';
 import { cacheManager } from '../../../lib/cache-manager';
+import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rate-limit';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
+  const clientId = getClientIdentifier(request);
+  const rateCheck = checkRateLimit(clientId, RATE_LIMITS.SUBMIT);
+  if (rateCheck.limited) {
+    return createRateLimitResponse(rateCheck.resetTime);
+  }
+
   try {
     // Verify webhook secret for security (optional but recommended)
     const secret = request.headers.get('x-webhook-secret');
