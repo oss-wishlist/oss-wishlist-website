@@ -55,6 +55,24 @@ function getPlaybookForService(serviceSlug: string) {
   description="Browse open source sustainability services: governance setup, funding strategy, security audits, succession planning, moderation, and more. Match with a verified practitioner.">
   <section class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <!-- Workshops banner -->
+      <div id="workshops-banner" class="relative mb-10 rounded-lg px-6 py-4 flex items-center justify-between gap-4" style="background: linear-gradient(to right, rgb(147,51,234), rgb(109,40,217));">
+        <p class="text-white text-sm sm:text-base">
+          <span class="font-semibold">We run workshops</span> to teach the skills needed to contribute these services &mdash;
+          <a href={`${basePath}contact?subject=Workshops`} class="font-medium underline text-purple-100 hover:text-white">get in touch to learn more</a>.
+        </p>
+        <button
+          id="workshops-banner-close"
+          aria-label="Dismiss banner"
+          class="flex-shrink-0 text-purple-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-300 rounded"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
       <div class="text-center mb-12">
         <h1 class="text-5xl font-bold text-gray-900 mb-4">Catalogue of <span class="text-accent">Services</span> & Resources</h1>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -178,6 +196,21 @@ function getPlaybookForService(serviceSlug: string) {
     </div>
   </section>
 </Layout>
+
+<script>
+  const banner = document.getElementById('workshops-banner');
+  const closeBtn = document.getElementById('workshops-banner-close');
+  if (closeBtn && banner) {
+    // Respect previous dismissal
+    if (sessionStorage.getItem('workshops-banner-dismissed') === 'true') {
+      banner.remove();
+    }
+    closeBtn.addEventListener('click', () => {
+      banner.remove();
+      sessionStorage.setItem('workshops-banner-dismissed', 'true');
+    });
+  }
+</script>
 
 <script define:vars={{ practitioners }}>
   document.addEventListener('DOMContentLoaded', function() {

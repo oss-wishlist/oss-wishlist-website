@@ -111,6 +111,14 @@ const basePath = getBasePath();
   const submitBtn = document.getElementById('submit-btn');
   const submitLabel = document.getElementById('submit-label');
 
+  // Pre-select subject from URL param (e.g. ?subject=Workshops)
+  const preSubject = new URLSearchParams(window.location.search).get('subject');
+  if (preSubject) {
+    const select = form.querySelector('#subject');
+    const match = Array.from(select.options).find(o => o.value === preSubject);
+    if (match) select.value = preSubject;
+  }
+
   function showError(msg) {
     errorText.textContent = msg;
     errorBox.classList.remove('hidden');
