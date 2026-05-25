@@ -1,0 +1,24 @@
+package.json
+  s_753457da63800d::t_24befdea5ce7d6 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "57bbc6be60054f81e5f6c1c71f3e79bfda98a28a",
+  "prompts": {},
+  "humans": {
+    "h_25392632ab7b53": {
+      "author": "sunnydeveloper"
+    }
+  },
+  "sessions": {
+    "s_753457da63800d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1ec96a9d-e0ba-4116-b23c-cdd0c30ad35e",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
