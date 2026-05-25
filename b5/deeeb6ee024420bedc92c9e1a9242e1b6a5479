@@ -1,0 +1,24 @@
+.gitignore
+  s_753457da63800d::t_857d439412e129 119-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "b5deeeb6ee024420bedc92c9e1a9242e1b6a5479",
+  "prompts": {},
+  "humans": {
+    "h_25392632ab7b53": {
+      "author": "sunnydeveloper"
+    }
+  },
+  "sessions": {
+    "s_753457da63800d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1ec96a9d-e0ba-4116-b23c-cdd0c30ad35e",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
