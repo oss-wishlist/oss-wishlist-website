@@ -4,11 +4,16 @@ import { approveWishlist } from '../../../lib/db';
 import { jsonSuccess, jsonError } from '../../../lib/api-response';
 import { triggerJsonUpdate } from '../../../lib/trigger-json-update';
 import { triggerWishlistActions } from '../../../lib/trigger-wishlist-actions';
+import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rate-limit';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
+    const clientId = getClientIdentifier(request);
+    const rateCheck = checkRateLimit(clientId, RATE_LIMITS.ADMIN);
+    if (rateCheck.limited) { return createRateLimitResponse(rateCheck.resetTime); }
+
     // Verify admin session (check both new and legacy cookies)
     const sessionCookie = cookies.get('oss_session') || cookies.get('github_session');
     if (!sessionCookie?.value) {

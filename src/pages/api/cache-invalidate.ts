@@ -9,10 +9,28 @@
 //
 import type { APIRoute } from 'astro';
 import { cacheManager } from '../../lib/cache-manager';
+import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateCheck = checkRateLimit(clientId, RATE_LIMITS.SUBMIT);
+  if (rateCheck.limited) {
+    return createRateLimitResponse(rateCheck.resetTime);
+  }
+
+  // Webhook secret check (required when WEBHOOK_SECRET is configured)
+  const secret = request.headers.get('x-webhook-secret');
+  const expectedSecret = import.meta.env.WEBHOOK_SECRET;
+  if (expectedSecret && secret !== expectedSecret) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
     // Get the cache key from the request body (optional, defaults to all wishlists cache)
     let body: any = {};

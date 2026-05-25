@@ -15,7 +15,13 @@ export const GET: APIRoute = async ({ url, request }) => {
     }
 
     const id = parseInt(issueNumber, 10);
-    
+    if (isNaN(id)) {
+      return new Response(JSON.stringify({ error: 'Invalid issue number' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     // Fetch wishlist from database
     const wishlist = await getWishlistById(id);
     

@@ -63,19 +63,6 @@ const playbooksExternal = defineCollection({
   }),
 });
 
-const guardians = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/guardians' }),
-  schema: z.object({
-    name: z.string(),
-    description: z.string(),
-    website: z.string().url().optional(),
-    logo_url: z.string().url().optional(),
-    contact_email: z.string().email().optional(),
-    sponsorship_level: z.enum(['platinum', 'gold', 'silver', 'bronze']).optional(),
-    active: z.boolean().default(true),
-  }),
-});
-
 const events = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/events' }),
   schema: z.object({
@@ -93,7 +80,6 @@ export const collections = {
   services,
   faq,
   pages,
-  guardians,
   events,
   'playbooks-external': playbooksExternal,
 };
