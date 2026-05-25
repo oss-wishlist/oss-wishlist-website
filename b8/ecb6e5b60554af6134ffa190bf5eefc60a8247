@@ -1,0 +1,29 @@
+src/pages/contact.astro
+  s_753457da63800d::t_6792ae5b3f9dc9 87,90-97,145-162,165,177-181,206-213
+src/pages/ecosystem-guardians.astro
+  h_2d84de832ff5e9 2,6
+src/pages/api/contact.ts
+  h_2d84de832ff5e9 9-11,84-86,89
+  s_753457da63800d::t_6792ae5b3f9dc9 38-50,62-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "b8ecb6e5b60554af6134ffa190bf5eefc60a8247",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_753457da63800d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1ec96a9d-e0ba-4116-b23c-cdd0c30ad35e",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
