@@ -158,14 +158,17 @@ const basePath = getBasePath();
 
       const res = await fetch(`${basePath}api/contact`, { method: 'POST', body: data });
 
-      // API redirects on success/error — follow the redirect URL to read the outcome
-      const finalUrl = new URL(res.url);
-      const success = finalUrl.searchParams.get('success');
-      const error = finalUrl.searchParams.get('error');
+      let result;
+      try {
+        result = await res.json();
+      } catch {
+        showError('Unexpected server response. Please try again.');
+        return;
+      }
 
-      if (success === 'true') {
+      if (result.success) {
         showSuccess();
-      } else if (error === 'moderation') {
+      } else if (result.code === 'moderation') {
         showError('Your message contains content that could not be accepted. Please revise and try again.');
       } else {
         showError('We couldn\'t send your message. Please try again.');

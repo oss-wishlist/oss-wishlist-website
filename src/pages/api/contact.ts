@@ -2,10 +2,12 @@ import type { APIRoute } from 'astro';
 import { sendAdminEmail, sendEmail } from '../../lib/mail';
 import { moderateContent } from '../../lib/content-moderation';
 import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit';
-import { getBasePath } from '../../lib/paths';
 import { z } from 'zod';
 
 export const prerender = false;
+
+const json = (data: object, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
 const contactSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -15,8 +17,6 @@ const contactSchema = z.object({
 });
 
 export const POST: APIRoute = async ({ request }) => {
-  const basePath = getBasePath();
-
   // Rate limiting
   const clientId = getClientIdentifier(request);
   const rateCheck = checkRateLimit(clientId, RATE_LIMITS.SUBMIT);
@@ -27,11 +27,9 @@ export const POST: APIRoute = async ({ request }) => {
   let formData: FormData;
   try {
     formData = await request.formData();
-  } catch {
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `${basePath}contact?error=invalid` },
-    });
+  } catch (err) {
+    console.error('[contact API] failed to parse form data:', err);
+    return json({ success: false, code: 'invalid' }, 400);
   }
 
   const raw = {
@@ -41,12 +39,12 @@ export const POST: APIRoute = async ({ request }) => {
     message: formData.get('message')?.toString() ?? '',
   };
 
+  console.log('[contact API] received submission for subject:', raw.subject);
+
   const parsed = contactSchema.safeParse(raw);
   if (!parsed.success) {
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `${basePath}contact?error=invalid` },
-    });
+    console.error('[contact API] validation failed:', parsed.error.flatten());
+    return json({ success: false, code: 'invalid' }, 400);
   }
 
   const { name, email, subject, message } = parsed.data;
@@ -54,11 +52,13 @@ export const POST: APIRoute = async ({ request }) => {
   // Content moderation
   const moderationResult = moderateContent(`${name} ${subject} ${message}`);
   if (!moderationResult.isClean) {
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `${basePath}contact?error=moderation` },
-    });
+    return json({ success: false, code: 'moderation' }, 400);
   }
+
+  // Check env vars
+  const adminEmail = import.meta.env.ADMIN_EMAIL;
+  const resendKey = import.meta.env.RESEND_API_KEY;
+  console.log('[contact API] ADMIN_EMAIL set:', !!adminEmail, '| RESEND_API_KEY set:', !!resendKey);
 
   const text = `New contact form submission\n\nName: ${name}\nEmail: ${email}\nSubject: ${subject}\n\nMessage:\n${message}`;
   const html = `
@@ -73,24 +73,21 @@ export const POST: APIRoute = async ({ request }) => {
   `;
 
   try {
-    await sendAdminEmail(`[Contact Form] ${subject}`, text, html);
+    console.log('[contact API] sending admin email...');
+    const adminResult = await sendAdminEmail(`[Contact Form] ${subject}`, text, html);
+    console.log('[contact API] admin email result:', JSON.stringify(adminResult));
 
-    // Send confirmation to the sender
-    await sendEmail({
+    console.log('[contact API] sending confirmation email...');
+    const confirmResult = await sendEmail({
       to: email,
       subject: 'We received your message – OSS Wishlist',
       text: `Hi ${name},\n\nThanks for reaching out! We've received your message and will get back to you as soon as we can.\n\nYour message:\n${message}\n\n— The OSS Wishlist team`,
     });
+    console.log('[contact API] confirmation email result:', JSON.stringify(confirmResult));
   } catch (err) {
-    console.error('[contact API] email error:', err);
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `${basePath}contact?error=send` },
-    });
+    console.error('[contact API] email error:', err instanceof Error ? err.message : err);
+    return json({ success: false, code: 'send', detail: err instanceof Error ? err.message : 'unknown' }, 500);
   }
 
-  return new Response(null, {
-    status: 302,
-    headers: { Location: `${basePath}contact?success=true` },
-  });
+  return json({ success: true });
 };
