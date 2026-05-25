@@ -1,0 +1,62 @@
+src/pages/faq.astro
+  s_753457da63800d::t_ea56e3fcd42af7 4-6,114-115
+src/pages/api/submit-practitioner.ts
+  s_753457da63800d::t_9a13bc69d141f7 253
+src/content/pages/privacy-policy.md
+  s_753457da63800d::t_9a13bc69d141f7 217,220,235,309,327
+src/pages/practitioners/[slug].astro
+  s_753457da63800d::t_9a13bc69d141f7 51
+src/pages/practitioners.astro
+  s_753457da63800d::t_2ec201705459f5 331-332
+src/pages/index.astro
+  s_753457da63800d::t_5385b0d139fa84 84-85,89,94
+src/components/Header.astro
+  s_753457da63800d::t_83c3181d26fd2b 92,146
+src/pages/api/fulfill-wishlist.ts
+  s_753457da63800d::t_9a13bc69d141f7 191
+src/pages/api/contact.ts
+  s_753457da63800d::t_78d6c0edee4a99 56
+  h_2d84de832ff5e9 1-55,57-96
+src/pages/contact.astro
+  h_2d84de832ff5e9 1-13,20,45,59,87,103-105,126,172
+  s_753457da63800d::t_fa5458efae4367 14-19,21-44,46-58,60-86,88-102,106-125,127-171
+src/content/pages/terms.md
+  s_753457da63800d::t_9a13bc69d141f7 72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "eb603149a191382a60a1ba60b5367ce3dc093327",
+  "prompts": {
+    "f2944fb7288d1609": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a1c976a3-e2f2-4bba-ab0d-a5707ce12710",
+        "model": "unknown"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>",
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_25392632ab7b53": {
+      "author": "sunnydeveloper"
+    },
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_753457da63800d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1ec96a9d-e0ba-4116-b23c-cdd0c30ad35e",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
