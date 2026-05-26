@@ -27,32 +27,31 @@ export const POST: APIRoute = async ({ request }) => {
     return createRateLimitResponse(rateCheck.resetTime);
   }
 
-  let formData: FormData;
+  let body: Record<string, unknown>;
   try {
-    formData = await request.formData();
+    body = await request.json();
   } catch (err) {
-    console.error('[contact API] failed to parse form data:', err);
+    console.error('[contact API] failed to parse JSON body:', err);
     return json({ success: false, code: 'invalid' }, 400);
   }
 
   // Bot protection: honeypot field must be empty
-  const honeypot = formData.get('_hp')?.toString() ?? '';
+  const honeypot = typeof body._hp === 'string' ? body._hp : '';
   if (honeypot) {
-    // Silently appear to succeed so bots don't retry
     return json({ success: true });
   }
 
   // Bot protection: page must have been loaded at least 2 seconds before submit
-  const ts = parseInt(formData.get('_ts')?.toString() ?? '0', 10);
+  const ts = typeof body._ts === 'number' ? body._ts : parseInt(String(body._ts ?? '0'), 10);
   if (ts && Date.now() - ts < 2000) {
     return json({ success: true });
   }
 
   const raw = {
-    name: formData.get('name')?.toString() ?? '',
-    email: formData.get('email')?.toString() ?? '',
-    subject: formData.get('subject')?.toString() ?? '',
-    message: formData.get('message')?.toString() ?? '',
+    name: typeof body.name === 'string' ? body.name : '',
+    email: typeof body.email === 'string' ? body.email : '',
+    subject: typeof body.subject === 'string' ? body.subject : '',
+    message: typeof body.message === 'string' ? body.message : '',
   };
 
   console.log('[contact API] received submission for subject:', raw.subject);

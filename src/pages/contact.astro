@@ -183,23 +183,16 @@ const basePath = getBasePath();
     submitLabel.textContent = 'Sending…';
 
     try {
-      const data = new FormData();
-      data.append('name', name);
-      data.append('email', email);
-      data.append('subject', subject);
-      data.append('message', message);
+      const ts = parseInt(document.getElementById('_ts').value || '0', 10);
+      const hp = document.getElementById('_hp').value || '';
 
-      const res = await fetch(`${basePath}api/contact`, { method: 'POST', body: data });
+      const res = await fetch(`${basePath}api/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message, _ts: ts, _hp: hp }),
+      });
 
-      let result;
-      try {
-        result = await res.json();
-      } catch {
-        const bodyText = await res.text().catch(() => '(unreadable)');
-        console.error('[contact form] non-JSON response', res.status, bodyText.slice(0, 500));
-        showError(`Unexpected server response (HTTP ${res.status}). Please try again.`);
-        return;
-      }
+      const result = await res.json();
 
       if (result.success) {
         showSuccess();
