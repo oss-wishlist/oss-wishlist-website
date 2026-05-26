@@ -1,0 +1,14 @@
+src/pages/catalog.astro
+  h_2d84de832ff5e9 6,28-31,37-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "8c4f26c0e1e770cf8da500f40c3fc0c6be858b69",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
