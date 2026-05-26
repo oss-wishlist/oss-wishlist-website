@@ -1,0 +1,14 @@
+src/lib/entry-slug.ts
+  h_2d84de832ff5e9 1-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "12a03392cb1b41d70416e8fbcbde163b17d9bff7",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
