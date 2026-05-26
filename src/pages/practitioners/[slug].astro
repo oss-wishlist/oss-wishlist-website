@@ -1,6 +1,7 @@
 ---
 import Layout from '../../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../../lib/entry-slug';
 import { getBasePath } from '../../lib/paths';
 import { getApprovedPractitioners } from '../../lib/db';
 import { marked } from 'marked';
@@ -21,7 +22,7 @@ if (!practitioner) {
 }
 
 // Fetch services to map slugs to titles (same approach as edit page)
-const allServices = await getCollection('services');
+const allServices = (await getCollection('services')).map(withSlug);
 const services = allServices.filter(s => s.data.type === 'service');
 
 const practitionerServices = practitioner.services && Array.isArray(practitioner.services)

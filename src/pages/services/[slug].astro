@@ -1,7 +1,7 @@
 ---
 import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
-import { getEntry, getCollection } from 'astro:content';
+import { getEntry, getCollection, render } from 'astro:content';
 
 const basePath = getBasePath();
 
@@ -21,18 +21,21 @@ if (!service) {
   return Astro.redirect('/404');
 }
 
+// Helper to derive a slug from an entry id (Astro v6: id includes file extension)
+const toSlug = (id: string) => id.replace(/\.md$/, '');
+
 // Load playbooks from submodule and resolve matches robustly
 const allPlaybooks = await getCollection('playbooks-external');
 
 // Helper to resolve a playbook entry by a folder hint
 function findPlaybookByFolder(folder: string) {
   // Prefer an exact `folder/playbook` file if present
-  const exact = allPlaybooks.find((pb) => pb.slug === `${folder}/playbook`);
+  const exact = allPlaybooks.find((pb) => toSlug(pb.id) === `${folder}/playbook`);
   if (exact) return exact;
   // Fallback: some entries may be published as `folder` or nested under `folder/...`
-  const direct = allPlaybooks.find((pb) => pb.slug === folder);
+  const direct = allPlaybooks.find((pb) => toSlug(pb.id) === folder);
   if (direct) return direct;
-  return allPlaybooks.find((pb) => pb.slug.startsWith(`${folder}/`));
+  return allPlaybooks.find((pb) => toSlug(pb.id).startsWith(`${folder}/`));
 }
 
 // If the service frontmatter specifies playbook(s), use those; otherwise try to infer
@@ -42,10 +45,10 @@ let playbookFolders: string[] = Array.isArray(service.data.playbooks)
 
 if (playbookFolders.length === 0) {
   // Try to infer via reverse link (playbook frontmatter `service`) or a static mapping
-  const linked = allPlaybooks.find((pb) => pb.data?.service === service.slug);
+  const linked = allPlaybooks.find((pb) => pb.data?.service === toSlug(service.id));
   if (linked) {
     // Derive folder from slug (portion before the first slash)
-    playbookFolders = [linked.slug.split('/')[0]];
+    playbookFolders = [toSlug(linked.id).split('/')[0]];
   } else {
     // Last-resort static map for known legacy slugs
     const serviceToPlaybook: Record<string, string> = {
@@ -56,8 +59,8 @@ if (playbookFolders.length === 0) {
       'maintainer-task-contributor': 'maintainer-relief',
       'developer-relations-strategy': 'devrel-strategy',
     };
-    if (serviceToPlaybook[service.slug]) {
-      playbookFolders = [serviceToPlaybook[service.slug]];
+    if (serviceToPlaybook[toSlug(service.id)]) {
+      playbookFolders = [serviceToPlaybook[toSlug(service.id)]];
     }
   }
 }
@@ -69,16 +72,16 @@ const relatedPlaybooks = playbookFolders
 // Pre-render playbook content so we can render without inline await in template
 const relatedWithContent = await Promise.all(
   relatedPlaybooks.map(async (pb) => {
-    const { Content } = await pb.render();
-    return { slug: pb.slug, Content };
+    const { Content } = await render(pb);
+    return { slug: toSlug(pb.id), Content };
   })
 );
 
-const { Content } = await service.render();
+const { Content } = await render(service);
 
 // Build structured data for the service
 const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com';
-const serviceUrl = new URL(`${basePath}services/${service.slug}`, siteUrl).toString();
+const serviceUrl = new URL(`${basePath}services/${toSlug(service.id)}`, siteUrl).toString();
 
 const structuredData = {
   "@context": "https://schema.org",

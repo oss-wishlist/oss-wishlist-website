@@ -1,5 +1,5 @@
 ---
-import { getEntry } from 'astro:content';
+import { getEntry, render } from 'astro:content';
 import Layout from '../components/Layout.astro';
 import { getBasePath } from '../lib/paths';
 
@@ -12,7 +12,7 @@ const page = await getEntry('pages', pageSlug);
 if (!page) {
   return Astro.redirect('/404');
 }
-const { Content } = await page.render();
+const { Content } = await render(page);
 const basePath = getBasePath();
 ---
 

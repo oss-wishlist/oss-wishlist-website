@@ -1,6 +1,7 @@
 ---
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 import { getPriceForService, formatPrice } from '../lib/pricing.js';
 import { getBasePath } from '../lib/paths';
 import { getApprovedPractitioners, getWishlistById } from '../lib/db';
@@ -40,7 +41,7 @@ if (!user) {
 const practitioners = await getApprovedPractitioners();
 
 // Get services for detailed display
-const services = await getCollection('services');
+const services = (await getCollection('services')).map(withSlug);
 
 // Create a lookup map for services by both title and slug
 const servicesByKey: Record<string, any> = services.reduce((acc, service) => {

@@ -2,12 +2,13 @@
 import Layout from '../components/Layout.astro';
 import { getBasePath } from '../lib/paths';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 
 const basePath = getBasePath();
 
 // Get all content collections for sitemap
-const services = await getCollection('services');
-const playbooks = await getCollection('playbooks-external');
+const services = (await getCollection('services')).map(withSlug);
+const playbooks = (await getCollection('playbooks-external')).map(withSlug);
 const faq = await getCollection('faq');
 
 export const prerender = false;

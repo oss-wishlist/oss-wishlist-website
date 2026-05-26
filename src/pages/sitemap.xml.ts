@@ -1,12 +1,13 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 
 export const GET: APIRoute = async ({ site }) => {
   const siteUrl = site?.toString() || 'https://oss-wishlist.com';
   
   // Get all dynamic content
-  const services = await getCollection('services');
-  const playbooks = await getCollection('playbooks-external');
+  const services = (await getCollection('services')).map(withSlug);
+  const playbooks = (await getCollection('playbooks-external')).map(withSlug);
   
   // Build URLs for all dynamic pages
   const urls: Array<{ loc: string; lastmod?: string; changefreq?: string; priority?: number }> = [];
