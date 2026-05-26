@@ -195,7 +195,9 @@ const basePath = getBasePath();
       try {
         result = await res.json();
       } catch {
-        showError('Unexpected server response. Please try again.');
+        const bodyText = await res.text().catch(() => '(unreadable)');
+        console.error('[contact form] non-JSON response', res.status, bodyText.slice(0, 500));
+        showError(`Unexpected server response (HTTP ${res.status}). Please try again.`);
         return;
       }
 
