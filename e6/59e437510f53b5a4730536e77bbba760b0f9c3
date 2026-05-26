@@ -1,0 +1,51 @@
+src/pages/playbooks/[slug].astro
+  h_2d84de832ff5e9 2,20
+src/pages/services/[slug].astro
+  h_2d84de832ff5e9 4,24-26,33,36,38,48,51,62-63,75-76,80,84
+src/pages/edit-wishlist.astro
+  s_753457da63800d::t_e69fc3ba4f3435 5,10
+src/pages/fulfill.astro
+  s_753457da63800d::t_e69fc3ba4f3435 4,44
+src/pages/sitemap.xml.ts
+  s_753457da63800d::t_e69fc3ba4f3435 3,9-10
+src/pages/sitemap.astro
+  h_2d84de832ff5e9 5,10-11
+src/pages/faq.astro
+  h_2d84de832ff5e9 3,14-15
+src/pages/edit-practitioner.astro
+  s_753457da63800d::t_e69fc3ba4f3435 7,28
+src/pages/[...slug].astro
+  h_2d84de832ff5e9 2,15
+src/pages/wishlist/[id].astro
+  h_2d84de832ff5e9 5,14
+  s_753457da63800d::t_e69fc3ba4f3435 13
+src/pages/practitioners/[slug].astro
+  s_753457da63800d::t_e69fc3ba4f3435 4,25
+src/pages/create-wishlist.astro
+  s_753457da63800d::t_e69fc3ba4f3435 5,12
+src/pages/pricing.astro
+  h_2d84de832ff5e9 5,9
+src/pages/apply-practitioner.astro
+  s_753457da63800d::t_e69fc3ba4f3435 7,29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "e659e437510f53b5a4730536e77bbba760b0f9c3",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_753457da63800d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1ec96a9d-e0ba-4116-b23c-cdd0c30ad35e",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
