@@ -2,11 +2,11 @@
 import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
-import { getEntry, getCollection } from 'astro:content';
+import { getEntry, getCollection, render } from 'astro:content';
 import { formatPrice } from '../lib/pricing';
 
 const page = await getEntry('pages', 'pricing');
-const { Content } = await page.render();
+const { Content } = await render(page);
 const allServices = await getCollection('services');
 const services = allServices
   .filter((s) => s.data.service_type !== 'hosting')

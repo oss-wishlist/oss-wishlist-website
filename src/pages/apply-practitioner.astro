@@ -4,6 +4,7 @@ const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import AuthenticatedForm from '../components/AuthenticatedForm.tsx';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 import { getPractitionersBySubmitter } from '../lib/db';
 
 export const prerender = false;
@@ -25,7 +26,7 @@ if (existingPractitioner) {
 }
 
 // Get all services from the catalog (exclude resources)
-const allServices = await getCollection('services');
+const allServices = (await getCollection('services')).map(withSlug);
 const services = allServices.filter(s => s.data.type === 'service');
 const serviceCategories = [...new Set(services.map(s => s.data.service_category || 'Other'))].sort();
 ---

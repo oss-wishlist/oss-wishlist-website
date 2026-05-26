@@ -2,6 +2,7 @@
 import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../../lib/entry-slug';
 import { getWishlistById } from '../../lib/db.js';
 
 const basePath = getBasePath();
@@ -9,8 +10,8 @@ const basePath = getBasePath();
 export const prerender = false;
 
 // Fetch all services from content collection
-const allServices = await getCollection('services');
-const serviceMap = new Map(allServices.map(service => [service.slug, service]));
+const allServices = (await getCollection('services')).map(withSlug);
+const serviceMap = new Map(allServices.map(s => [s.id.replace(/\.md$/, ''), s]));
 
 // Get the wishlist ID from URL params
 const { id } = Astro.params;

@@ -2,11 +2,12 @@
 import Layout from '../components/Layout.astro';
 import WishlistForm from '../components/WishlistForms.tsx';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 import { getBasePath } from '../lib/paths';
 import { fetchUserRepositories } from '../lib/github-oauth';
 import { getApprovedPractitioners } from '../lib/db';
 
-const services = await getCollection('services');
+const services = (await getCollection('services')).map(withSlug);
 const practitioners = await getApprovedPractitioners();
 
 const practitionerCounts = services.reduce((acc, s) => {

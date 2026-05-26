@@ -1,6 +1,6 @@
 ---
 import Layout from '../components/Layout.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import { getBasePath } from '../lib/paths';
 
 const basePath = getBasePath();
@@ -11,8 +11,8 @@ const allFaq = await getCollection('faq');
 // Render content for each FAQ
 const faqWithContent = await Promise.all(
   allFaq.map(async (faq) => {
-    const { Content } = await faq.render();
-    return { ...faq, Content };
+    const { Content } = await render(faq);
+    return { ...faq, slug: faq.id.replace(/\.md$/, ''), Content };
   })
 );
 

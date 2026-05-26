@@ -1,5 +1,5 @@
 ---
-import { getEntry } from 'astro:content';
+import { getEntry, render } from 'astro:content';
 import Layout from '../../components/Layout.astro';
 import { getBasePath } from '../../lib/paths';
 const basePath = getBasePath();
@@ -17,7 +17,7 @@ if (!playbook) {
 }
 
 // Render the markdown content
-const { Content } = await playbook.render();
+const { Content } = await render(playbook);
 
 // GitHub edit URL
 const githubRepoUrl = 'https://github.com/oss-wishlist/wishlist-playbooks';

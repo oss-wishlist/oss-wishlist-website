@@ -2,13 +2,14 @@
 import Layout from '../components/Layout.astro';
 import WishlistForm from '../components/WishlistForms.tsx';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 import { getBasePath } from '../lib/paths';
 import { getApprovedPractitioners } from '../lib/db';
 import { getOAuthProvider } from '../lib/oauth/registry.js';
 import { verifySession } from '../lib/github-oauth';
 import type { OAuthProviderName } from '../lib/oauth/types';
 
-const services = await getCollection('services');
+const services = (await getCollection('services')).map(withSlug);
 
 // Fetch practitioners from database with error handling
 let practitioners = [];

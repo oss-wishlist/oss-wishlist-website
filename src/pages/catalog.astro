@@ -3,6 +3,7 @@ import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 import { getApprovedPractitioners } from '../lib/db';
 
 const servicesRaw = await getCollection('services');
@@ -22,15 +23,19 @@ const featuredOrder = [
   'moderation-strategy',
   'winding-down',
 ];
-const services = servicesRaw.sort((a, b) => {
-  const aIdx = featuredOrder.indexOf(a.slug);
-  const bIdx = featuredOrder.indexOf(b.slug);
-  if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-  if (aIdx !== -1) return -1;
-  if (bIdx !== -1) return 1;
-  return a.data.title.localeCompare(b.data.title);
-});
-const playbooks = await getCollection('playbooks-external');
+const services = servicesRaw
+  .sort((a, b) => {
+    const aSlug = a.id.replace(/\.md$/, '');
+    const bSlug = b.id.replace(/\.md$/, '');
+    const aIdx = featuredOrder.indexOf(aSlug);
+    const bIdx = featuredOrder.indexOf(bSlug);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return a.data.title.localeCompare(b.data.title);
+  })
+  .map(withSlug);
+const playbooks = (await getCollection('playbooks-external')).map(withSlug);
 
 // Map service slugs to playbook slugs (fallbacks for legacy mismatches)
 const serviceToPlaybook: Record<string, string> = {
