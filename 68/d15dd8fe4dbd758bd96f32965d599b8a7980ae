@@ -1,0 +1,28 @@
+src/pages/services/[slug].astro
+  h_2d84de832ff5e9 144,149-173
+  s_7ce01f5a77b8e1::t_09364a6eb86a94 83-89
+  s_7ce01f5a77b8e1::t_3836cebc304f29 5
+.gitignore
+  h_2d84de832ff5e9 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "68d15dd8fe4dbd758bd96f32965d599b8a7980ae",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_7ce01f5a77b8e1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "0b21f407-db58-407a-9e25-db25abc8204b",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
