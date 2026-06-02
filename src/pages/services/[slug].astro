@@ -2,6 +2,7 @@
 import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
 import { getEntry, getCollection, render } from 'astro:content';
+import { getApprovedPractitioners } from '../../lib/db';
 
 const basePath = getBasePath();
 
@@ -79,6 +80,13 @@ const relatedWithContent = await Promise.all(
 
 const { Content } = await render(service);
 
+// Find practitioners who offer this service
+const serviceSlug = toSlug(service.id);
+const allPractitioners = await getApprovedPractitioners();
+const matchingPractitioners = allPractitioners.filter(p =>
+  (p.services || []).includes(serviceSlug)
+);
+
 // Build structured data for the service
 const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com';
 const serviceUrl = new URL(`${basePath}services/${toSlug(service.id)}`, siteUrl).toString();
@@ -133,12 +141,36 @@ const structuredData = {
         <div class="flex flex-wrap gap-4 items-center border-t pt-6">
           {/* Playbook link removed */}
           <a href={`${basePath}create-wishlist`} class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
-            Need this service?
+            Create a wishlist to request this service
           </a>
         </div>
       </div>
 
-      <!-- Call to Action removed -->
+      <!-- Practitioners for this service -->
+      {matchingPractitioners.length > 0 && (
+        <div class="bg-white p-8 rounded-lg shadow-sm border mb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">Practitioners offering this service</h2>
+          <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {matchingPractitioners.map((p) => (
+              <a
+                href={`${basePath}practitioners/${p.slug}`}
+                class="flex items-center gap-3 p-4 rounded-lg border hover:border-gray-400 transition-colors"
+              >
+                <img
+                  src={p.avatar_url || `${basePath}images/oss-wishlist-logo.jpg`}
+                  alt={p.name}
+                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  loading="lazy"
+                />
+                <div class="min-w-0">
+                  <p class="font-semibold text-gray-900 text-sm truncate">{p.name}</p>
+                  {p.title && <p class="text-xs text-gray-500 truncate">{p.title}</p>}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <!-- Playbook Only -->
       {relatedWithContent.length > 0 && (
