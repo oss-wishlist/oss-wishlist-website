@@ -91,7 +91,7 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
       }
     </script>
   </head>
-  <body class="bg-gray-50 min-h-screen overflow-x-hidden">
+  <body class="bg-gray-50 min-h-screen overflow-x-hidden flex flex-col">
     <!-- Skip to main content link for keyboard users -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-gray-900 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg">
       Skip to main content
@@ -99,7 +99,7 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
 
   {showHeader && <Header />}
 
-    <main id="main-content"  tabindex="-1">
+    <main id="main-content" class="flex-1" tabindex="-1">
       <slot />
     </main>
 
