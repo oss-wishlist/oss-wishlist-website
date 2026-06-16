@@ -3,6 +3,7 @@ import { getBasePath } from '../lib/paths';
 const basePath = getBasePath();
 import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
+import { withSlug } from '../lib/entry-slug';
 import { verifySession } from '../lib/github-oauth';
 import { getApprovedPractitioners, getPractitionersBySubmitter, getWishlistById } from '../lib/db';
 
@@ -28,7 +29,7 @@ if (sessionCookie?.value) {
 // Fetch practitioners directly from database (faster than API call)
 const allPractitioners = await getApprovedPractitioners();
 
-const allServices = await getCollection('services');
+const allServices = (await getCollection('services')).map(withSlug);
 const filteredServices = allServices.filter(s => s.data.type === 'service');
 
 export const prerender = false;
@@ -169,7 +170,7 @@ if (wishlistSlug) {
         >
           <option value="" selected>All Services</option>
           {filteredServices.map(svc => (
-            <option value={(svc as any).slug}>{svc.data.title}</option>
+            <option value={svc.slug}>{svc.data.title}</option>
           ))}
         </select>
       </div>
