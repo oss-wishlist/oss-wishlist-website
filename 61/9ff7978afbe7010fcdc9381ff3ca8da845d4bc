@@ -1,0 +1,25 @@
+src/components/Layout.astro
+  s_6de1509322e8ed::t_5a679cd1797095 94
+  s_6de1509322e8ed::t_f0892011f705b9 102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "619ff7978afbe7010fcdc9381ff3ca8da845d4bc",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_6de1509322e8ed": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "831fa581-754b-48a8-8a9b-7e304158043c",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
