@@ -1,0 +1,39 @@
+src/pages/catalog.astro
+  h_2d84de832ff5e9 226,236-240
+  s_dd08e56c7d41aa::t_af36a62e16398c 221-225,227-232
+src/content/pages/ai-alignment.md
+  s_6de1509322e8ed::t_10b9ee488883a5 18
+src/pages/practitioners.astro
+  s_dd08e56c7d41aa::t_c6712a6c416772 6,32,173
+src/pages/helpers.astro
+  s_6de1509322e8ed::t_10b9ee488883a5 31,34-35,38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "268802fb7bd58a9c2c7d41ff39c51364f5483fc3",
+  "prompts": {},
+  "humans": {
+    "h_2d84de832ff5e9": {
+      "author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_6de1509322e8ed": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "831fa581-754b-48a8-8a9b-7e304158043c",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    },
+    "s_dd08e56c7d41aa": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "3e0af987-d8c4-485d-95a1-97602d6a6480",
+        "model": "gpt-5-mini"
+      },
+      "human_author": "sunnydeveloper <emma.irwin@gmail.com>"
+    }
+  }
+}
