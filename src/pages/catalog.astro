@@ -218,6 +218,26 @@ function getPlaybookForService(serviceSlug: string) {
 </script>
 
 <script define:vars={{ practitioners }}>
+  // Map legacy/renamed service slugs to their current slug
+  const legacyServiceSlugMap = {
+    'leadership-continuity-succession-planning': 'leadership-onboarding',
+    'leadership-continuity': 'leadership-onboarding',
+  };
+
+  // Build a map: serviceSlug -> array of practitioner slugs that offer it
+  const servicesPractitionerMap = {};
+  practitioners.forEach(p => {
+    (p.services || []).forEach(rawSlug => {
+      const serviceSlug = legacyServiceSlugMap[rawSlug] || rawSlug;
+      if (!servicesPractitionerMap[serviceSlug]) servicesPractitionerMap[serviceSlug] = [];
+      servicesPractitionerMap[serviceSlug].push(p.slug);
+    });
+  });
+
+  // DEBUG: log immediately so it's always visible in console
+  console.log('[catalog debug] practitioners:', practitioners);
+  console.log('[catalog debug] servicesPractitionerMap:', servicesPractitionerMap);
+
   document.addEventListener('DOMContentLoaded', function() {
     const typeFilterButtons = document.querySelectorAll('.type-filter-btn');
     const serviceCards = document.querySelectorAll('.service-card');
@@ -225,15 +245,6 @@ function getPlaybookForService(serviceSlug: string) {
 
     let currentType = 'all';
     let currentPractitioner = '';
-
-    // Build a map: serviceSlug -> array of practitioner slugs that offer it
-    const servicesPractitionerMap = {};
-    practitioners.forEach(p => {
-      p.services.forEach(serviceSlug => {
-        if (!servicesPractitionerMap[serviceSlug]) servicesPractitionerMap[serviceSlug] = [];
-        servicesPractitionerMap[serviceSlug].push(p.slug);
-      });
-    });
 
     function filterCards() {
       serviceCards.forEach(card => {

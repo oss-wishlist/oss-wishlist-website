@@ -20,7 +20,6 @@ interface ImportMetaEnv {
   readonly JWT_SECRET: string;
   readonly SESSION_SECRET: string;
   readonly DISCORD_WEBHOOK_URL: string;
-  readonly SLACK_WEBHOOK_URL: string;
   readonly NODE_ENV: 'development' | 'production' | 'test';
   readonly PUBLIC_SITE_URL: string;
   readonly DISABLE_INDEXING?: string;
