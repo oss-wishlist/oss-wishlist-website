@@ -1,0 +1,65 @@
+---
+/**
+ * One cached critical package.
+ *
+ * Shows facts only — dependent repo count, and the flags the data carries,
+ * phrased as plain statements ("one maintainer", "no release since 2021").
+ * No score, no rank, no "at risk" or "failing" language, and no contact route
+ * to the maintainer. The action is always to sponsor a service for the package.
+ */
+import { getBasePath } from '../lib/paths';
+import type { PresentedPackage } from '../lib/critical-packages';
+
+export interface Props {
+  pkg: PresentedPackage;
+}
+
+const { pkg } = Astro.props as Props;
+const basePath = getBasePath();
+
+// Guard on > 0, not just "is a number": some records genuinely report zero
+// dependents, and "0 dependent repositories" is exactly the empty figure this
+// site must never print.
+const dependents =
+  typeof pkg.dependent_repos_count === 'number' && pkg.dependent_repos_count > 0
+    ? pkg.dependent_repos_count.toLocaleString('en-US')
+    : null;
+---
+
+<article class="package-card bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow flex flex-col">
+  <div class="flex items-baseline justify-between gap-3 mb-2">
+    <h3 class="text-lg font-semibold text-gray-900 break-all">{pkg.name}</h3>
+    <span class="shrink-0 text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
+      {pkg.ecosystem}
+    </span>
+  </div>
+
+  {pkg.description && (
+    <p class="text-sm text-gray-600 mb-3 line-clamp-2">{pkg.description}</p>
+  )}
+
+  {dependents && (
+    <p class="text-sm text-gray-700 mb-3">
+      <span class="font-semibold">{dependents}</span> dependent repositories
+    </p>
+  )}
+
+  {pkg.labels.length > 0 && (
+    <ul class="flex flex-wrap gap-2 mb-4" aria-label="What the data shows">
+      {pkg.labels.map((label: string) => (
+        <li class="text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 rounded-full">
+          {label}
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <div class="mt-auto pt-2">
+    <a
+      href={`${basePath}${pkg.href.replace(/^\//, '')}`}
+      class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+    >
+      Sponsor a service
+    </a>
+  </div>
+</article>

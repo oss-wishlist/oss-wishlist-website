@@ -1,0 +1,188 @@
+---
+/**
+ * /p/:ecosystem/:name — the permanent page for one cached package.
+ *
+ * Facts, the services that address them, and links out. This site does not
+ * broker anything: the practitioners are on the service pages, the maintainers
+ * are on their own repository, and the visitor goes to both directly.
+ *
+ * A rest parameter is used for the name because package names legitimately
+ * contain slashes (npm scopes like @babel/core, Go module paths, Packagist
+ * vendor/package) and colons (Maven group:artifact).
+ */
+import Layout from '../../../components/Layout.astro';
+import ServiceSelector from '../../../components/ServiceSelector.astro';
+import DataAttribution from '../../../components/DataAttribution.astro';
+import { getBasePath } from '../../../lib/paths';
+import { getPackage } from '../../../lib/critical-packages';
+import { labelsFor } from '../../../../config/service-map.js';
+
+export const prerender = false;
+
+const basePath = getBasePath();
+const { ecosystem, name } = Astro.params;
+
+// The rest parameter arrives encoded; opted-out packages are already absent
+// from getPackage(), so they 404 here exactly as they vanish everywhere else.
+const decodedName = decodeURIComponent(name ?? '');
+const pkg = ecosystem ? getPackage(decodeURIComponent(ecosystem), decodedName) : undefined;
+
+if (!pkg) {
+  return new Response(null, { status: 404, statusText: 'Package not found' });
+}
+
+const facts = labelsFor(pkg) as string[];
+
+// Only maintainers we can actually name. Anyone whose registry login was an
+// email address was dropped at fetch time and is simply absent here.
+const maintainers = (pkg.maintainers ?? []).filter((m) => m.login || m.name);
+
+// Zero is treated as "no figure to show" rather than printed: some records
+// report 0 dependents or 0 downloads, and this site never displays an empty count.
+const fmt = (n: number | null) =>
+  typeof n === 'number' && n > 0 ? n.toLocaleString('en-US') : null;
+const dependents = fmt(pkg.dependent_repos_count);
+const downloads = fmt(pkg.downloads);
+
+const lastRelease = pkg.latest_release_published_at
+  ? new Date(pkg.latest_release_published_at)
+  : null;
+const lastReleaseLabel =
+  lastRelease && !Number.isNaN(lastRelease.getTime())
+    ? lastRelease.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+const correctionUrl =
+  'https://github.com/oss-wishlist/oss-wishlist-website/issues/new' +
+  `?template=package-correction.yml&title=${encodeURIComponent(`[package] ${pkg.name}`)}`;
+---
+
+<Layout
+  title={`${pkg.name} | OSS Wishlist`}
+  description={pkg.description ?? `Services that would help ${pkg.name}.`}
+>
+  <main class="max-w-4xl mx-auto px-4 py-12">
+    <nav class="mb-6">
+      <a href={`${basePath}fund`} class="text-sm text-gray-600 hover:text-gray-900 underline"
+        >&larr; Browse packages</a
+      >
+    </nav>
+
+    <div class="flex items-baseline flex-wrap gap-3 mb-3">
+      <h1 class="text-3xl font-bold text-gray-900 break-all">{pkg.name}</h1>
+      <span class="text-sm font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded"
+        >{pkg.ecosystem}</span
+      >
+    </div>
+
+    {pkg.description && <p class="text-lg text-gray-700 mb-6">{pkg.description}</p>}
+
+    <dl class="grid gap-4 sm:grid-cols-2 bg-white border rounded-lg p-6 mb-6">
+      {dependents && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Dependent repositories</dt>
+          <dd class="text-lg font-semibold text-gray-900">{dependents}</dd>
+        </div>
+      )}
+      {downloads && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Downloads</dt>
+          <dd class="text-lg font-semibold text-gray-900">{downloads}</dd>
+        </div>
+      )}
+      {lastReleaseLabel && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Latest release</dt>
+          <dd class="text-lg font-semibold text-gray-900">{lastReleaseLabel}</dd>
+        </div>
+      )}
+      {pkg.licenses && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Licence</dt>
+          <dd class="text-lg font-semibold text-gray-900 break-all">{pkg.licenses}</dd>
+        </div>
+      )}
+    </dl>
+
+    {facts.length > 0 && (
+      <section class="mb-6">
+        <h2 class="text-sm uppercase tracking-wide text-gray-500 mb-2">What the data shows</h2>
+        <ul class="flex flex-wrap gap-2">
+          {facts.map((fact) => (
+            <li
+              class="text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full"
+            >
+              {fact}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <div class="flex flex-wrap gap-4 mb-2">
+      {pkg.repository_url && (
+        <a
+          href={pkg.repository_url}
+          class="text-sm text-gray-600 hover:text-gray-900 underline"
+          rel="noopener noreferrer"
+          target="_blank">Repository &rarr;</a
+        >
+      )}
+      {pkg.funding_links?.map((link) => (
+        <a
+          href={link}
+          class="text-sm text-gray-600 hover:text-gray-900 underline"
+          rel="noopener noreferrer"
+          target="_blank">Funding link &rarr;</a
+        >
+      ))}
+    </div>
+
+    <ServiceSelector pkg={pkg} />
+
+    {maintainers.length > 0 && (
+      <section class="mt-10" aria-labelledby="reach-out">
+        <h2 id="reach-out" class="text-2xl font-bold text-gray-900 mb-2">Reaching out</h2>
+        <p class="text-gray-600 mb-4 max-w-3xl">
+          This site does not contact maintainers and does not arrange anything. If you want to
+          help, go to them directly &mdash; you can offer to fund the work, or simply ask
+          whether a practitioner&rsquo;s help would be useful. Either is a better opening than
+          assuming.
+        </p>
+
+        <ul class="flex flex-wrap gap-3 mb-4">
+          {maintainers.map((person) => (
+            <li>
+              {person.profile_url ? (
+                <a
+                  href={person.profile_url}
+                  class="inline-block text-sm text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                  rel="noopener noreferrer"
+                  target="_blank">{person.name || person.login} &rarr;</a
+                >
+              ) : (
+                <span
+                  class="inline-block text-sm text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full"
+                  >{person.name || person.login}</span
+                >
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <p class="text-sm text-gray-500 max-w-3xl">
+          Profiles link to each maintainer&rsquo;s public registry page. We publish no contact
+          details of our own.
+        </p>
+      </section>
+    )}
+
+    <p class="text-sm text-gray-600 mt-10 pt-6 border-t">
+      <a href={correctionUrl} class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank"
+        >I maintain this package</a
+      > &mdash; ask for a correction, or to have it removed. Removal needs no reason.
+    </p>
+
+    <DataAttribution />
+  </main>
+</Layout>

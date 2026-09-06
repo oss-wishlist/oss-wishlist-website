@@ -1,0 +1,118 @@
+---
+/**
+ * /fund — browse critical packages worth sponsoring a service for.
+ *
+ * A fresh random set on every load, reshuffled by "show another set". There is
+ * no ranking, no score, no leaderboard and no fixed order: no package sits above
+ * another. Counts in the headline are computed from the data, never hand-edited.
+ */
+import Layout from '../components/Layout.astro';
+import PackageGrid from '../components/PackageGrid.astro';
+import DataAttribution from '../components/DataAttribution.astro';
+import { getBasePath } from '../lib/paths';
+import { samplePackages, presentPackage, getCounts } from '../lib/critical-packages';
+import { SAMPLE_SIZE } from '../../config/data-sources.js';
+
+export const prerender = false;
+
+const basePath = getBasePath();
+const counts = getCounts();
+const packages = samplePackages(SAMPLE_SIZE).map(presentPackage);
+
+const fmt = (n: number) => n.toLocaleString('en-US');
+
+/**
+ * Only state a count that is actually non-zero. Some registries report no
+ * sole-maintainer data at all (Go and Maven have no registry accounts), so a
+ * sentence built blindly could render "0 maintained by one person" — an empty
+ * number is an argument against the point this page exists to make.
+ */
+const facts = [
+  counts.sole_maintainer > 0 && `${fmt(counts.sole_maintainer)} maintained by one person.`,
+  counts.unfunded > 0 && `${fmt(counts.unfunded)} with no funding link.`,
+  counts.quiet > 0 && `${fmt(counts.quiet)} with no release in the last 18 months.`,
+].filter(Boolean) as string[];
+
+// Never render the page without content.
+const hasContent = packages.length > 0;
+---
+
+<Layout
+  title="Fund a service | OSS Wishlist"
+  description="Critical open source packages, and the services that would help the people maintaining them."
+>
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold text-gray-900 mb-4">Sponsor a service</h1>
+
+    {hasContent && (
+      <p class="text-lg text-gray-700 mb-2 max-w-3xl">
+        {fmt(counts.total)} critical packages. {facts.join(' ')}
+      </p>
+    )}
+
+    <p class="text-gray-600 mb-8 max-w-3xl">
+      Every one of these has a defined fix and people who do that work. Pick a package,
+      choose the services that would help, and take the summary to whoever holds the budget.
+    </p>
+
+    {hasContent ? (
+      <>
+        <div id="package-set">
+          <PackageGrid packages={packages} />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 mt-8">
+          <button
+            id="reshuffle"
+            type="button"
+            class="inline-flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium disabled:opacity-60"
+          >
+            Show another set
+          </button>
+          <a
+            href={`${basePath}fund/all`}
+            class="text-sm text-gray-600 hover:text-gray-900 underline font-medium"
+          >
+            See all {fmt(counts.total)} packages
+          </a>
+        </div>
+
+        <p id="reshuffle-error" class="text-sm text-gray-600 mt-3" hidden>
+          Could not load another set just now. Reload the page to see different packages.
+        </p>
+      </>
+    ) : (
+      <p class="text-gray-700">
+        The package cache has not been built yet. Run <code class="bg-gray-100 px-1 rounded"
+          >npm run refresh-data</code
+        > to populate it.
+      </p>
+    )}
+
+    <DataAttribution />
+  </main>
+</Layout>
+
+<script define:vars={{ sampleUrl: `${basePath}fund/sample` }}>
+  // "Show another set" swaps in a freshly sampled grid rendered by the server,
+  // so the cards stay in one place (PackageCard.astro) rather than being
+  // duplicated in client-side markup.
+  const button = document.getElementById('reshuffle');
+  const target = document.getElementById('package-set');
+  const errorLine = document.getElementById('reshuffle-error');
+
+  button?.addEventListener('click', async () => {
+    button.disabled = true;
+    errorLine.hidden = true;
+
+    try {
+      const res = await fetch(sampleUrl, { headers: { 'X-Requested-With': 'fetch' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      target.innerHTML = await res.text();
+    } catch {
+      errorLine.hidden = false;
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>

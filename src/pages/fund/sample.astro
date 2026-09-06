@@ -1,0 +1,21 @@
+---
+/**
+ * HTML fragment for /fund's "show another set" button — a freshly sampled grid
+ * and nothing else. Exists so the card markup lives in exactly one place.
+ *
+ * Not a destination: it renders no layout and is excluded from the sitemap.
+ */
+import PackageGrid from '../../components/PackageGrid.astro';
+import { samplePackages, presentPackage } from '../../lib/critical-packages';
+import { SAMPLE_SIZE } from '../../../config/data-sources.js';
+
+export const prerender = false;
+
+const packages = samplePackages(SAMPLE_SIZE).map(presentPackage);
+
+// Each request must produce a new set, so nothing may cache this.
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex');
+---
+
+<PackageGrid packages={packages} />

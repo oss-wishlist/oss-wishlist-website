@@ -1,0 +1,219 @@
+---
+/**
+ * Suggested services for a package, as checkboxes that build a plain summary.
+ *
+ * Nothing here submits, stores or counts anything, and this site does not
+ * broker the arrangement. It shows the connection — package fact, the service
+ * that addresses it, the people who do that work, the project itself — and the
+ * visitor takes it from there, to the practitioner and to the maintainer
+ * directly. There is no interest counter and no "0 people have offered": an
+ * unclicked button is an argument against the point of this site.
+ *
+ * Each service links to its existing service page, which is where practitioners
+ * already are. No second practitioner surface is built here.
+ */
+import { getCollection } from 'astro:content';
+import { getBasePath } from '../lib/paths';
+import { servicesFor, labelsFor } from '../../config/service-map.js';
+import { practitionersByService } from '../lib/practitioner-availability';
+import type { CriticalPackage } from '../lib/critical-packages';
+
+export interface Props {
+  pkg: CriticalPackage;
+}
+
+const { pkg } = Astro.props as Props;
+const basePath = getBasePath();
+
+const slugOf = (entry: { id: string }) => entry.id.replace(/\.md$/, '');
+const catalog = await getCollection('services');
+const bySlug = new Map(catalog.map((entry) => [slugOf(entry), entry]));
+
+// Suggested slugs come from config/service-map.js. A slug missing from the
+// catalog is skipped rather than rendered as a dead card.
+const suggested = (servicesFor(pkg) as string[])
+  .map((slug) => bySlug.get(slug))
+  .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+// Who can actually do each of these. Empty when the lookup fails or nobody has
+// listed themselves — in which case nothing is rendered for that service rather
+// than a zero.
+const availability = await practitionersByService(suggested.map(slugOf));
+
+const facts = labelsFor(pkg) as string[];
+---
+
+{suggested.length > 0 && (
+  <section class="mt-10" aria-labelledby="suggested-services">
+    <h2 id="suggested-services" class="text-2xl font-bold text-gray-900 mb-2">
+      What would help
+    </h2>
+    <p class="text-gray-600 mb-6 max-w-3xl">
+      {facts.length > 0
+        ? `Based on what the data shows for this package (${facts.join(', ')}), these services apply.`
+        : 'These services apply to any critical package.'} Choose the ones you would sponsor
+      and copy the summary.
+    </p>
+
+    <form id="service-form" class="space-y-4">
+      {suggested.map((entry) => {
+        const slug = slugOf(entry);
+        const people = availability.get(slug) ?? [];
+        return (
+          <label
+            class="flex gap-4 items-start bg-white p-5 rounded-lg border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              class="service-check mt-1 h-4 w-4 shrink-0"
+              value={slug}
+              data-title={entry.data.title}
+              data-outcome={entry.data.impact ?? ''}
+            />
+            <span class="min-w-0">
+              <span class="block text-lg font-semibold text-gray-900">{entry.data.title}</span>
+              <span class="block text-sm text-gray-600 mt-1">{entry.data.description}</span>
+              {entry.data.impact && (
+                <span class="block text-xs text-gray-700 mt-2">
+                  <span class="font-semibold">Outcome:</span> {entry.data.impact}
+                </span>
+              )}
+              {people.length > 0 && (
+                <span class="block mt-3">
+                  <span class="block text-xs font-semibold text-gray-700 mb-1">
+                    Available for this
+                  </span>
+                  <span class="flex flex-wrap gap-2">
+                    {people.map((person) => (
+                      <a
+                        href={`${basePath}practitioners/${person.slug}`}
+                        class="inline-flex items-center gap-2 text-xs text-gray-700 bg-gray-100 border border-gray-200 rounded-full pl-1 pr-3 py-1 hover:bg-gray-200 transition-colors"
+                      >
+                        {person.avatar_url ? (
+                          <img
+                            src={person.avatar_url}
+                            alt=""
+                            width="20"
+                            height="20"
+                            loading="lazy"
+                            class="w-5 h-5 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span class="w-5 h-5 rounded-full bg-gray-300"></span>
+                        )}
+                        {person.name}
+                        {person.accepts_pro_bono && (
+                          <span class="text-gray-500">&middot; pro bono</span>
+                        )}
+                      </a>
+                    ))}
+                  </span>
+                </span>
+              )}
+
+              <a
+                href={`${basePath}services/${slug}`}
+                class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-2"
+              >
+                See this service and who does it &rarr;
+              </a>
+            </span>
+          </label>
+        );
+      })}
+    </form>
+
+    <div class="mt-6 bg-gray-50 border rounded-lg p-5" id="summary-block" hidden>
+      <h3 class="text-lg font-semibold text-gray-900 mb-3">Your summary</h3>
+      <pre
+        id="summary-text"
+        class="whitespace-pre-wrap text-sm text-gray-800 bg-white border rounded p-4 overflow-x-auto"></pre>
+      <div class="flex flex-wrap items-center gap-3 mt-4">
+        <button
+          type="button"
+          id="copy-summary"
+          class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+        >
+          Copy summary
+        </button>
+        <span id="copy-status" class="text-sm text-gray-600" role="status" aria-live="polite"></span>
+      </div>
+
+      <div class="mt-5 pt-4 border-t text-sm text-gray-700">
+        <p class="font-semibold mb-1">Where to take it</p>
+        <p class="text-gray-600">
+          This site does not arrange the work. Take the summary to a practitioner on the
+          service page above, and to the project through its own channels.
+          {pkg.repository_url && (
+            <>
+              {' '}<a
+                href={pkg.repository_url}
+                class="underline hover:text-gray-900"
+                rel="noopener noreferrer"
+                target="_blank">{pkg.name} repository &rarr;</a
+              >
+            </>
+          )}
+        </p>
+      </div>
+    </div>
+  </section>
+)}
+
+<script
+  define:vars={{
+    packageName: pkg.name,
+    ecosystem: pkg.ecosystem,
+    repositoryUrl: pkg.repository_url,
+    facts,
+  }}
+>
+  const form = document.getElementById('service-form');
+  const block = document.getElementById('summary-block');
+  const output = document.getElementById('summary-text');
+  const copyButton = document.getElementById('copy-summary');
+  const status = document.getElementById('copy-status');
+
+  function build() {
+    const chosen = [...document.querySelectorAll('.service-check:checked')];
+
+    // With nothing selected there is no summary to show — the block is hidden
+    // rather than rendered empty.
+    if (chosen.length === 0) {
+      block.hidden = true;
+      return;
+    }
+
+    const lines = [`Package: ${packageName} (${ecosystem})`];
+    if (repositoryUrl) lines.push(`Repository: ${repositoryUrl}`);
+    if (facts.length > 0) lines.push(`What the data shows: ${facts.join(', ')}`);
+    lines.push('', 'Services to sponsor:');
+
+    for (const box of chosen) {
+      lines.push(`- ${box.dataset.title}`);
+      if (box.dataset.outcome) lines.push(`  Outcome: ${box.dataset.outcome}`);
+    }
+
+    output.textContent = lines.join('\n');
+    block.hidden = false;
+    status.textContent = '';
+  }
+
+  form?.addEventListener('change', build);
+
+  copyButton?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(output.textContent ?? '');
+      status.textContent = 'Copied.';
+    } catch {
+      // Clipboard access is refused in some browsers and contexts; selecting the
+      // text lets the visitor copy it themselves rather than hitting a dead end.
+      const range = document.createRange();
+      range.selectNodeContents(output);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      status.textContent = 'Select and copy the text above.';
+    }
+  });
+</script>

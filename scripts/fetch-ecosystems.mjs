@@ -127,6 +127,20 @@ function stripUrlUserinfo(url) {
 }
 
 /**
+ * A maintainer's public registry profile page, or null.
+ *
+ * Only http(s) survives: `mailto:` and anything with an embedded address is
+ * rejected, so this can never become a route to someone's inbox.
+ */
+function safeProfileUrl(url) {
+  if (typeof url !== 'string') return null;
+  const cleaned = stripUrlUserinfo(url.trim());
+  if (!/^https?:\/\//i.test(cleaned)) return null;
+  if (EMAIL_RE.test(cleaned)) return null;
+  return cleaned;
+}
+
+/**
  * Keep only the fields the site uses, and strip every email address on the way.
  *
  * Two sources of addresses in the raw payload, both dropped here:
@@ -152,6 +166,11 @@ function trimRecord(raw) {
     .map((m) => ({
       login: typeof m.login === 'string' && EMAIL_RE.test(m.login) ? null : m.login ?? null,
       name: typeof m.name === 'string' && EMAIL_RE.test(m.name) ? null : m.name ?? null,
+      // Public registry profile page (e.g. npmjs.com/~someone), so a visitor can
+      // reach a maintainer through the channel that maintainer already publishes.
+      // Kept only when it is a plain http(s) URL: never a mailto:, and never
+      // anything carrying an address.
+      profile_url: safeProfileUrl(m.html_url),
     }))
     .filter((m) => m.login || m.name);
 

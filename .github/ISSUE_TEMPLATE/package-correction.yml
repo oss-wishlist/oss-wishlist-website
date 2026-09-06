@@ -1,0 +1,43 @@
+name: I maintain this package
+description: Correct something about a package on this site, or have it removed.
+title: '[package] '
+labels: ['package-correction']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for getting in touch.
+
+        **Removal needs no reason and is not negotiated.** Say which package and we
+        will add it to `data/optout.json`, which takes it out of the browse pages,
+        the dependency check, its own page and the sitemap on the next build.
+
+        Corrections are welcome too — the data comes from
+        [ecosyste.ms](https://ecosyste.ms) and can be out of date or wrong.
+
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: Name and ecosystem, e.g. `minimatch` (npm) or `requests` (pypi).
+      placeholder: name (ecosystem)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: request
+    attributes:
+      label: What would you like?
+      options:
+        - Remove this package from the site
+        - Correct something shown about it
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Anything else
+      description: Optional. Only needed if you are asking for a correction.
+    validations:
+      required: false

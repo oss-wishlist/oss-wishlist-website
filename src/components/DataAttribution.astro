@@ -1,0 +1,30 @@
+---
+/**
+ * Required attribution for the ecosyste.ms data (CC-BY-SA-4.0).
+ *
+ * Every page that displays this data must render this. Also states the fetch
+ * date, so what a visitor is looking at is dated rather than implied-live.
+ */
+import { meta } from '../lib/critical-packages';
+
+const fetched = new Date(meta.fetched_at);
+const fetchedLabel = Number.isNaN(fetched.getTime())
+  ? null
+  : fetched.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<p class="text-xs text-gray-500 mt-8">
+  Package data from
+  <a
+    href="https://ecosyste.ms"
+    class="underline hover:text-gray-700"
+    rel="noopener noreferrer"
+    target="_blank">ecosyste.ms</a
+  >, licensed
+  <a
+    href="https://creativecommons.org/licenses/by-sa/4.0/"
+    class="underline hover:text-gray-700"
+    rel="noopener noreferrer"
+    target="_blank">CC-BY-SA-4.0</a
+  >.{fetchedLabel && <> Last refreshed {fetchedLabel}.</>}
+</p>

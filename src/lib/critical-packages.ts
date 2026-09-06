@@ -1,0 +1,152 @@
+/**
+ * Read-side access to the cached ecosyste.ms data.
+ *
+ * The JSON is imported, not fetched, so it is bundled at build time and the
+ * site serves with the network disabled. Nothing here calls ecosyste.ms.
+ *
+ * Data: https://ecosyste.ms — CC-BY-SA-4.0. Every page rendering this data
+ * must carry visible attribution.
+ */
+
+import criticalData from '../../data/critical.json';
+import metaData from '../../data/_meta.json';
+import optoutData from '../../data/optout.json';
+import { flagsFor, labelsFor, servicesFor } from '../../config/service-map.js';
+
+export interface Maintainer {
+  login: string | null;
+  name: string | null;
+  /** Public registry profile page. Never an email route — see safeProfileUrl(). */
+  profile_url: string | null;
+}
+
+export interface CriticalPackage {
+  name: string;
+  ecosystem: string;
+  purl: string | null;
+  description: string | null;
+  repository_url: string | null;
+  downloads: number | null;
+  dependent_repos_count: number | null;
+  funding_links: string[] | null;
+  latest_release_published_at: string | null;
+  licenses: string | null;
+  maintainers: Maintainer[];
+  advisory_count: number;
+  has_advisories: boolean;
+  sole_maintainer: boolean;
+  unfunded: boolean;
+  quiet: boolean;
+}
+
+export interface DataMeta {
+  fetched_at: string;
+  attribution: string;
+  license: string;
+  sources: string[];
+  registries: string[];
+  cap: number;
+  counts: {
+    total: number;
+    sole_maintainer: number;
+    unfunded: number;
+    has_advisories: number;
+    quiet: number;
+    per_registry: Record<string, number>;
+  };
+}
+
+interface OptOutEntry {
+  ecosystem: string;
+  name: string;
+}
+
+/** Stable identity for a package across the cache, /check results and opt-outs. */
+export const packageKey = (ecosystem: string, name: string) => `${ecosystem}/${name}`;
+
+/**
+ * Opt-outs are honoured here as well as at fetch time. Enforcing it on the read
+ * side too means an entry added to data/optout.json takes effect on the next
+ * build across every surface — /fund, /check, package pages and the sitemap —
+ * without waiting for the weekly refresh.
+ */
+const optedOut = new Set(
+  (optoutData as OptOutEntry[]).map((e) => packageKey(e.ecosystem, e.name))
+);
+
+const allPackages: CriticalPackage[] = (criticalData as CriticalPackage[]).filter(
+  (p) => !optedOut.has(packageKey(p.ecosystem, p.name))
+);
+
+export const meta = metaData as DataMeta;
+
+/** Every cached package, minus opt-outs. Fetch order is already deterministic. */
+export function getAllPackages(): CriticalPackage[] {
+  return allPackages;
+}
+
+/** Alphabetical, for the "see all" view. Never sorted by severity, never ranked. */
+export function getAllPackagesAlphabetical(): CriticalPackage[] {
+  return [...allPackages].sort((a, b) => {
+    const byName = a.name.localeCompare(b.name);
+    return byName !== 0 ? byName : a.ecosystem.localeCompare(b.ecosystem);
+  });
+}
+
+export function getPackage(ecosystem: string, name: string): CriticalPackage | undefined {
+  const key = packageKey(ecosystem, name);
+  return allPackages.find((p) => packageKey(p.ecosystem, p.name) === key);
+}
+
+/**
+ * A random sample, reshuffled on every call. /fund draws a fresh set on each
+ * page load and on "show another set" — there is no daily seed and no fixed
+ * order, so no package sits at the top of a list and none is ranked above
+ * another.
+ *
+ * Partial Fisher-Yates over a copy: O(n) and unbiased.
+ */
+export function samplePackages(count: number, pool = allPackages): CriticalPackage[] {
+  const take = Math.min(count, pool.length);
+  const copy = [...pool];
+  for (let i = 0; i < take; i++) {
+    const j = i + Math.floor(Math.random() * (copy.length - i));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, take);
+}
+
+/** Counts for the generated headline. Computed from the data, never hand-edited. */
+export function getCounts() {
+  return {
+    total: allPackages.length,
+    sole_maintainer: allPackages.filter((p) => p.sole_maintainer).length,
+    unfunded: allPackages.filter((p) => p.unfunded).length,
+    quiet: allPackages.filter((p) => p.quiet).length,
+    has_advisories: allPackages.filter((p) => p.has_advisories).length,
+  };
+}
+
+/** Everything a card or package page needs, including its suggested services. */
+export function presentPackage(pkg: CriticalPackage) {
+  return {
+    ...pkg,
+    key: packageKey(pkg.ecosystem, pkg.name),
+    href: packageHref(pkg),
+    flags: flagsFor(pkg) as string[],
+    labels: labelsFor(pkg) as string[],
+    serviceSlugs: servicesFor(pkg) as string[],
+  };
+}
+
+export type PresentedPackage = ReturnType<typeof presentPackage>;
+
+/**
+ * Package pages live at /p/:ecosystem/:name. Names legitimately contain slashes
+ * and @ (npm scopes like @babel/core, Maven group:artifact), so the name is
+ * encoded per path segment and the route uses a rest parameter.
+ */
+export function packageHref(pkg: Pick<CriticalPackage, 'ecosystem' | 'name'>): string {
+  const name = pkg.name.split('/').map(encodeURIComponent).join('/');
+  return `/p/${encodeURIComponent(pkg.ecosystem)}/${name}`;
+}
