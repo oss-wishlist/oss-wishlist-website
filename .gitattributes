@@ -1,0 +1,11 @@
+# The cached ecosyste.ms data is written with LF by scripts/fetch-ecosystems.mjs
+# and compared byte-for-byte against the file on disk so it only rewrites when
+# the content actually changed. Without this, a Windows checkout (core.autocrlf
+# = true) converts it to CRLF, every local run sees a 3.4MB diff, and the weekly
+# commit history stops meaning anything.
+data/*.json text eol=lf
+
+# Same reasoning for the scripts and config that produce it.
+*.mjs text eol=lf
+*.js  text eol=lf
+*.ts  text eol=lf
