@@ -9,6 +9,7 @@
     "build:gh-pages": "astro build --base /oss-wishlist-website",
     "preview": "astro preview",
     "astro": "astro",
+    "refresh-data": "node scripts/fetch-ecosystems.mjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui"

@@ -1,0 +1,55 @@
+name: Refresh ecosyste.ms data
+
+# Caches critical-package data into data/*.json so the site never calls
+# ecosyste.ms from the browser. The weekly commit history is a dated public
+# record of how these numbers move, which is part of the point.
+#
+# Data: https://ecosyste.ms — CC-BY-SA-4.0.
+
+on:
+  schedule:
+    # Mondays, 05:00 UTC
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch from ecosyste.ms
+        env:
+          # Repository variable, not a secret — it is sent as ?mailto= to join the
+          # ecosyste.ms "polite pool". Kept out of the repo so no address is
+          # committed anywhere in the source tree.
+          ECOSYSTEMS_CONTACT: ${{ vars.ECOSYSTEMS_CONTACT }}
+        run: node scripts/fetch-ecosystems.mjs
+
+      # The script exits 0 and leaves the previous JSON untouched if the API
+      # fails, so "no changes" here is a valid, healthy outcome.
+      - name: Commit if the data changed
+        run: |
+          if [ -z "$(git status --porcelain data/)" ]; then
+            echo "No change in data/ — nothing to commit."
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "data: refresh critical package cache from ecosyste.ms"
+          git push

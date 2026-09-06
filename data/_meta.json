@@ -1,0 +1,38 @@
+{
+  "fetched_at": "2026-09-06T20:43:10.901Z",
+  "attribution": "Package data from ecosyste.ms (https://ecosyste.ms), licensed CC-BY-SA-4.0.",
+  "license": "CC-BY-SA-4.0",
+  "sources": [
+    "https://packages.ecosyste.ms/api/v1/critical",
+    "https://packages.ecosyste.ms/api/v1/critical/sole_maintainers"
+  ],
+  "registries": [
+    "npmjs.org",
+    "pypi.org",
+    "rubygems.org",
+    "crates.io",
+    "proxy.golang.org",
+    "repo1.maven.org",
+    "packagist.org",
+    "nuget.org"
+  ],
+  "cap": 5000,
+  "counts": {
+    "total": 4546,
+    "sole_maintainer": 572,
+    "unfunded": 2947,
+    "has_advisories": 781,
+    "quiet": 1781,
+    "per_registry": {
+      "npmjs.org": 625,
+      "pypi.org": 522,
+      "rubygems.org": 625,
+      "crates.io": 625,
+      "proxy.golang.org": 625,
+      "repo1.maven.org": 625,
+      "packagist.org": 548,
+      "nuget.org": 351
+    }
+  },
+  "opt_outs_honoured": 0
+}
