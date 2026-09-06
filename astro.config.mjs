@@ -22,6 +22,9 @@ export default defineConfig({
     '/fulfill-success': '/fund',
     // The old dependency page asked the same question /check now answers.
     '/dependency-action': '/check',
+    // /fund/all was an exhaustive alphabetical list. The point of this site is
+    // to show a few things and hand over, not to be a directory.
+    '/fund/all': '/fund',
   },
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],

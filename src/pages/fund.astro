@@ -16,6 +16,7 @@ import {
   presentPackage,
   getCounts,
   getPool,
+  getHeadlinePool,
   parseFilters,
   meta,
   FILTERS,
@@ -29,7 +30,11 @@ const counts = getCounts();
 
 // Filters combine, so several can be on at once and they narrow together.
 const active = parseFilters(Astro.url.searchParams.getAll('flag'));
-const pool = getPool(active);
+
+// Unfiltered, sample from the widely-used-and-flagged pool: that card makes the
+// argument on its own. A filter means the visitor asked a specific question, so
+// answer it against the full set.
+const pool = active.length > 0 ? getPool(active) : getHeadlinePool();
 const packages = samplePackages(SAMPLE_SIZE, pool).map(presentPackage);
 
 /** Query string for a given set of filters. */
@@ -66,7 +71,6 @@ const activeLabels = FILTERS.filter((f) => active.includes(f.id)).map((f) =>
 );
 const hasContent = packages.length > 0;
 
-const seeAllHref = `${basePath}fund/all${queryFor(active)}`;
 const clearHref = `${basePath}fund`;
 ---
 
@@ -78,13 +82,13 @@ const clearHref = `${basePath}fund`;
     <h1 class="text-3xl font-bold text-gray-900 mb-3">Find a critical package you want to help with</h1>
 
     <p class="text-lg text-gray-700 mb-5 max-w-3xl">
-      A random sample of {packages.length} of {fmt(pool.length)} critical packages, as defined by
+      {fmt(counts.total)} critical packages, as defined by
       <a
         href="https://ecosyste.ms"
         class="underline hover:text-gray-900"
         rel="noopener noreferrer"
         target="_blank">ecosyste.ms</a
-      >.
+      >. Here are {packages.length} of the most widely used, picked at random.
     </p>
 
     <p class="text-gray-600 mb-6 max-w-3xl">
@@ -128,17 +132,15 @@ const clearHref = `${basePath}fund`;
           )}
         </div>
 
-        <p
-          aria-live="polite"
-          class={`inline-block mt-3 rounded-lg px-4 py-2 text-sm border ${
-            active.length > 0
-              ? 'bg-purple-50 border-purple-300 text-purple-900'
-              : 'bg-gray-100 border-gray-200 text-gray-800'
-          }`}
-        >
-          Showing <span class="font-bold">{fmt(pool.length)}</span> of {fmt(counts.total)}
-          packages{activeLabels.length > 0 ? ` with ${activeLabels.join(' and ')}` : ''}.
-        </p>
+        {active.length > 0 && (
+          <p
+            aria-live="polite"
+            class="inline-block mt-3 rounded-lg px-4 py-2 text-sm border bg-purple-50 border-purple-300 text-purple-900"
+          >
+            <span class="font-bold">{fmt(pool.length)}</span> of {fmt(counts.total)} packages have
+            {' '}{activeLabels.join(' and ')}.
+          </p>
+        )}
 
         {active.includes('sole_maintainer') && (
           <p class="text-xs text-gray-500 mt-1 max-w-3xl">
@@ -156,17 +158,14 @@ const clearHref = `${basePath}fund`;
           <PackageGrid packages={packages} />
         </div>
 
-        <div class="flex flex-wrap items-center gap-4 mt-8">
+        <div class="flex justify-center mt-8">
           <button
             id="reshuffle"
             type="button"
-            class="inline-flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium disabled:opacity-60"
+            class="inline-flex items-center gap-2 bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm disabled:opacity-60"
           >
-            Show another set
+            Show me another set
           </button>
-          <a href={seeAllHref} class="text-sm text-gray-600 hover:text-gray-900 underline font-medium">
-            See all {fmt(pool.length)} packages
-          </a>
         </div>
 
         <p id="reshuffle-error" class="text-sm text-gray-600 mt-3" hidden>

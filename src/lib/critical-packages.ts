@@ -148,6 +148,31 @@ export function isFilterId(value: string | null): value is FilterId {
 }
 
 /**
+ * Most visitors give this page a few seconds. The default set is drawn from
+ * packages that are both heavily depended on and carrying at least one flag,
+ * because that card makes the whole argument on its own: "5,765,200 dependent
+ * repositories" next to "one maintainer" needs no explaining.
+ *
+ * This is a sampling pool, not a ranking. Nothing is ordered by it and no score
+ * is shown. Applying a filter searches the full set instead.
+ */
+const WIDELY_USED_THRESHOLD = 100_000;
+
+/** Below this the pool is too thin to feel random, so fall back to everything. */
+const SAMPLE_FALLBACK_MIN = 24;
+
+const headlinePool = allPackages.filter(
+  (p) =>
+    (p.dependent_repos_count ?? 0) >= WIDELY_USED_THRESHOLD &&
+    (p.sole_maintainer || p.unfunded || p.quiet || p.has_advisories)
+);
+
+/** The pool the unfiltered page samples from, falling back if it is ever thin. */
+export function getHeadlinePool(): CriticalPackage[] {
+  return headlinePool.length >= SAMPLE_FALLBACK_MIN ? headlinePool : allPackages;
+}
+
+/**
  * Keep only the recognised filter ids, in a stable order and without duplicates,
  * so a hand-edited or stale query string cannot produce a strange page.
  */

@@ -251,7 +251,6 @@ npm test              # Run the test suite
 ### Key URLs (when running locally)
 - **Homepage**: `/` - Main landing page
 - **Sponsor a Service**: `/fund` - Browse critical packages and what might help them
-- **All Packages**: `/fund/all` - The full cached set, alphabetically
 - **Check Dependencies**: `/check` - See which critical packages a repository depends on
 - **Package Page**: `/p/:ecosystem/:name` - One package, its facts and its services
 - **Admin Panel**: `/admin` - Manage practitioners
