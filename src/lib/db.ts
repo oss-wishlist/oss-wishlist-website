@@ -30,46 +30,61 @@ if (!DATABASE_URL) {
   }
 }
 
-if (!DATABASE_URL) {
-  const errorMsg = '[Database] DATABASE_URL not found in environment or .env file. Database connection required.';
-  console.error(errorMsg);
-  throw new Error(errorMsg);
-}
-
 const PGSSLMODE = process.env.PGSSLMODE || import.meta.env?.PGSSLMODE;
 
-// SSL configuration for Digital Ocean managed PostgreSQL
-// Per-connection SSL configuration (not global process modification)
-const shouldUseSSL = DATABASE_URL?.includes('sslmode=require') || DATABASE_URL?.includes('ssl=true') || PGSSLMODE === 'require';
+/**
+ * The pool is created on first use, not at import.
+ *
+ * This module is imported transitively by Header.astro, so throwing at module
+ * scope when DATABASE_URL is absent took down every page on the site —
+ * including the ones that never touch the database. Now a missing or broken
+ * database only fails the queries that actually need it, and callers that can
+ * degrade (see practitioner-availability.ts) render without it.
+ */
+let pool: pg.Pool | null = null;
 
-// Configure SSL per-connection if needed
-// For Digital Ocean managed databases, we need to disable certificate validation
-// NOTE: This MUST be set before pool creation and left set for database operations
-if (shouldUseSSL) {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  console.log('[Database] Using SSL connection with certificate validation disabled');
+function getPool(): pg.Pool {
+  if (pool) return pool;
+
+  if (!DATABASE_URL) {
+    throw new Error(
+      '[Database] DATABASE_URL not found in environment or .env file. Database connection required.'
+    );
+  }
+
+  // SSL configuration for Digital Ocean managed PostgreSQL
+  const shouldUseSSL =
+    DATABASE_URL.includes('sslmode=require') ||
+    DATABASE_URL.includes('ssl=true') ||
+    PGSSLMODE === 'require';
+
+  // For Digital Ocean managed databases, we need to disable certificate validation.
+  // NOTE: This MUST be set before pool creation and left set for database operations.
+  if (shouldUseSSL) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    console.log('[Database] Using SSL connection with certificate validation disabled');
+  }
+
+  pool = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: shouldUseSSL ? { rejectUnauthorized: false } : false,
+    // Connection pool settings
+    max: 20, // Maximum number of clients in the pool
+    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection not available
+  });
+
+  pool.on('error', (err) => {
+    console.error('[Database] Unexpected error on idle client', err);
+  });
+
+  return pool;
 }
 
-const sslConfig = shouldUseSSL
-  ? {
-      rejectUnauthorized: false,
-    }
-  : false;
-
-// Connection pool configuration
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: sslConfig,
-  // Connection pool settings
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection not available
-});
-
-// Log pool errors
-pool.on('error', (err) => {
-  console.error('[Database] Unexpected error on idle client', err);
-});
+/** True when a connection string is configured. Lets callers skip the attempt. */
+export function isDatabaseConfigured(): boolean {
+  return Boolean(DATABASE_URL);
+}
 
 /**
  * Execute a SQL query
@@ -80,7 +95,7 @@ pool.on('error', (err) => {
 export async function query<T extends pg.QueryResultRow = any>(text: string, params?: any[]): Promise<pg.QueryResult<T>> {
   const start = Date.now();
   try {
-    const res = await pool.query<T>(text, params);
+    const res = await getPool().query<T>(text, params);
     const duration = Date.now() - start;
     // Query logging disabled - uncomment if needed for debugging
     // console.log('[Database] Executed query', { text: text.substring(0, 100), duration, rows: res.rowCount });
@@ -96,14 +111,16 @@ export async function query<T extends pg.QueryResultRow = any>(text: string, par
  * Remember to call client.release() when done!
  */
 export async function getClient() {
-  return await pool.connect();
+  return await getPool().connect();
 }
 
 /**
  * Close the database pool (for graceful shutdown)
  */
 export async function closePool() {
+  if (!pool) return;
   await pool.end();
+  pool = null;
   console.log('[Database] Connection pool closed');
 }
 
