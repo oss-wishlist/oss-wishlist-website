@@ -7,6 +7,22 @@ import node from '@astrojs/node';
 export default defineConfig({
   site: 'https://oss-wish-list.github.io',
   base: process.env.PUBLIC_BASE_PATH || '/',
+  // Wishlists were replaced by /fund and /check. These keep every previously
+  // published link working rather than 404ing it.
+  redirects: {
+    '/wishlists': '/fund',
+    '/wishlists/new': '/fund',
+    '/wishlists/[...rest]': '/fund',
+    '/wishlist/[...rest]': '/fund',
+    '/browse-wishlists': '/fund',
+    '/create-wishlist': '/fund',
+    '/edit-wishlist': '/fund',
+    '/wishlist-success': '/fund',
+    '/fulfill': '/fund',
+    '/fulfill-success': '/fund',
+    // The old dependency page asked the same question /check now answers.
+    '/dependency-action': '/check',
+  },
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],
     defaultLocale: 'en',
