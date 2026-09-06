@@ -15,11 +15,26 @@ import { getAllPackages, packageKey, type CriticalPackage } from './critical-pac
 const USER_AGENT =
   'oss-wishlist-website/1.0 (+https://github.com/oss-wishlist/oss-wishlist-website)';
 
-/** Hosts ecosyste.ms indexes that we accept, mapped to its own hostName segment. */
+/**
+ * Hosts we accept, mapped to the exact `hostName` segment ecosyste.ms uses.
+ *
+ * These strings are not guessable and are not consistent with each other: the
+ * API answers to "GitHub" but 404s on "GitLab", wanting the literal domain
+ * instead. They come from https://repos.ecosyste.ms/api/v1/hosts, which is the
+ * only thing to trust when adding another. Getting one wrong fails silently as
+ * "this repository is not indexed yet" rather than as an error.
+ */
 const SUPPORTED_HOSTS: Record<string, string> = {
   'github.com': 'GitHub',
-  'gitlab.com': 'GitLab',
+  'gitlab.com': 'gitlab.com',
+  'codeberg.org': 'codeberg.org',
 };
+
+/** Host names as a visitor would write them, for the hint under the field. */
+export const SUPPORTED_HOST_LABELS = ['GitHub', 'GitLab', 'Codeberg'];
+
+/** "GitHub, GitLab or Codeberg" rather than a bare comma-joined list. */
+const hostList = SUPPORTED_HOST_LABELS.slice(0, -1).join(', ') + ' or ' + SUPPORTED_HOST_LABELS.at(-1);
 
 export interface ParsedRepo {
   host: string;
@@ -95,7 +110,8 @@ export async function checkRepository(raw: string): Promise<CheckOutcome> {
     return {
       status: 'invalid',
       message:
-        'That does not look like a GitHub or GitLab repository. Try a link like https://github.com/owner/repo.',
+        `That does not look like a ${hostList} repository. ` +
+        'Try a link like https://github.com/owner/repo.',
     };
   }
 

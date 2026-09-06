@@ -7,7 +7,6 @@
  * another. Counts in the headline are computed from the data, never hand-edited,
  * and each one narrows the set rather than just stating a total.
  */
-import { getCollection } from 'astro:content';
 import Layout from '../components/Layout.astro';
 import PackageGrid from '../components/PackageGrid.astro';
 import DataAttribution from '../components/DataAttribution.astro';
@@ -37,16 +36,6 @@ const packages = samplePackages(SAMPLE_SIZE, pool).map(presentPackage);
 const queryFor = (ids: string[]) => (ids.length ? `?${ids.map((f) => `flag=${f}`).join('&')}` : '');
 
 const fmt = (n: number) => n.toLocaleString('en-US');
-
-/**
- * The "we know how to fix this" claim, counted rather than asserted. Both
- * figures come from the catalog itself, so neither can drift out of date and
- * neither is hand-edited. Not every service has a playbook yet, which is why
- * this counts rather than saying "every".
- */
-const services = await getCollection('services');
-const serviceCount = services.length;
-const playbookCount = services.filter((s) => s.data.playbook || s.data.playbooks?.length).length;
 
 /**
  * Each filter states its own count, and only appears when that count is above
@@ -88,29 +77,15 @@ const clearHref = `${basePath}fund`;
   <main class="max-w-6xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-bold text-gray-900 mb-3">Find a critical package you want to help with</h1>
 
-    <p class="text-lg text-gray-700 mb-2 max-w-3xl">
-      A sample of {fmt(counts.total)} critical packages, as defined by ecosyste.ms. Open one to
-      see what it is carrying, whether you depend on it, and what might move the needle.
+    <p class="text-lg text-gray-700 mb-5 max-w-3xl">
+      A random sample of {packages.length} of {fmt(pool.length)} critical packages, as defined by
+      <a
+        href="https://ecosyste.ms"
+        class="underline hover:text-gray-900"
+        rel="noopener noreferrer"
+        target="_blank">ecosyste.ms</a
+      >.
     </p>
-
-    <p class="text-sm text-gray-500 mb-5 max-w-3xl">
-      This is not the whole picture. It is the most depended-on packages from
-      {meta.registries.length} registries, refreshed weekly. Plenty of critical work sits outside it.
-    </p>
-
-    <div class="max-w-3xl mb-6 border-l-4 border-gray-800 pl-5 py-1">
-      <p class="text-lg text-gray-900 font-semibold mb-2">
-        The hard part is not knowing what to do. It is deciding to pay for it.
-      </p>
-      <p class="text-gray-700">
-        The work here is not improvised. {playbookCount} of our {serviceCount} services have a
-        <a href={`${basePath}catalog`} class="underline hover:text-gray-900 font-medium"
-          >published playbook</a
-        > with a scored peer-review rubric, so you can read the method and see exactly
-        how the result gets measured, before anyone spends anything. Each one has practitioners
-        who already do that work.
-      </p>
-    </div>
 
     <p class="text-gray-600 mb-6 max-w-3xl">
       Pick a package, choose the services that might help, and take the summary to whoever
@@ -153,8 +128,15 @@ const clearHref = `${basePath}fund`;
           )}
         </div>
 
-        <p class="text-sm text-gray-800 mt-3">
-          Showing <span class="font-semibold">{fmt(pool.length)}</span> of {fmt(counts.total)}
+        <p
+          aria-live="polite"
+          class={`inline-block mt-3 rounded-lg px-4 py-2 text-sm border ${
+            active.length > 0
+              ? 'bg-purple-50 border-purple-300 text-purple-900'
+              : 'bg-gray-100 border-gray-200 text-gray-800'
+          }`}
+        >
+          Showing <span class="font-bold">{fmt(pool.length)}</span> of {fmt(counts.total)}
           packages{activeLabels.length > 0 ? ` with ${activeLabels.join(' and ')}` : ''}.
         </p>
 
@@ -170,8 +152,6 @@ const clearHref = `${basePath}fund`;
 
     {hasContent ? (
       <>
-        <p class="text-sm text-gray-600 mb-4">A random set of {packages.length}.</p>
-
         <div id="package-set">
           <PackageGrid packages={packages} />
         </div>

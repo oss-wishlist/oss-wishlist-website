@@ -88,7 +88,19 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
     </nav>
 
     <div class="flex items-baseline flex-wrap gap-3 mb-3">
-      <h1 class="text-3xl font-bold text-gray-900 break-all">{pkg.name}</h1>
+      <h1 class="text-3xl font-bold text-gray-900 break-all">
+        {pkg.repository_url ? (
+          <a
+            href={pkg.repository_url}
+            class="hover:underline decoration-2 underline-offset-4"
+            rel="noopener noreferrer"
+            target="_blank"
+            title={`Open the ${pkg.name} project`}>{pkg.name}</a
+          >
+        ) : (
+          pkg.name
+        )}
+      </h1>
       <span class="text-sm font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded"
         >{pkg.ecosystem}</span
       >
@@ -128,7 +140,7 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
             Check
           </button>
         </div>
-        <p class="text-xs text-gray-500 mt-2">GitHub and GitLab. Public repositories only.</p>
+        <p class="text-xs text-gray-500 mt-2">GitHub, GitLab and Codeberg. Public repositories only.</p>
       </form>
 
       {checkProblem && <p class="mt-4 text-gray-800">{checkProblem}</p>}
@@ -261,10 +273,9 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
       <section class="mt-10" aria-labelledby="reach-out">
         <h2 id="reach-out" class="text-2xl font-bold text-gray-900 mb-2">Reaching out</h2>
         <p class="text-gray-600 mb-4 max-w-3xl">
-          This site does not contact maintainers and does not arrange anything. If you want to
-          help, go to them directly. You can offer to fund the work, or simply ask
-          whether a practitioner&rsquo;s help would be useful. Either is a better opening than
-          assuming.
+          Open Source Wishlist does not contact maintainers and does not arrange anything. If
+          you want to help, go to them directly. You can offer to fund the work, or simply ask
+          whether a practitioner&rsquo;s help would be useful. Don&rsquo;t guess, ask.
         </p>
 
         <ul class="flex flex-wrap gap-3 mb-4">
