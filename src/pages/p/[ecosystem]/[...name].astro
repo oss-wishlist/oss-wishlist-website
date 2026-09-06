@@ -14,7 +14,8 @@ import Layout from '../../../components/Layout.astro';
 import ServiceSelector from '../../../components/ServiceSelector.astro';
 import DataAttribution from '../../../components/DataAttribution.astro';
 import { getBasePath } from '../../../lib/paths';
-import { getPackage } from '../../../lib/critical-packages';
+import { getPackage, packageHref } from '../../../lib/critical-packages';
+import { checkRepositoryForPackage } from '../../../lib/dependency-check';
 import { labelsFor } from '../../../../config/service-map.js';
 
 export const prerender = false;
@@ -55,11 +56,29 @@ const lastReleaseLabel =
 const correctionUrl =
   'https://github.com/oss-wishlist/oss-wishlist-website/issues/new' +
   `?template=package-correction.yml&title=${encodeURIComponent(`[package] ${pkg.name}`)}`;
+
+/**
+ * "Do you depend on this package?" — asked and answered on the package page
+ * itself, so the question is about the package in front of you rather than a
+ * separate site-wide report. Nothing is stored and no result is recorded.
+ */
+const submittedRepo = Astro.url.searchParams.get('repo')?.trim() ?? '';
+const dependencyCheck = submittedRepo
+  ? await checkRepositoryForPackage(submittedRepo, pkg.ecosystem, pkg.name)
+  : null;
+
+const checkProblem =
+  dependencyCheck && dependencyCheck.status !== 'ok'
+    ? (dependencyCheck as Extract<typeof dependencyCheck, { message: string }>).message
+    : null;
+
+// The form posts back to this same page, so the answer appears in context.
+const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
 ---
 
 <Layout
   title={`${pkg.name} | OSS Wishlist`}
-  description={pkg.description ?? `Services that would help ${pkg.name}.`}
+  description={pkg.description ?? `Services that might help ${pkg.name}.`}
 >
   <main class="max-w-4xl mx-auto px-4 py-12">
     <nav class="mb-6">
@@ -137,6 +156,77 @@ const correctionUrl =
         >
       ))}
     </div>
+
+    <section class="mt-10 bg-white border rounded-lg p-6" aria-labelledby="depend-check">
+      <h2 id="depend-check" class="text-2xl font-bold text-gray-900 mb-2">
+        See if you depend on this package
+      </h2>
+      <p class="text-gray-600 mb-4 max-w-3xl">
+        Paste one of your repositories and we will tell you whether it depends on
+        <span class="font-semibold">{pkg.name}</span>. Nothing is stored.
+      </p>
+
+      <form method="get" action={selfPath}>
+        <label for="repo" class="block text-sm font-semibold text-gray-900 mb-2">
+          Repository URL
+        </label>
+        <div class="flex flex-wrap gap-3">
+          <input
+            type="text"
+            id="repo"
+            name="repo"
+            value={submittedRepo}
+            placeholder="https://github.com/owner/repo"
+            required
+            autocomplete="off"
+            spellcheck="false"
+            class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          />
+          <button
+            type="submit"
+            class="bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+          >
+            Check
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">GitHub and GitLab. Public repositories only.</p>
+      </form>
+
+      {checkProblem && <p class="mt-4 text-gray-800">{checkProblem}</p>}
+
+      {dependencyCheck?.status === 'ok' && (
+        <div
+          class={`mt-5 rounded-lg border p-5 ${
+            dependencyCheck.dependsOn ? 'border-gray-800 bg-gray-50' : 'border-gray-200 bg-gray-50'
+          }`}
+        >
+          <p class="text-xl font-bold text-gray-900 mb-1">
+            {dependencyCheck.dependsOn ? 'Yes' : 'No'}
+          </p>
+          <p class="text-gray-700">
+            {dependencyCheck.dependsOn ? (
+              <>
+                <span class="font-semibold">{dependencyCheck.repo.label}</span> depends on {pkg.name}.
+                The services below are the ones that might help it.
+              </>
+            ) : (
+              <>
+                We read {dependencyCheck.dependencyCount.toLocaleString('en-US')} dependencies for
+                <span class="font-semibold"> {dependencyCheck.repo.label}</span> and {pkg.name} is
+                not among them.
+              </>
+            )}
+          </p>
+          {!dependencyCheck.dependsOn && (
+            <a
+              href={`${basePath}fund`}
+              class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-3"
+              >Browse other critical packages &rarr;</a
+            >
+          )}
+        </div>
+      )}
+    </section>
 
     <ServiceSelector pkg={pkg} />
 

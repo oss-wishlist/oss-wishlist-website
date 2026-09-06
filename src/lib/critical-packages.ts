@@ -124,7 +124,37 @@ export function getCounts() {
     unfunded: allPackages.filter((p) => p.unfunded).length,
     quiet: allPackages.filter((p) => p.quiet).length,
     has_advisories: allPackages.filter((p) => p.has_advisories).length,
+    /**
+     * How many packages we actually hold maintainer data for. Go and Maven have
+     * no registry maintainer accounts, so `sole_maintainer` can only ever be
+     * false for them — stating it against the full total would overstate how
+     * many critical packages have more than one maintainer.
+     */
+    with_maintainer_data: allPackages.filter((p) => p.maintainers.length > 0).length,
   };
+}
+
+/** The flags a visitor can narrow /fund by. */
+export const FILTERS = [
+  { id: 'sole_maintainer', label: 'One maintainer' },
+  { id: 'unfunded', label: 'No funding link' },
+  { id: 'quiet', label: 'No release in 18 months' },
+] as const;
+
+export type FilterId = (typeof FILTERS)[number]['id'];
+
+export function isFilterId(value: string | null): value is FilterId {
+  return FILTERS.some((f) => f.id === value);
+}
+
+/**
+ * The pool a sample is drawn from. An unrecognised or absent filter gives every
+ * package, so a bad query string degrades to the unfiltered page rather than an
+ * empty one.
+ */
+export function getPool(filter: string | null): CriticalPackage[] {
+  if (!isFilterId(filter)) return allPackages;
+  return allPackages.filter((p) => p[filter]);
 }
 
 /** Everything a card or package page needs, including its suggested services. */

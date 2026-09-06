@@ -168,3 +168,26 @@ export async function checkRepository(raw: string): Promise<CheckOutcome> {
 
   return { status: 'ok', repo, matches, dependencyCount: pairs.size };
 }
+
+/**
+ * Does this repository depend on one specific package? A plain yes or no.
+ *
+ * Asked from a package page, where the visitor already knows which package they
+ * are looking at. Reuses the same lookup: the target is by definition in the
+ * cached set, so it appears in `matches` exactly when the repository depends on it.
+ */
+export async function checkRepositoryForPackage(
+  raw: string,
+  ecosystem: string,
+  name: string
+): Promise<CheckOutcome & { dependsOn?: boolean }> {
+  const outcome = await checkRepository(raw);
+  if (outcome.status !== 'ok') return outcome;
+
+  const target = packageKey(ecosystem, name);
+  const dependsOn = outcome.matches.some(
+    (pkg) => packageKey(pkg.ecosystem, pkg.name) === target
+  );
+
+  return { ...outcome, dependsOn };
+}

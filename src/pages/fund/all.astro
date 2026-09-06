@@ -10,24 +10,40 @@ import Layout from '../../components/Layout.astro';
 import PackageGrid from '../../components/PackageGrid.astro';
 import DataAttribution from '../../components/DataAttribution.astro';
 import { getBasePath } from '../../lib/paths';
-import { getAllPackagesAlphabetical, presentPackage } from '../../lib/critical-packages';
+import {
+  getAllPackagesAlphabetical,
+  presentPackage,
+  getPool,
+  isFilterId,
+  FILTERS,
+} from '../../lib/critical-packages';
 
 export const prerender = false;
 
 const PER_PAGE = 60;
 const basePath = getBasePath();
 
-const all = getAllPackagesAlphabetical();
+const requested = Astro.url.searchParams.get('flag');
+const activeFilter = isFilterId(requested) ? requested : null;
+const activeLabel = FILTERS.find((f) => f.id === activeFilter)?.label ?? null;
+
+// Filter first, then sort by name. Never by severity, and never with a rank.
+const filtered = new Set(getPool(activeFilter));
+const all = getAllPackagesAlphabetical().filter((p) => filtered.has(p));
 const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
 
-const requested = Number(Astro.url.searchParams.get('page') ?? '1');
-const page = Number.isFinite(requested) ? Math.min(Math.max(1, Math.trunc(requested)), totalPages) : 1;
+const requestedPage = Number(Astro.url.searchParams.get('page') ?? '1');
+const page = Number.isFinite(requestedPage)
+  ? Math.min(Math.max(1, Math.trunc(requestedPage)), totalPages)
+  : 1;
 
 const start = (page - 1) * PER_PAGE;
 const packages = all.slice(start, start + PER_PAGE).map(presentPackage);
 
 const fmt = (n: number) => n.toLocaleString('en-US');
-const pageHref = (n: number) => `${basePath}fund/all?page=${n}`;
+const pageHref = (n: number) =>
+  `${basePath}fund/all?page=${n}${activeFilter ? `&flag=${activeFilter}` : ''}`;
+const backHref = activeFilter ? `${basePath}fund?flag=${activeFilter}` : `${basePath}fund`;
 ---
 
 <Layout
@@ -36,16 +52,17 @@ const pageHref = (n: number) => `${basePath}fund/all?page=${n}`;
 >
   <main class="max-w-6xl mx-auto px-4 py-12">
     <nav class="mb-6">
-      <a href={`${basePath}fund`} class="text-sm text-gray-600 hover:text-gray-900 underline"
+      <a href={backHref} class="text-sm text-gray-600 hover:text-gray-900 underline"
         >&larr; Back to a random set</a
       >
     </nav>
 
-    <h1 class="text-3xl font-bold text-gray-900 mb-3">All critical packages</h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-3">
+      {activeLabel ? activeLabel : 'All critical packages'}
+    </h1>
     <p class="text-gray-700 mb-8">
-      {fmt(all.length)} packages, listed alphabetically. Showing {fmt(start + 1)}&ndash;{fmt(
-        start + packages.length
-      )}.
+      {fmt(all.length)} packages{activeLabel ? ` with ${activeLabel.toLowerCase()}` : ''}, listed
+      alphabetically. Showing {fmt(start + 1)}&ndash;{fmt(start + packages.length)}.
     </p>
 
     <PackageGrid packages={packages} />
