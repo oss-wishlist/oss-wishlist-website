@@ -111,12 +111,28 @@ const facts = labelsFor(pkg) as string[];
                 </span>
               )}
 
-              <a
-                href={`${basePath}services/${slug}`}
-                class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-2"
-              >
-                See this service and who does it &rarr;
-              </a>
+              <span class="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                <a
+                  href={`${basePath}services/${slug}`}
+                  class="text-sm text-gray-600 hover:text-gray-900 underline"
+                >
+                  See this service and who does it &rarr;
+                </a>
+                {/*
+                  The playbook is the evidence behind "we know how to fix this":
+                  the method and its scored rubric, readable before committing
+                  anything. Linked here so the proof is one click from the package,
+                  not two.
+                */}
+                {entry.data.playbook && (
+                  <a
+                    href={`${basePath}playbooks/${entry.data.playbook}`}
+                    class="text-sm text-gray-600 hover:text-gray-900 underline"
+                  >
+                    Read the playbook and rubric &rarr;
+                  </a>
+                )}
+              </span>
             </span>
           </label>
         );

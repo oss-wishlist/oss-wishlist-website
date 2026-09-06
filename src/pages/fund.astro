@@ -7,6 +7,7 @@
  * another. Counts in the headline are computed from the data, never hand-edited,
  * and each one narrows the set rather than just stating a total.
  */
+import { getCollection } from 'astro:content';
 import Layout from '../components/Layout.astro';
 import PackageGrid from '../components/PackageGrid.astro';
 import DataAttribution from '../components/DataAttribution.astro';
@@ -16,7 +17,8 @@ import {
   presentPackage,
   getCounts,
   getPool,
-  isFilterId,
+  parseFilters,
+  meta,
   FILTERS,
 } from '../lib/critical-packages';
 import { SAMPLE_SIZE } from '../../config/data-sources.js';
@@ -26,13 +28,25 @@ export const prerender = false;
 const basePath = getBasePath();
 const counts = getCounts();
 
-const requested = Astro.url.searchParams.get('flag');
-const activeFilter = isFilterId(requested) ? requested : null;
-
-const pool = getPool(activeFilter);
+// Filters combine, so several can be on at once and they narrow together.
+const active = parseFilters(Astro.url.searchParams.getAll('flag'));
+const pool = getPool(active);
 const packages = samplePackages(SAMPLE_SIZE, pool).map(presentPackage);
 
+/** Query string for a given set of filters. */
+const queryFor = (ids: string[]) => (ids.length ? `?${ids.map((f) => `flag=${f}`).join('&')}` : '');
+
 const fmt = (n: number) => n.toLocaleString('en-US');
+
+/**
+ * The "we know how to fix this" claim, counted rather than asserted. Both
+ * figures come from the catalog itself, so neither can drift out of date and
+ * neither is hand-edited. Not every service has a playbook yet, which is why
+ * this counts rather than saying "every".
+ */
+const services = await getCollection('services');
+const serviceCount = services.length;
+const playbookCount = services.filter((s) => s.data.playbook || s.data.playbooks?.length).length;
 
 /**
  * Each filter states its own count, and only appears when that count is above
@@ -40,19 +54,31 @@ const fmt = (n: number) => n.toLocaleString('en-US');
  * blindly could offer "0 maintained by one person" — an empty number is an
  * argument against the point this page exists to make.
  */
-const filters = FILTERS.map((f) => ({
-  ...f,
-  count: counts[f.id],
-  active: activeFilter === f.id,
-  href: activeFilter === f.id ? `${basePath}fund` : `${basePath}fund?flag=${f.id}`,
-})).filter((f) => f.count > 0);
+const filters = FILTERS.map((f) => {
+  const isActive = active.includes(f.id);
+  // Toggling this chip gives this set...
+  const next = isActive ? active.filter((id) => id !== f.id) : [...active, f.id];
+  // ...and this many packages. Showing the resulting number rather than the
+  // flag's own total makes the effect of combining filters legible before
+  // anyone clicks: "no funding link 2,947" alone, but "268" once
+  // "one maintainer" is already on.
+  const resulting = getPool(parseFilters(next)).length;
+  return {
+    ...f,
+    isActive,
+    resulting,
+    total: counts[f.id],
+    href: `${basePath}fund${queryFor(next)}`,
+  };
+}).filter((f) => f.total > 0);
 
-const activeLabel = filters.find((f) => f.active)?.label ?? null;
+const activeLabels = FILTERS.filter((f) => active.includes(f.id)).map((f) =>
+  f.label.toLowerCase()
+);
 const hasContent = packages.length > 0;
 
-const seeAllHref = activeFilter
-  ? `${basePath}fund/all?flag=${activeFilter}`
-  : `${basePath}fund/all`;
+const seeAllHref = `${basePath}fund/all${queryFor(active)}`;
+const clearHref = `${basePath}fund`;
 ---
 
 <Layout
@@ -60,40 +86,80 @@ const seeAllHref = activeFilter
   description="Critical open source packages, and the services that might help the people maintaining them."
 >
   <main class="max-w-6xl mx-auto px-4 py-12">
-    <h1 class="text-3xl font-bold text-gray-900 mb-4">Sponsor a service</h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-3">Find a critical package you want to help with</h1>
 
     <p class="text-lg text-gray-700 mb-2 max-w-3xl">
-      {fmt(counts.total)} critical packages, as defined by ecosyste.ms.
+      A sample of {fmt(counts.total)} critical packages, as defined by ecosyste.ms. Open one to
+      see what it is carrying, whether you depend on it, and what might move the needle.
     </p>
 
+    <p class="text-sm text-gray-500 mb-5 max-w-3xl">
+      This is not the whole picture. It is the most depended-on packages from
+      {meta.registries.length} registries, refreshed weekly. Plenty of critical work sits outside it.
+    </p>
+
+    <div class="max-w-3xl mb-6 border-l-4 border-gray-800 pl-5 py-1">
+      <p class="text-lg text-gray-900 font-semibold mb-2">
+        The hard part is not knowing what to do. It is deciding to pay for it.
+      </p>
+      <p class="text-gray-700">
+        The work here is not improvised. {playbookCount} of our {serviceCount} services have a
+        <a href={`${basePath}catalog`} class="underline hover:text-gray-900 font-medium"
+          >published playbook</a
+        > with a scored peer-review rubric, so you can read the method and see exactly
+        how the result gets measured, before anyone spends anything. Each one has practitioners
+        who already do that work.
+      </p>
+    </div>
+
     <p class="text-gray-600 mb-6 max-w-3xl">
-      Every one of these is associated with a rubric for verified impact, and expert
-      practitioners in that area. Pick a package, choose the services that might help, and
-      take the summary to whoever holds the budget.
+      Pick a package, choose the services that might help, and take the summary to whoever
+      holds the budget.
     </p>
 
     {filters.length > 0 && (
       <div class="mb-8">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Narrow the set</p>
-        <div class="flex flex-wrap gap-2">
+        <p class="text-sm font-semibold text-gray-700 mb-2">
+          Narrow the set. Combine as many as you like
+        </p>
+        <div class="flex flex-wrap items-center gap-2">
           {filters.map((f) => (
             <a
               href={f.href}
-              aria-pressed={f.active ? 'true' : 'false'}
+              aria-pressed={f.isActive ? 'true' : 'false'}
               class={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                f.active
+                f.isActive
                   ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-700'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
               }`}
             >
-              {f.label} <span class="opacity-70">{fmt(f.count)}</span>
-              {f.active && <span aria-hidden="true"> &times;</span>}
+              {f.label}{' '}
+              {f.isActive ? (
+                <span aria-hidden="true">&times;</span>
+              ) : (
+                /* The number you would be left with, not the flag's own total,
+                   so the effect of stacking filters is visible before clicking. */
+                <span class="opacity-70">{fmt(f.resulting)}</span>
+              )}
             </a>
           ))}
+
+          {active.length > 0 && (
+            <a
+              href={clearHref}
+              class="text-sm text-gray-600 hover:text-gray-900 underline ml-1"
+              >Clear all</a
+            >
+          )}
         </div>
 
-        {activeFilter === 'sole_maintainer' && (
-          <p class="text-xs text-gray-500 mt-2 max-w-3xl">
+        <p class="text-sm text-gray-800 mt-3">
+          Showing <span class="font-semibold">{fmt(pool.length)}</span> of {fmt(counts.total)}
+          packages{activeLabels.length > 0 ? ` with ${activeLabels.join(' and ')}` : ''}.
+        </p>
+
+        {active.includes('sole_maintainer') && (
+          <p class="text-xs text-gray-500 mt-1 max-w-3xl">
             Counted across the {fmt(counts.with_maintainer_data)} packages we hold maintainer
             data for. Go and Maven have no registry maintainer accounts, so their packages
             cannot appear here either way.
@@ -104,11 +170,7 @@ const seeAllHref = activeFilter
 
     {hasContent ? (
       <>
-        <p class="text-sm text-gray-600 mb-4">
-          {activeLabel
-            ? `A random set of ${packages.length} from the ${fmt(pool.length)} with ${activeLabel.toLowerCase()}.`
-            : `A random set of ${packages.length}.`}
-        </p>
+        <p class="text-sm text-gray-600 mb-4">A random set of {packages.length}.</p>
 
         <div id="package-set">
           <PackageGrid packages={packages} />
@@ -145,7 +207,7 @@ const seeAllHref = activeFilter
 
 <script
   define:vars={{
-    sampleUrl: `${basePath}fund/sample${activeFilter ? `?flag=${activeFilter}` : ''}`,
+    sampleUrl: `${basePath}fund/sample${queryFor(active)}`,
   }}
 >
   // "Show another set" swaps in a freshly sampled grid rendered by the server,

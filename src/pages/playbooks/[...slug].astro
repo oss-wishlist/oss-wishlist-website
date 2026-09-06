@@ -9,7 +9,15 @@ export const prerender = false;
 // Server-rendered: resolve content dynamically at request time
 const { playbook: propsPlaybook } = Astro.props;
 const { slug } = Astro.params;
-const playbook = propsPlaybook || await getEntry('playbooks-external', slug);
+/**
+ * Entry ids from the glob loader are "<folder>/playbook", so a link to the bare
+ * folder name has to be resolved to that. Both forms are accepted because the
+ * sitemap links the full id while services link the folder.
+ */
+const playbook =
+  propsPlaybook ||
+  (slug ? await getEntry('playbooks-external', slug) : undefined) ||
+  (slug ? await getEntry('playbooks-external', `${slug}/playbook`) : undefined);
 
 // Check if playbook exists
 if (!playbook) {

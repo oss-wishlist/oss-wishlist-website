@@ -14,7 +14,7 @@ import {
   getAllPackagesAlphabetical,
   presentPackage,
   getPool,
-  isFilterId,
+  parseFilters,
   FILTERS,
 } from '../../lib/critical-packages';
 
@@ -23,12 +23,12 @@ export const prerender = false;
 const PER_PAGE = 60;
 const basePath = getBasePath();
 
-const requested = Astro.url.searchParams.get('flag');
-const activeFilter = isFilterId(requested) ? requested : null;
-const activeLabel = FILTERS.find((f) => f.id === activeFilter)?.label ?? null;
+const active = parseFilters(Astro.url.searchParams.getAll('flag'));
+const activeLabels = FILTERS.filter((f) => active.includes(f.id)).map((f) => f.label.toLowerCase());
+const queryFor = (ids: string[]) => (ids.length ? ids.map((f) => `flag=${f}`).join('&') : '');
 
 // Filter first, then sort by name. Never by severity, and never with a rank.
-const filtered = new Set(getPool(activeFilter));
+const filtered = new Set(getPool(active));
 const all = getAllPackagesAlphabetical().filter((p) => filtered.has(p));
 const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
 
@@ -41,14 +41,16 @@ const start = (page - 1) * PER_PAGE;
 const packages = all.slice(start, start + PER_PAGE).map(presentPackage);
 
 const fmt = (n: number) => n.toLocaleString('en-US');
-const pageHref = (n: number) =>
-  `${basePath}fund/all?page=${n}${activeFilter ? `&flag=${activeFilter}` : ''}`;
-const backHref = activeFilter ? `${basePath}fund?flag=${activeFilter}` : `${basePath}fund`;
+const pageHref = (n: number) => {
+  const q = queryFor(active);
+  return `${basePath}fund/all?page=${n}${q ? `&${q}` : ''}`;
+};
+const backHref = `${basePath}fund${active.length ? `?${queryFor(active)}` : ''}`;
 ---
 
 <Layout
-  title="All critical packages | OSS Wishlist"
-  description="Every critical open source package in the cache, listed alphabetically."
+  title="Every package in the sample | OSS Wishlist"
+  description="Every critical open source package in the cached sample, listed alphabetically."
 >
   <main class="max-w-6xl mx-auto px-4 py-12">
     <nav class="mb-6">
@@ -57,12 +59,13 @@ const backHref = activeFilter ? `${basePath}fund?flag=${activeFilter}` : `${base
       >
     </nav>
 
-    <h1 class="text-3xl font-bold text-gray-900 mb-3">
-      {activeLabel ? activeLabel : 'All critical packages'}
-    </h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-3">Every package in the sample</h1>
     <p class="text-gray-700 mb-8">
-      {fmt(all.length)} packages{activeLabel ? ` with ${activeLabel.toLowerCase()}` : ''}, listed
-      alphabetically. Showing {fmt(start + 1)}&ndash;{fmt(start + packages.length)}.
+      {fmt(all.length)} packages{activeLabels.length > 0
+        ? ` with ${activeLabels.join(' and ')}`
+        : ''}, listed alphabetically. Showing {fmt(start + 1)}&ndash;{fmt(
+        start + packages.length
+      )}.
     </p>
 
     <PackageGrid packages={packages} />

@@ -148,13 +148,22 @@ export function isFilterId(value: string | null): value is FilterId {
 }
 
 /**
- * The pool a sample is drawn from. An unrecognised or absent filter gives every
- * package, so a bad query string degrades to the unfiltered page rather than an
- * empty one.
+ * Keep only the recognised filter ids, in a stable order and without duplicates,
+ * so a hand-edited or stale query string cannot produce a strange page.
  */
-export function getPool(filter: string | null): CriticalPackage[] {
-  if (!isFilterId(filter)) return allPackages;
-  return allPackages.filter((p) => p[filter]);
+export function parseFilters(values: string[]): FilterId[] {
+  return FILTERS.map((f) => f.id).filter((id) => values.includes(id));
+}
+
+/**
+ * The pool a sample is drawn from. Filters combine with AND: asking for one
+ * maintainer *and* no funding link gives the packages that are both, which is a
+ * smaller set than either alone. No filters, or only unrecognised ones, gives
+ * every package — a bad query string degrades to the full page, never an empty one.
+ */
+export function getPool(filters: FilterId[]): CriticalPackage[] {
+  if (filters.length === 0) return allPackages;
+  return allPackages.filter((p) => filters.every((f) => p[f]));
 }
 
 /** Everything a card or package page needs, including its suggested services. */

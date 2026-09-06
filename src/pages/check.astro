@@ -120,7 +120,7 @@ const problem =
               {result.dependencyCount > 0
                 ? `We read ${fmt(result.dependencyCount)} dependencies and none of them are among the ${fmt(counts.total)} critical packages cached here.`
                 : `We could read its manifests but found no dependencies listed in them.`}
-              {' '}That is a normal result &mdash; the cache covers the most depended-on packages
+              {' '}That is a normal result. The cache covers the most depended-on packages
               per registry, not everything.
             </p>
             <a

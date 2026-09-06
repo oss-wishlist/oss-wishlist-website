@@ -96,6 +96,104 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
 
     {pkg.description && <p class="text-lg text-gray-700 mb-6">{pkg.description}</p>}
 
+    <section class="mb-8 bg-white border rounded-lg p-6" aria-labelledby="depend-check">
+      <h2 id="depend-check" class="text-2xl font-bold text-gray-900 mb-2">
+        See if you depend on this package
+      </h2>
+      <p class="text-gray-600 mb-4 max-w-3xl">
+        Paste one of your repositories and we will tell you whether it depends on
+        <span class="font-semibold">{pkg.name}</span>. Nothing is stored.
+      </p>
+
+      <form method="get" action={selfPath}>
+        <label for="repo" class="block text-sm font-semibold text-gray-900 mb-2">
+          Repository URL
+        </label>
+        <div class="flex flex-wrap gap-3">
+          <input
+            type="text"
+            id="repo"
+            name="repo"
+            value={submittedRepo}
+            placeholder="https://github.com/owner/repo"
+            required
+            autocomplete="off"
+            spellcheck="false"
+            class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          />
+          <button
+            type="submit"
+            class="bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+          >
+            Check
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">GitHub and GitLab. Public repositories only.</p>
+      </form>
+
+      {checkProblem && <p class="mt-4 text-gray-800">{checkProblem}</p>}
+
+      {dependencyCheck?.status === 'ok' && (
+        <div
+          id="depend-result"
+          role="status"
+          aria-live="polite"
+          class={`mt-6 rounded-xl border-2 p-6 ${
+            dependencyCheck.dependsOn
+              ? 'border-purple-500 bg-purple-50 shadow-md'
+              : 'border-gray-300 bg-gray-50'
+          }`}
+        >
+          <p
+            class={`text-3xl font-extrabold mb-2 ${
+              dependencyCheck.dependsOn ? 'text-purple-700' : 'text-gray-900'
+            }`}
+          >
+            {dependencyCheck.dependsOn ? 'Yes' : 'No'}
+          </p>
+          <p class="text-lg text-gray-800">
+            {dependencyCheck.dependsOn ? (
+              <>
+                <span class="font-semibold">{dependencyCheck.repo.label}</span> depends on
+                <span class="font-semibold"> {pkg.name}</span>.
+              </>
+            ) : (
+              <>
+                We read {dependencyCheck.dependencyCount.toLocaleString('en-US')} dependencies for
+                <span class="font-semibold"> {dependencyCheck.repo.label}</span> and {pkg.name} is
+                not among them.
+              </>
+            )}
+          </p>
+
+          {dependencyCheck.dependsOn ? (
+            <a
+              href="#suggested-services"
+              class="inline-block bg-purple-600 text-white px-5 py-2 rounded mt-4 hover:bg-purple-700 transition-colors text-sm font-semibold"
+              >See what might help &darr;</a
+            >
+          ) : (
+            <a
+              href={`${basePath}fund`}
+              class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-3"
+              >Browse other critical packages &rarr;</a
+            >
+          )}
+        </div>
+      )}
+    </section>
+
+    <script>
+      // Bring the answer into view after a check. The form is a plain GET, so
+      // the page reloads at the top and the result would otherwise be easy to
+      // miss on a long package page.
+      const result = document.getElementById('depend-result');
+      if (result) {
+        result.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    </script>
+
+
     <dl class="grid gap-4 sm:grid-cols-2 bg-white border rounded-lg p-6 mb-6">
       {dependents && (
         <div>
@@ -157,77 +255,6 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
       ))}
     </div>
 
-    <section class="mt-10 bg-white border rounded-lg p-6" aria-labelledby="depend-check">
-      <h2 id="depend-check" class="text-2xl font-bold text-gray-900 mb-2">
-        See if you depend on this package
-      </h2>
-      <p class="text-gray-600 mb-4 max-w-3xl">
-        Paste one of your repositories and we will tell you whether it depends on
-        <span class="font-semibold">{pkg.name}</span>. Nothing is stored.
-      </p>
-
-      <form method="get" action={selfPath}>
-        <label for="repo" class="block text-sm font-semibold text-gray-900 mb-2">
-          Repository URL
-        </label>
-        <div class="flex flex-wrap gap-3">
-          <input
-            type="text"
-            id="repo"
-            name="repo"
-            value={submittedRepo}
-            placeholder="https://github.com/owner/repo"
-            required
-            autocomplete="off"
-            spellcheck="false"
-            class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
-          />
-          <button
-            type="submit"
-            class="bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
-          >
-            Check
-          </button>
-        </div>
-        <p class="text-xs text-gray-500 mt-2">GitHub and GitLab. Public repositories only.</p>
-      </form>
-
-      {checkProblem && <p class="mt-4 text-gray-800">{checkProblem}</p>}
-
-      {dependencyCheck?.status === 'ok' && (
-        <div
-          class={`mt-5 rounded-lg border p-5 ${
-            dependencyCheck.dependsOn ? 'border-gray-800 bg-gray-50' : 'border-gray-200 bg-gray-50'
-          }`}
-        >
-          <p class="text-xl font-bold text-gray-900 mb-1">
-            {dependencyCheck.dependsOn ? 'Yes' : 'No'}
-          </p>
-          <p class="text-gray-700">
-            {dependencyCheck.dependsOn ? (
-              <>
-                <span class="font-semibold">{dependencyCheck.repo.label}</span> depends on {pkg.name}.
-                The services below are the ones that might help it.
-              </>
-            ) : (
-              <>
-                We read {dependencyCheck.dependencyCount.toLocaleString('en-US')} dependencies for
-                <span class="font-semibold"> {dependencyCheck.repo.label}</span> and {pkg.name} is
-                not among them.
-              </>
-            )}
-          </p>
-          {!dependencyCheck.dependsOn && (
-            <a
-              href={`${basePath}fund`}
-              class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-3"
-              >Browse other critical packages &rarr;</a
-            >
-          )}
-        </div>
-      )}
-    </section>
-
     <ServiceSelector pkg={pkg} />
 
     {maintainers.length > 0 && (
@@ -235,7 +262,7 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
         <h2 id="reach-out" class="text-2xl font-bold text-gray-900 mb-2">Reaching out</h2>
         <p class="text-gray-600 mb-4 max-w-3xl">
           This site does not contact maintainers and does not arrange anything. If you want to
-          help, go to them directly &mdash; you can offer to fund the work, or simply ask
+          help, go to them directly. You can offer to fund the work, or simply ask
           whether a practitioner&rsquo;s help would be useful. Either is a better opening than
           assuming.
         </p>
@@ -270,7 +297,7 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
     <p class="text-sm text-gray-600 mt-10 pt-6 border-t">
       <a href={correctionUrl} class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank"
         >I maintain this package</a
-      > &mdash; ask for a correction, or to have it removed. Removal needs no reason.
+      >. Ask for a correction, or to have it removed. Removal needs no reason.
     </p>
 
     <DataAttribution />
