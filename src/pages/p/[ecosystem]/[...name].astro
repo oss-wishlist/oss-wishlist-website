@@ -38,6 +38,9 @@ const facts = labelsFor(pkg) as string[];
 // email address was dropped at fetch time and is simply absent here.
 const maintainers = (pkg.maintainers ?? []).filter((m) => m.login || m.name);
 
+// Older cached records predate advisory details, so guard rather than assume.
+const advisories = (pkg.advisories ?? []).filter((a) => a.url || a.id);
+
 // Zero is treated as "no figure to show" rather than printed: some records
 // report 0 dependents or 0 downloads, and this site never displays an empty count.
 const fmt = (n: number | null) =>
@@ -242,6 +245,45 @@ const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
               class="text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full"
             >
               {fact}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {advisories.length > 0 && (
+      <section class="mb-8" aria-labelledby="security-issues">
+        <h2 id="security-issues" class="text-xl font-bold text-gray-900 mb-1">
+          Known security issues
+        </h2>
+        <p class="text-sm text-gray-600 mb-4 max-w-3xl">
+          Problems that were found, reported publicly and written up, so anyone using this
+          package can see them. Being listed here is normal, and usually a sign the project
+          handled things in the open.
+        </p>
+
+        <ul class="space-y-2">
+          {advisories.map((a) => (
+            <li class="bg-white border rounded-lg p-4">
+              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                {a.severity && (
+                  <span class="text-xs font-semibold uppercase tracking-wide text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">
+                    {a.severity.toLowerCase()}
+                  </span>
+                )}
+                <span class="text-gray-900 font-medium">{a.title ?? a.cve ?? a.id}</span>
+              </div>
+              <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
+                {a.url && (
+                  <a
+                    href={a.url}
+                    class="text-gray-600 hover:text-gray-900 underline"
+                    rel="noopener noreferrer"
+                    target="_blank">Read the advisory &rarr;</a
+                  >
+                )}
+                {a.cve && <span class="text-gray-500">{a.cve}</span>}
+              </div>
             </li>
           ))}
         </ul>

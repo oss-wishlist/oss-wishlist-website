@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-06T20:48:04.302Z",
+  "fetched_at": "2026-09-06T23:16:13.688Z",
   "attribution": "Package data from ecosyste.ms (https://ecosyste.ms), licensed CC-BY-SA-4.0.",
   "license": "CC-BY-SA-4.0",
   "sources": [
@@ -21,7 +21,7 @@
     "total": 4546,
     "sole_maintainer": 572,
     "unfunded": 2947,
-    "has_advisories": 781,
+    "has_advisories": 772,
     "quiet": 1781,
     "per_registry": {
       "npmjs.org": 625,

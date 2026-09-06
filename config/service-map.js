@@ -40,8 +40,12 @@ export const DEFAULT_SERVICES = ['general-need'];
 export const FLAG_LABELS = {
   sole_maintainer: () => 'one maintainer',
   unfunded: () => 'no funding link',
+  // "Published advisory" is security jargon. Most visitors are not security
+  // people and will not know what one is, so say what it means instead.
   has_advisories: (pkg) =>
-    pkg.advisory_count === 1 ? '1 published advisory' : `${pkg.advisory_count} published advisories`,
+    pkg.advisory_count === 1
+      ? '1 known security issue'
+      : `${pkg.advisory_count} known security issues`,
   quiet: (pkg) => {
     const year = pkg.latest_release_published_at
       ? new Date(pkg.latest_release_published_at).getUTCFullYear()

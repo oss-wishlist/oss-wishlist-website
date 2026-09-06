@@ -82,26 +82,24 @@ const clearHref = `${basePath}fund`;
     <h1 class="text-3xl font-bold text-gray-900 mb-3">Find a critical package you want to help with</h1>
 
     <p class="text-lg text-gray-700 mb-5 max-w-3xl">
-      {fmt(counts.total)} critical packages, as defined by
+      {packages.length} critical packages, picked at random from the most widely used, as
+      defined by
       <a
         href="https://ecosyste.ms"
         class="underline hover:text-gray-900"
         rel="noopener noreferrer"
         target="_blank">ecosyste.ms</a
-      >. Here are {packages.length} of the most widely used, picked at random.
-    </p>
-
-    <p class="text-gray-600 mb-6 max-w-3xl">
-      Pick a package, choose the services that might help, and take the summary to whoever
-      holds the budget.
+      >.
     </p>
 
     {filters.length > 0 && (
       <div class="mb-8">
-        <p class="text-sm font-semibold text-gray-700 mb-2">
-          Narrow the set. Combine as many as you like
-        </p>
-        <div class="flex flex-wrap items-center gap-2">
+        {/*
+          No visible heading: the chips read as filters on sight. The group is
+          named for assistive technology only, which would otherwise meet three
+          unexplained pills.
+        */}
+        <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filter packages">
           {filters.map((f) => (
             <a
               href={f.href}
@@ -137,7 +135,12 @@ const clearHref = `${basePath}fund`;
             aria-live="polite"
             class="inline-block mt-3 rounded-lg px-4 py-2 text-sm border bg-purple-50 border-purple-300 text-purple-900"
           >
-            <span class="font-bold">{fmt(pool.length)}</span> of {fmt(counts.total)} packages have
+            {/*
+              Counts the set on screen against the set it was drawn from. Saying
+              "268 of 4,546" while showing twelve cards invited the obvious
+              question of where the other 256 were.
+            */}
+            Showing <span class="font-bold">{packages.length}</span> of {fmt(pool.length)} with
             {' '}{activeLabels.join(' and ')}.
           </p>
         )}

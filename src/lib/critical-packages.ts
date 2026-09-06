@@ -12,12 +12,24 @@ import criticalData from '../../data/critical.json';
 import metaData from '../../data/_meta.json';
 import optoutData from '../../data/optout.json';
 import { flagsFor, labelsFor, servicesFor } from '../../config/service-map.js';
+import { isExcludedOwner } from '../../config/excluded-owners.js';
 
 export interface Maintainer {
   login: string | null;
   name: string | null;
   /** Public registry profile page. Never an email route — see safeProfileUrl(). */
   profile_url: string | null;
+}
+
+export interface Advisory {
+  /** Usually a GHSA id; whatever the source lists first. */
+  id: string | null;
+  cve: string | null;
+  title: string | null;
+  severity: string | null;
+  /** Canonical advisory page. Never a mailto, see safeProfileUrl() in the fetcher. */
+  url: string | null;
+  published_at: string | null;
 }
 
 export interface CriticalPackage {
@@ -34,6 +46,7 @@ export interface CriticalPackage {
   maintainers: Maintainer[];
   advisory_count: number;
   has_advisories: boolean;
+  advisories: Advisory[];
   sole_maintainer: boolean;
   unfunded: boolean;
   quiet: boolean;
@@ -75,7 +88,7 @@ const optedOut = new Set(
 );
 
 const allPackages: CriticalPackage[] = (criticalData as CriticalPackage[]).filter(
-  (p) => !optedOut.has(packageKey(p.ecosystem, p.name))
+  (p) => !optedOut.has(packageKey(p.ecosystem, p.name)) && !isExcludedOwner(p)
 );
 
 export const meta = metaData as DataMeta;

@@ -148,8 +148,9 @@ function safeProfileUrl(url) {
  *     these would republish maintainer contact details at scale, which this
  *     project does not do under any circumstances; we never contact maintainers.
  *     Only `login` and `name` survive.
- *   - `advisories[]` — embeds security mailing-list addresses in its references,
- *     and the site only needs "are there any?". Reduced to a count.
+ *   - `advisories[].references` — security mailing-list addresses live in the
+ *     reference lists, which are also the bulk of the payload. The identifier,
+ *     title, severity and canonical link survive so each can be linked out.
  *
  * Some registries (Packagist) also allow an email address as the account login
  * itself, so the surviving `login`/`name` are checked and dropped if they look
@@ -175,8 +176,26 @@ function trimRecord(raw) {
     .filter((m) => m.login || m.name);
 
   const advisories = Array.isArray(raw.advisories) ? raw.advisories : [];
-  out.advisory_count = advisories.length;
-  out.has_advisories = advisories.length > 0;
+  // Withdrawn advisories are excluded below, so count after filtering.
+  const live = advisories.filter((a) => !a.withdrawn_at);
+  out.advisory_count = live.length;
+  out.has_advisories = live.length > 0;
+
+  // Keep enough to link each advisory and say what it is. `references` and
+  // `description` are dropped: the reference lists are where the security
+  // mailing-list addresses live, and they are the bulk of the payload.
+  out.advisories = live
+    .map((a) => ({
+      id: Array.isArray(a.identifiers) ? a.identifiers[0] ?? null : null,
+      cve: Array.isArray(a.identifiers)
+        ? a.identifiers.find((i) => typeof i === 'string' && i.startsWith('CVE-')) ?? null
+        : null,
+      title: typeof a.title === 'string' ? a.title : null,
+      severity: typeof a.severity === 'string' ? a.severity : null,
+      url: safeProfileUrl(a.url) || safeProfileUrl(a.html_url),
+      published_at: a.published_at ?? null,
+    }))
+    .filter((a) => a.url || a.id);
 
   return out;
 }
