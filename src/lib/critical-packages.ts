@@ -13,6 +13,7 @@ import metaData from '../../data/_meta.json';
 import optoutData from '../../data/optout.json';
 import { flagsFor, labelsFor, servicesFor } from '../../config/service-map.js';
 import { isExcludedOwner } from '../../config/excluded-owners.js';
+import { FEATURED_PACKAGES } from '../../config/featured.js';
 
 export interface Maintainer {
   login: string | null;
@@ -226,6 +227,19 @@ export function getHeadlinePool(ecosystem: EcosystemId | null): CriticalPackage[
   // Widen a step at a time rather than ever rendering an empty page.
   const flagged = base.filter(hasAnyFlag);
   return flagged.length >= SAMPLE_FALLBACK_MIN ? flagged : base;
+}
+
+/**
+ * The curated set shown before a package manager is chosen.
+ *
+ * Resolved against the live cache, so an entry that has dropped out or opted
+ * out simply disappears rather than 404ing from the front page. Order follows
+ * config/featured.js.
+ */
+export function getFeaturedPackages(): CriticalPackage[] {
+  return (FEATURED_PACKAGES as Array<{ ecosystem: string; name: string }>)
+    .map((entry) => getPackage(entry.ecosystem, entry.name))
+    .filter((p): p is CriticalPackage => Boolean(p));
 }
 
 /** How many packages each registry has, for the picker. */

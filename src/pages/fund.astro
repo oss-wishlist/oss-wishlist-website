@@ -17,6 +17,7 @@ import {
   getPool,
   getHeadlinePool,
   getEcosystemCounts,
+  getFeaturedPackages,
   parseFilters,
   isEcosystemId,
   ECOSYSTEMS,
@@ -44,6 +45,10 @@ const active = parseFilters(Astro.url.searchParams.getAll('flag'));
 // A filter means the visitor asked a specific question, so answer it exactly.
 const pool = active.length > 0 ? getPool(active, ecosystem) : getHeadlinePool(ecosystem);
 const packages = ecosystem ? samplePackages(SAMPLE_SIZE, pool).map(presentPackage) : [];
+
+// The landing view: a hand-picked set of well-known projects, so there is
+// something worth looking at before any choice is made.
+const featured = ecosystem ? [] : getFeaturedPackages().map(presentPackage);
 
 /** Query string carrying the registry and any active filters. */
 const queryFor = (ids: string[]) => {
@@ -92,10 +97,10 @@ const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`
     {!ecosystem ? (
       <>
         <h1 class="text-3xl font-bold text-gray-900 mb-3">
-          Which package manager do you want to look at?
+          Projects you already depend on
         </h1>
         <p class="text-lg text-gray-700 mb-8 max-w-3xl">
-          Pick the one your work depends on. Critical packages as defined by
+          Critical packages as defined by
           <a
             href="https://ecosyste.ms"
             class="underline hover:text-gray-900"
@@ -103,6 +108,17 @@ const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`
             target="_blank">ecosyste.ms</a
           >.
         </p>
+
+        {featured.length > 0 && (
+          <div class="mb-12">
+            <PackageGrid packages={featured} />
+          </div>
+        )}
+
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">
+          Or pick a package manager
+        </h2>
+        <p class="text-gray-600 mb-6">See a different set from the one your work depends on.</p>
 
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
