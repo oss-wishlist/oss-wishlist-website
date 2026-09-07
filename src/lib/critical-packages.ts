@@ -254,6 +254,56 @@ export function getFeaturedPackages(): CriticalPackage[] {
     .filter((p): p is CriticalPackage => Boolean(p));
 }
 
+/**
+ * Search the cached packages by name, and by description as a fallback.
+ *
+ * Runs entirely against the bundled data: no network call, no database, no
+ * rate limit. A substring scan over a few thousand records costs microseconds,
+ * so this is not a load concern the way resolving a dependency tree would be.
+ *
+ * Ordering is by how well the name matches, which is relevance for a query the
+ * visitor typed, not a ranking of the projects against each other.
+ */
+export function searchPackages(
+  query: string,
+  ecosystem: EcosystemId | null = null,
+  limit = 24
+): CriticalPackage[] {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+
+  const base = ecosystem ? allPackages.filter((p) => p.ecosystem === ecosystem) : allPackages;
+
+  const scored: Array<{ pkg: CriticalPackage; score: number }> = [];
+  for (const pkg of base) {
+    const name = pkg.name.toLowerCase();
+    let score = -1;
+
+    if (name === q) score = 0;
+    else if (name.startsWith(q)) score = 1;
+    else if (name.includes(q)) score = 2;
+    else if ((pkg.description ?? '').toLowerCase().includes(q)) score = 3;
+
+    if (score >= 0) scored.push({ pkg, score });
+  }
+
+  scored.sort((a, b) =>
+    a.score !== b.score ? a.score - b.score : a.pkg.name.localeCompare(b.pkg.name)
+  );
+
+  return scored.slice(0, limit).map((s) => s.pkg);
+}
+
+/** Total matches for a query, so the page can say when it truncated the list. */
+export function countSearchMatches(query: string, ecosystem: EcosystemId | null = null): number {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return 0;
+  const base = ecosystem ? allPackages.filter((p) => p.ecosystem === ecosystem) : allPackages;
+  return base.filter(
+    (p) => p.name.toLowerCase().includes(q) || (p.description ?? '').toLowerCase().includes(q)
+  ).length;
+}
+
 /** How many packages each registry has, for the picker. */
 export function getEcosystemCounts(): Record<string, number> {
   const counts: Record<string, number> = {};

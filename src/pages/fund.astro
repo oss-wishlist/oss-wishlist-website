@@ -19,6 +19,8 @@ import {
   getEcosystemCounts,
   getFeaturedPackages,
   criticalListUrl,
+  searchPackages,
+  countSearchMatches,
   parseFilters,
   isEcosystemId,
   ECOSYSTEMS,
@@ -39,6 +41,15 @@ const ecosystem = isEcosystemId(requestedEcosystem) ? requestedEcosystem : null;
 const ecosystemMeta = ECOSYSTEMS.find((e) => e.id === ecosystem) ?? null;
 const ecosystemCounts = getEcosystemCounts();
 
+// A typed query searches by name across the cache. It runs against bundled data,
+// so it costs nothing beyond the render.
+const query = (Astro.url.searchParams.get('q') ?? '').trim();
+const searching = query.length >= 2;
+const searchResults = searching
+  ? searchPackages(query, ecosystem).map(presentPackage)
+  : [];
+const searchTotal = searching ? countSearchMatches(query, ecosystem) : 0;
+
 // Filters combine, so several can be on at once and they narrow together.
 const active = parseFilters(Astro.url.searchParams.getAll('flag'));
 
@@ -49,7 +60,7 @@ const packages = ecosystem ? samplePackages(SAMPLE_SIZE, pool).map(presentPackag
 
 // The landing view: a hand-picked set of well-known projects, so there is
 // something worth looking at before any choice is made.
-const featured = ecosystem ? [] : getFeaturedPackages().map(presentPackage);
+const featured = ecosystem || searching ? [] : getFeaturedPackages().map(presentPackage);
 
 /** Query string carrying the registry and any active filters. */
 const queryFor = (ids: string[]) => {
@@ -97,15 +108,73 @@ const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`
   <main class="max-w-6xl mx-auto px-4 py-12">
     {!ecosystem ? (
       <>
-        <h1 class="text-3xl font-bold text-gray-900 mb-3">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">
           Find a critical package you want to help with
         </h1>
+
+        <form method="get" action={`${basePath}fund`} class="mb-6" role="search">
+          <div class="flex flex-wrap gap-3">
+            <input
+              type="search"
+              name="q"
+              value={query}
+              placeholder="Search by name, e.g. lodash, requests, nokogiri"
+              aria-label="Search packages by name"
+              autocomplete="off"
+              class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button
+              type="submit"
+              class="bg-gray-800 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+
+        {searching ? (
+          <section class="mb-10">
+            {searchResults.length > 0 ? (
+              <>
+                <h2 class="text-xl font-bold text-gray-900 mb-1">
+                  {searchTotal === 1
+                    ? `1 package matching "${query}"`
+                    : `${fmt(searchTotal)} packages matching "${query}"`}
+                </h2>
+                {searchTotal > searchResults.length && (
+                  <p class="text-sm text-gray-600 mb-4">
+                    Showing the closest {searchResults.length}.
+                  </p>
+                )}
+                <div class="mt-4">
+                  <PackageGrid packages={searchResults} />
+                </div>
+              </>
+            ) : (
+              <div class="bg-white border rounded-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-2">
+                  Nothing here matches &ldquo;{query}&rdquo;
+                </h2>
+                <p class="text-gray-700">
+                  We cache the most depended-on packages per registry, not every one, so plenty
+                  of real projects will not be here.
+                  <a
+                    href={criticalListUrl(null)}
+                    class="underline hover:text-gray-900"
+                    rel="noopener noreferrer"
+                    target="_blank">Search the full list on ecosyste.ms &rarr;</a
+                  >
+                </p>
+              </div>
+            )}
+          </section>
+        ) : null}
 
         {/*
           The registry choice sits above the fold. It was previously below
           thirteen cards, where nobody scrolled far enough to find it.
         */}
-        <p class="text-gray-700 mb-2">Start with your package manager:</p>
+        <p class="text-gray-700 mb-2">Or start with your package manager:</p>
         <div class="flex flex-wrap gap-2 mb-8" role="group" aria-label="Choose a package manager">
           {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
             <a
@@ -145,9 +214,68 @@ const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`
           >
         </nav>
 
-        <h1 class="text-3xl font-bold text-gray-900 mb-3">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">
           Critical packages on {ecosystemMeta?.label}
         </h1>
+
+        <form method="get" action={`${basePath}fund`} class="mb-6" role="search">
+          {/* Keeps the visitor in the registry they chose while searching. */}
+          <input type="hidden" name="ecosystem" value={ecosystem} />
+          <div class="flex flex-wrap gap-3">
+            <input
+              type="search"
+              name="q"
+              value={query}
+              placeholder={`Search ${ecosystemMeta?.label} by name`}
+              aria-label={`Search ${ecosystemMeta?.label} packages by name`}
+              autocomplete="off"
+              class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button
+              type="submit"
+              class="bg-gray-800 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+
+        {searching && (
+          <section class="mb-10">
+            {searchResults.length > 0 ? (
+              <>
+                <h2 class="text-xl font-bold text-gray-900 mb-1">
+                  {searchTotal === 1
+                    ? `1 match for "${query}"`
+                    : `${fmt(searchTotal)} matches for "${query}"`}
+                </h2>
+                {searchTotal > searchResults.length && (
+                  <p class="text-sm text-gray-600 mb-4">
+                    Showing the closest {searchResults.length}.
+                  </p>
+                )}
+                <div class="mt-4">
+                  <PackageGrid packages={searchResults} />
+                </div>
+              </>
+            ) : (
+              <div class="bg-white border rounded-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-2">
+                  No {ecosystemMeta?.label} package here matches &ldquo;{query}&rdquo;
+                </h2>
+                <p class="text-gray-700">
+                  We cache the most depended-on packages per registry, not every one.
+                  <a
+                    href={criticalListUrl(ecosystem)}
+                    class="underline hover:text-gray-900"
+                    rel="noopener noreferrer"
+                    target="_blank">Search the full list on ecosyste.ms &rarr;</a
+                  >
+                </p>
+              </div>
+            )}
+          </section>
+        )}
 
         <p class="text-lg text-gray-700 mb-5 max-w-3xl">
           {packages.length} picked at random from the most widely used, as defined by
@@ -212,7 +340,7 @@ const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`
           </div>
         )}
 
-        {packages.length > 0 ? (
+        {searching ? null : packages.length > 0 ? (
           <>
             <div id="package-set">
               <PackageGrid packages={packages} />
