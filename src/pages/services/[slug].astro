@@ -2,7 +2,7 @@
 import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
 import { getEntry, getCollection, render } from 'astro:content';
-import { getApprovedPractitioners } from '../../lib/db';
+import { getApprovedPractitionersSafe } from '../../lib/practitioner-availability';
 
 const basePath = getBasePath();
 
@@ -82,7 +82,9 @@ const { Content } = await render(service);
 
 // Find practitioners who offer this service
 const serviceSlug = toSlug(service.id);
-const allPractitioners = await getApprovedPractitioners();
+// Degrades to no practitioner list rather than a 500: this page still has a
+// service to explain when the database is unreachable.
+const allPractitioners = await getApprovedPractitionersSafe();
 const matchingPractitioners = allPractitioners.filter(p =>
   (p.services || []).includes(serviceSlug)
 );

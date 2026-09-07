@@ -22,6 +22,23 @@ export interface AvailablePractitioner {
 }
 
 /**
+ * Approved practitioners, or an empty list if the database cannot be reached.
+ *
+ * For pages where practitioners are a section rather than the subject: a
+ * service page should still explain the service when the database is down,
+ * not return a 500. Callers must render nothing for an empty list rather than
+ * a zero.
+ */
+export async function getApprovedPractitionersSafe() {
+  try {
+    return await getApprovedPractitioners();
+  } catch (error) {
+    console.warn('[practitioners] lookup failed, continuing without:', error);
+    return [];
+  }
+}
+
+/**
  * Practitioners grouped by service slug, for the given services only.
  *
  * Unavailable practitioners are left out: listing someone who has said they
