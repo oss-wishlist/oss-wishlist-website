@@ -161,28 +161,80 @@ export function isFilterId(value: string | null): value is FilterId {
 }
 
 /**
- * Most visitors give this page a few seconds. The default set is drawn from
- * packages that are both heavily depended on and carrying at least one flag,
- * because that card makes the whole argument on its own: "5,765,200 dependent
- * repositories" next to "one maintainer" needs no explaining.
- *
- * This is a sampling pool, not a ranking. Nothing is ordered by it and no score
- * is shown. Applying a filter searches the full set instead.
+ * Registries, with the label a visitor would recognise rather than the internal
+ * ecosystem key. Order is the order they are offered in.
  */
-const WIDELY_USED_THRESHOLD = 100_000;
+export const ECOSYSTEMS = [
+  { id: 'npm', label: 'npm', language: 'JavaScript' },
+  { id: 'pypi', label: 'PyPI', language: 'Python' },
+  { id: 'maven', label: 'Maven', language: 'Java' },
+  { id: 'go', label: 'Go modules', language: 'Go' },
+  { id: 'rubygems', label: 'RubyGems', language: 'Ruby' },
+  { id: 'cargo', label: 'crates.io', language: 'Rust' },
+  { id: 'packagist', label: 'Packagist', language: 'PHP' },
+  { id: 'nuget', label: 'NuGet', language: '.NET' },
+] as const;
 
-/** Below this the pool is too thin to feel random, so fall back to everything. */
+export type EcosystemId = (typeof ECOSYSTEMS)[number]['id'];
+
+export function isEcosystemId(value: string | null): value is EcosystemId {
+  return ECOSYSTEMS.some((e) => e.id === value);
+}
+
+const hasAnyFlag = (p: CriticalPackage) =>
+  p.sole_maintainer || p.unfunded || p.quiet || p.has_advisories;
+
+/** Below this a pool is too thin to feel random, so widen rather than repeat. */
 const SAMPLE_FALLBACK_MIN = 24;
 
-const headlinePool = allPackages.filter(
-  (p) =>
-    (p.dependent_repos_count ?? 0) >= WIDELY_USED_THRESHOLD &&
-    (p.sole_maintainer || p.unfunded || p.quiet || p.has_advisories)
-);
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
 
-/** The pool the unfiltered page samples from, falling back if it is ever thin. */
-export function getHeadlinePool(): CriticalPackage[] {
-  return headlinePool.length >= SAMPLE_FALLBACK_MIN ? headlinePool : allPackages;
+/**
+ * The "worth showing first" threshold, computed per registry.
+ *
+ * Dependent counts are not comparable across registries: npm's median package
+ * has 2.6 million dependent repos while NuGet's has none recorded. A single
+ * absolute cutoff looked fine across the whole set but collapsed once the page
+ * was split by registry, leaving NuGet with nothing at all to show. Each
+ * registry is therefore measured against its own median.
+ */
+const medianDependents = new Map<string, number>();
+for (const { id } of ECOSYSTEMS) {
+  const inEcosystem = allPackages.filter((p) => p.ecosystem === id);
+  medianDependents.set(id, median(inEcosystem.map((p) => p.dependent_repos_count ?? 0)));
+}
+
+/**
+ * The set the page samples from: packages carrying at least one flag, and more
+ * depended on than the typical package in their own registry. That card makes
+ * the argument on its own, which is all most visitors will read.
+ *
+ * A sampling pool, not a ranking. Nothing is ordered by it and no score shown.
+ */
+export function getHeadlinePool(ecosystem: EcosystemId | null): CriticalPackage[] {
+  const base = ecosystem ? allPackages.filter((p) => p.ecosystem === ecosystem) : allPackages;
+  const pool = base.filter(
+    (p) => hasAnyFlag(p) && (p.dependent_repos_count ?? 0) >= (medianDependents.get(p.ecosystem) ?? 0)
+  );
+  if (pool.length >= SAMPLE_FALLBACK_MIN) return pool;
+
+  // Widen a step at a time rather than ever rendering an empty page.
+  const flagged = base.filter(hasAnyFlag);
+  return flagged.length >= SAMPLE_FALLBACK_MIN ? flagged : base;
+}
+
+/** How many packages each registry has, for the picker. */
+export function getEcosystemCounts(): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const { id } of ECOSYSTEMS) {
+    counts[id] = allPackages.filter((p) => p.ecosystem === id).length;
+  }
+  return counts;
 }
 
 /**
@@ -199,9 +251,10 @@ export function parseFilters(values: string[]): FilterId[] {
  * smaller set than either alone. No filters, or only unrecognised ones, gives
  * every package — a bad query string degrades to the full page, never an empty one.
  */
-export function getPool(filters: FilterId[]): CriticalPackage[] {
-  if (filters.length === 0) return allPackages;
-  return allPackages.filter((p) => filters.every((f) => p[f]));
+export function getPool(filters: FilterId[], ecosystem: EcosystemId | null = null): CriticalPackage[] {
+  const base = ecosystem ? allPackages.filter((p) => p.ecosystem === ecosystem) : allPackages;
+  if (filters.length === 0) return base;
+  return base.filter((p) => filters.every((f) => p[f]));
 }
 
 /** Everything a card or package page needs, including its suggested services. */

@@ -14,11 +14,12 @@ import { getBasePath } from '../lib/paths';
 import {
   samplePackages,
   presentPackage,
-  getCounts,
   getPool,
   getHeadlinePool,
+  getEcosystemCounts,
   parseFilters,
-  meta,
+  isEcosystemId,
+  ECOSYSTEMS,
   FILTERS,
 } from '../lib/critical-packages';
 import { SAMPLE_SIZE } from '../../config/data-sources.js';
@@ -26,19 +27,29 @@ import { SAMPLE_SIZE } from '../../config/data-sources.js';
 export const prerender = false;
 
 const basePath = getBasePath();
-const counts = getCounts();
+
+/**
+ * The registry comes first: the visitor says where they work before being shown
+ * anything. Without one, the page is the question and nothing else.
+ */
+const requestedEcosystem = Astro.url.searchParams.get('ecosystem');
+const ecosystem = isEcosystemId(requestedEcosystem) ? requestedEcosystem : null;
+const ecosystemMeta = ECOSYSTEMS.find((e) => e.id === ecosystem) ?? null;
+const ecosystemCounts = getEcosystemCounts();
 
 // Filters combine, so several can be on at once and they narrow together.
 const active = parseFilters(Astro.url.searchParams.getAll('flag'));
 
-// Unfiltered, sample from the widely-used-and-flagged pool: that card makes the
-// argument on its own. A filter means the visitor asked a specific question, so
-// answer it against the full set.
-const pool = active.length > 0 ? getPool(active) : getHeadlinePool();
-const packages = samplePackages(SAMPLE_SIZE, pool).map(presentPackage);
+// Unfiltered, sample from the flagged-and-widely-used pool for this registry.
+// A filter means the visitor asked a specific question, so answer it exactly.
+const pool = active.length > 0 ? getPool(active, ecosystem) : getHeadlinePool(ecosystem);
+const packages = ecosystem ? samplePackages(SAMPLE_SIZE, pool).map(presentPackage) : [];
 
-/** Query string for a given set of filters. */
-const queryFor = (ids: string[]) => (ids.length ? `?${ids.map((f) => `flag=${f}`).join('&')}` : '');
+/** Query string carrying the registry and any active filters. */
+const queryFor = (ids: string[]) => {
+  const parts = [...(ecosystem ? [`ecosystem=${ecosystem}`] : []), ...ids.map((f) => `flag=${f}`)];
+  return parts.length ? `?${parts.join('&')}` : '';
+};
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -56,12 +67,12 @@ const filters = FILTERS.map((f) => {
   // flag's own total makes the effect of combining filters legible before
   // anyone clicks: "no funding link 2,947" alone, but "268" once
   // "one maintainer" is already on.
-  const resulting = getPool(parseFilters(next)).length;
+  const resulting = getPool(parseFilters(next), ecosystem).length;
   return {
     ...f,
     isActive,
     resulting,
-    total: counts[f.id],
+    total: getPool([f.id], ecosystem).length,
     href: `${basePath}fund${queryFor(next)}`,
   };
 }).filter((f) => f.total > 0);
@@ -69,9 +80,8 @@ const filters = FILTERS.map((f) => {
 const activeLabels = FILTERS.filter((f) => active.includes(f.id)).map((f) =>
   f.label.toLowerCase()
 );
-const hasContent = packages.length > 0;
 
-const clearHref = `${basePath}fund`;
+const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`;
 ---
 
 <Layout
@@ -79,108 +89,141 @@ const clearHref = `${basePath}fund`;
   description="Critical open source packages, and the services that might help the people maintaining them."
 >
   <main class="max-w-6xl mx-auto px-4 py-12">
-    <h1 class="text-3xl font-bold text-gray-900 mb-3">Find a critical package you want to help with</h1>
+    {!ecosystem ? (
+      <>
+        <h1 class="text-3xl font-bold text-gray-900 mb-3">
+          Which package manager do you want to look at?
+        </h1>
+        <p class="text-lg text-gray-700 mb-8 max-w-3xl">
+          Pick the one your work depends on. Critical packages as defined by
+          <a
+            href="https://ecosyste.ms"
+            class="underline hover:text-gray-900"
+            rel="noopener noreferrer"
+            target="_blank">ecosyste.ms</a
+          >.
+        </p>
 
-    <p class="text-lg text-gray-700 mb-5 max-w-3xl">
-      {packages.length} critical packages, picked at random from the most widely used, as
-      defined by
-      <a
-        href="https://ecosyste.ms"
-        class="underline hover:text-gray-900"
-        rel="noopener noreferrer"
-        target="_blank">ecosyste.ms</a
-      >.
-    </p>
-
-    {filters.length > 0 && (
-      <div class="mb-8">
-        {/*
-          No visible heading: the chips read as filters on sight. The group is
-          named for assistive technology only, which would otherwise meet three
-          unexplained pills.
-        */}
-        <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filter packages">
-          {filters.map((f) => (
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
             <a
-              href={f.href}
-              aria-pressed={f.isActive ? 'true' : 'false'}
-              class={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                f.isActive
-                  ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-700'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-              }`}
+              href={`${basePath}fund?ecosystem=${e.id}`}
+              class="bg-white border rounded-xl p-5 shadow-sm hover:shadow-md hover:border-purple-300 transition-all group"
             >
-              {f.label}{' '}
-              {f.isActive ? (
-                <span aria-hidden="true">&times;</span>
-              ) : (
-                /* The number you would be left with, not the flag's own total,
-                   so the effect of stacking filters is visible before clicking. */
-                <span class="opacity-70">{fmt(f.resulting)}</span>
-              )}
+              <span class="block text-xl font-bold text-gray-900 group-hover:text-purple-700">
+                {e.label}
+              </span>
+              <span class="block text-sm text-gray-500 mt-0.5">{e.language}</span>
+              <span class="block text-sm text-gray-700 mt-3">
+                {fmt(ecosystemCounts[e.id])} packages
+              </span>
             </a>
           ))}
-
-          {active.length > 0 && (
-            <a
-              href={clearHref}
-              class="text-sm text-gray-600 hover:text-gray-900 underline ml-1"
-              >Clear all</a
-            >
-          )}
         </div>
-
-        {active.length > 0 && (
-          <p
-            aria-live="polite"
-            class="inline-block mt-3 rounded-lg px-4 py-2 text-sm border bg-purple-50 border-purple-300 text-purple-900"
-          >
-            {/*
-              Counts the set on screen against the set it was drawn from. Saying
-              "268 of 4,546" while showing twelve cards invited the obvious
-              question of where the other 256 were.
-            */}
-            Showing <span class="font-bold">{packages.length}</span> of {fmt(pool.length)} with
-            {' '}{activeLabels.join(' and ')}.
-          </p>
-        )}
-
-        {active.includes('sole_maintainer') && (
-          <p class="text-xs text-gray-500 mt-1 max-w-3xl">
-            Counted across the {fmt(counts.with_maintainer_data)} packages we hold maintainer
-            data for. Go and Maven have no registry maintainer accounts, so their packages
-            cannot appear here either way.
-          </p>
-        )}
-      </div>
-    )}
-
-    {hasContent ? (
-      <>
-        <div id="package-set">
-          <PackageGrid packages={packages} />
-        </div>
-
-        <div class="flex justify-center mt-8">
-          <button
-            id="reshuffle"
-            type="button"
-            class="inline-flex items-center gap-2 bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm disabled:opacity-60"
-          >
-            Show me another set
-          </button>
-        </div>
-
-        <p id="reshuffle-error" class="text-sm text-gray-600 mt-3" hidden>
-          Could not load another set just now. Reload the page to see different packages.
-        </p>
       </>
     ) : (
-      <p class="text-gray-700">
-        The package cache has not been built yet. Run <code class="bg-gray-100 px-1 rounded"
-          >npm run refresh-data</code
-        > to populate it.
-      </p>
+      <>
+        <nav class="mb-4">
+          <a href={`${basePath}fund`} class="text-sm text-gray-600 hover:text-gray-900 underline"
+            >&larr; Choose a different package manager</a
+          >
+        </nav>
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-3">
+          Critical packages on {ecosystemMeta?.label}
+        </h1>
+
+        <p class="text-lg text-gray-700 mb-5 max-w-3xl">
+          {packages.length} picked at random from the most widely used, as defined by
+          <a
+            href="https://ecosyste.ms"
+            class="underline hover:text-gray-900"
+            rel="noopener noreferrer"
+            target="_blank">ecosyste.ms</a
+          >.
+        </p>
+
+        {filters.length > 0 && (
+          <div class="mb-8">
+            {/*
+              No visible heading: the chips read as filters on sight. The group is
+              named for assistive technology only, which would otherwise meet three
+              unexplained pills.
+            */}
+            <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filter packages">
+              {filters.map((f) => (
+                <a
+                  href={f.href}
+                  aria-pressed={f.isActive ? 'true' : 'false'}
+                  class={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                    f.isActive
+                      ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-700'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  {f.label}{' '}
+                  {f.isActive ? (
+                    <span aria-hidden="true">&times;</span>
+                  ) : (
+                    <span class="opacity-70">{fmt(f.resulting)}</span>
+                  )}
+                </a>
+              ))}
+
+              {active.length > 0 && (
+                <a href={clearHref} class="text-sm text-gray-600 hover:text-gray-900 underline ml-1"
+                  >Clear all</a
+                >
+              )}
+            </div>
+
+            {active.length > 0 && (
+              <p
+                aria-live="polite"
+                class="inline-block mt-3 rounded-lg px-4 py-2 text-sm border bg-purple-50 border-purple-300 text-purple-900"
+              >
+                Showing <span class="font-bold">{packages.length}</span> of {fmt(pool.length)} with
+                {' '}{activeLabels.join(' and ')}.
+              </p>
+            )}
+
+            {active.includes('sole_maintainer') && (
+              <p class="text-xs text-gray-500 mt-1 max-w-3xl">
+                Go and Maven have no registry maintainer accounts, so their packages cannot
+                appear here either way.
+              </p>
+            )}
+          </div>
+        )}
+
+        {packages.length > 0 ? (
+          <>
+            <div id="package-set">
+              <PackageGrid packages={packages} />
+            </div>
+
+            <div class="flex justify-center mt-8">
+              <button
+                id="reshuffle"
+                type="button"
+                class="inline-flex items-center gap-2 bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm disabled:opacity-60"
+              >
+                Show me another set
+              </button>
+            </div>
+
+            <p id="reshuffle-error" class="text-sm text-gray-600 mt-3 text-center" hidden>
+              Could not load another set just now. Reload the page to see different packages.
+            </p>
+          </>
+        ) : (
+          <p class="text-gray-700">
+            Nothing matches that combination on {ecosystemMeta?.label}.
+            <a href={clearHref} class="underline hover:text-gray-900">Clear the filters</a> to see
+            the rest.
+          </p>
+        )}
+      </>
     )}
 
     <DataAttribution />
