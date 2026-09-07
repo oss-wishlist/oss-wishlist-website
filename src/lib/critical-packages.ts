@@ -166,15 +166,27 @@ export function isFilterId(value: string | null): value is FilterId {
  * ecosystem key. Order is the order they are offered in.
  */
 export const ECOSYSTEMS = [
-  { id: 'npm', label: 'npm', language: 'JavaScript' },
-  { id: 'pypi', label: 'PyPI', language: 'Python' },
-  { id: 'maven', label: 'Maven', language: 'Java' },
-  { id: 'go', label: 'Go modules', language: 'Go' },
-  { id: 'rubygems', label: 'RubyGems', language: 'Ruby' },
-  { id: 'cargo', label: 'crates.io', language: 'Rust' },
-  { id: 'packagist', label: 'Packagist', language: 'PHP' },
-  { id: 'nuget', label: 'NuGet', language: '.NET' },
+  { id: 'npm', label: 'npm', language: 'JavaScript', registry: 'npmjs.org' },
+  { id: 'pypi', label: 'PyPI', language: 'Python', registry: 'pypi.org' },
+  { id: 'maven', label: 'Maven', language: 'Java', registry: 'repo1.maven.org' },
+  { id: 'go', label: 'Go modules', language: 'Go', registry: 'proxy.golang.org' },
+  { id: 'rubygems', label: 'RubyGems', language: 'Ruby', registry: 'rubygems.org' },
+  { id: 'cargo', label: 'crates.io', language: 'Rust', registry: 'crates.io' },
+  { id: 'packagist', label: 'Packagist', language: 'PHP', registry: 'packagist.org' },
+  { id: 'nuget', label: 'NuGet', language: '.NET', registry: 'nuget.org' },
 ] as const;
+
+/**
+ * The full critical list on ecosyste.ms. We cache a slice of it, so anyone who
+ * wants the whole thing should be sent to the source rather than being given a
+ * directory here.
+ */
+export function criticalListUrl(ecosystem: EcosystemId | null): string {
+  const entry = ECOSYSTEMS.find((e) => e.id === ecosystem);
+  return entry
+    ? `https://packages.ecosyste.ms/critical?registry=${entry.registry}`
+    : 'https://packages.ecosyste.ms/critical';
+}
 
 export type EcosystemId = (typeof ECOSYSTEMS)[number]['id'];
 

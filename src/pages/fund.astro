@@ -18,6 +18,7 @@ import {
   getHeadlinePool,
   getEcosystemCounts,
   getFeaturedPackages,
+  criticalListUrl,
   parseFilters,
   isEcosystemId,
   ECOSYSTEMS,
@@ -97,45 +98,44 @@ const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`
     {!ecosystem ? (
       <>
         <h1 class="text-3xl font-bold text-gray-900 mb-3">
-          Projects you already depend on
+          Find a critical package you want to help with
         </h1>
-        <p class="text-lg text-gray-700 mb-8 max-w-3xl">
-          Critical packages as defined by
-          <a
-            href="https://ecosyste.ms"
-            class="underline hover:text-gray-900"
-            rel="noopener noreferrer"
-            target="_blank">ecosyste.ms</a
-          >.
-        </p>
 
-        {featured.length > 0 && (
-          <div class="mb-12">
-            <PackageGrid packages={featured} />
-          </div>
-        )}
-
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">
-          Or pick a package manager
-        </h2>
-        <p class="text-gray-600 mb-6">See a different set from the one your work depends on.</p>
-
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/*
+          The registry choice sits above the fold. It was previously below
+          thirteen cards, where nobody scrolled far enough to find it.
+        */}
+        <p class="text-gray-700 mb-2">Start with your package manager:</p>
+        <div class="flex flex-wrap gap-2 mb-8" role="group" aria-label="Choose a package manager">
           {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
             <a
               href={`${basePath}fund?ecosystem=${e.id}`}
-              class="bg-white border rounded-xl p-5 shadow-sm hover:shadow-md hover:border-purple-300 transition-all group"
+              class="inline-flex items-baseline gap-2 bg-white border border-gray-300 rounded-full px-4 py-2 hover:border-purple-400 hover:bg-purple-50 transition-colors"
             >
-              <span class="block text-xl font-bold text-gray-900 group-hover:text-purple-700">
-                {e.label}
-              </span>
-              <span class="block text-sm text-gray-500 mt-0.5">{e.language}</span>
-              <span class="block text-sm text-gray-700 mt-3">
-                {fmt(ecosystemCounts[e.id])} packages
-              </span>
+              <span class="font-semibold text-gray-900">{e.label}</span>
+              <span class="text-xs text-gray-500">{e.language}</span>
             </a>
           ))}
         </div>
+
+        {featured.length > 0 && (
+          <>
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">Or start with these</h2>
+            <p class="text-gray-600 mb-6">
+              Projects you have almost certainly used, and what they are carrying.
+            </p>
+            <PackageGrid packages={featured} />
+
+            <p class="text-sm text-gray-600 mt-8">
+              <a
+                href={criticalListUrl(null)}
+                class="underline hover:text-gray-900"
+                rel="noopener noreferrer"
+                target="_blank">See the full critical list on ecosyste.ms &rarr;</a
+              >
+            </p>
+          </>
+        )}
       </>
     ) : (
       <>
@@ -218,14 +218,26 @@ const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`
               <PackageGrid packages={packages} />
             </div>
 
-            <div class="flex justify-center mt-8">
+            <div class="flex flex-col items-center gap-3 mt-8">
               <button
                 id="reshuffle"
                 type="button"
                 class="inline-flex items-center gap-2 bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm disabled:opacity-60"
               >
-                Show me another set
+                Show me another {SAMPLE_SIZE}
               </button>
+              {/*
+                We cache a slice of the critical list, so anyone who wants the
+                whole thing goes to the source rather than being offered a
+                directory here.
+              */}
+              <a
+                href={criticalListUrl(ecosystem)}
+                class="text-sm text-gray-600 hover:text-gray-900 underline"
+                rel="noopener noreferrer"
+                target="_blank"
+                >See the full {ecosystemMeta?.label} list on ecosyste.ms &rarr;</a
+              >
             </div>
 
             <p id="reshuffle-error" class="text-sm text-gray-600 mt-3 text-center" hidden>
