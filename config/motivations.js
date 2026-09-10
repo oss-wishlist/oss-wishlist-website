@@ -12,6 +12,11 @@
  * arguable rather than hidden in a recommendation. The visitor overrides freely;
  * a pre-tick is a suggestion with its working shown, never a verdict.
  *
+ * Labels deliberately echo the services they lead to: "Leadership continuity"
+ * rather than "Continuity", because the service is called Leadership Continuity
+ * & Succession Planning. Someone should leave with the vocabulary the catalogue
+ * actually uses, not a set of abstractions invented for this page.
+ *
  * `evidence` returns a plain sentence when the signal is present, or null when
  * it is not. A motivation with no evidence is still offered, just not ticked:
  * some real reasons for investing leave no trace in registry metadata, and
@@ -22,7 +27,7 @@ export const MOTIVATIONS = [
   {
     id: 'security',
     label: 'Security',
-    question: 'Vulnerabilities, slow patches, or a supply chain you have to vouch for.',
+    question: 'Known vulnerabilities, or fixes that are slow to arrive.',
     services: ['dependency-security-audit'],
     evidence: (pkg) =>
       pkg.has_advisories
@@ -31,15 +36,15 @@ export const MOTIVATIONS = [
   },
   {
     id: 'project-health',
-    label: 'Project health',
-    question: 'Governance, decision-making, or how the community is run.',
+    label: 'Governance and moderation',
+    question: 'How decisions get made, and how the community is run.',
     services: ['governance-setup', 'moderation-strategy'],
     evidence: (pkg) => (pkg.sole_maintainer ? 'one maintainer listed' : null),
   },
   {
     id: 'continuity',
-    label: 'Continuity',
-    question: 'What happens to this if the people running it stop.',
+    label: 'Leadership continuity',
+    question: 'What happens if the people running it stop.',
     services: ['leadership-onboarding', 'winding-down'],
     evidence: (pkg) => {
       if (!pkg.quiet) return null;
@@ -51,8 +56,8 @@ export const MOTIVATIONS = [
   },
   {
     id: 'capacity',
-    label: 'Maintainer capacity',
-    question: 'More work arriving than the maintainers can absorb.',
+    label: 'Maintainer workload',
+    question: 'More work arriving than the maintainers can keep up with.',
     services: ['maintainer-task-contributor'],
     // The combination is the signal: a lot of people depending on very few.
     evidence: (pkg) =>
@@ -63,14 +68,14 @@ export const MOTIVATIONS = [
   {
     id: 'funding',
     label: 'Funding',
-    question: 'No route for money to reach the people doing the work.',
+    question: 'No way for money to reach the people doing the work.',
     services: ['funding-strategy'],
     evidence: (pkg) => (pkg.unfunded ? 'no funding link published' : null),
   },
   {
     id: 'innovation',
-    label: 'Innovation',
-    question: 'Too few contributors for the project to move forward.',
+    label: 'Contributors and growth',
+    question: 'Not enough people contributing to move it forward.',
     services: ['developer-relations-strategy'],
     // Deliberately never pre-ticked. Contributor growth is not in the cached
     // data, and inventing a signal would teach people to trust one that is not there.

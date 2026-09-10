@@ -16,9 +16,12 @@ export interface AvailablePractitioner {
   slug: string;
   name: string;
   title: string | null;
+  bio: string | null;
   avatar_url: string | null;
   availability: string;
   accepts_pro_bono: boolean;
+  /** Which of the requested services this person covers. */
+  matched: string[];
 }
 
 /**
@@ -70,9 +73,11 @@ export async function practitionersByService(
         slug: p.slug,
         name: p.name,
         title: p.title ?? null,
+        bio: p.bio ?? null,
         avatar_url: p.avatar_url ?? null,
         availability: p.availability,
         accepts_pro_bono: Boolean(p.accepts_pro_bono),
+        matched: (p.services ?? []).filter((s) => wanted.has(s)),
       };
 
       const existing = grouped.get(slug);
@@ -82,4 +87,30 @@ export async function practitionersByService(
   }
 
   return grouped;
+}
+
+/**
+ * The people who cover the requested services, one entry each rather than one
+ * per service, with the services they matched on.
+ *
+ * Practitioners write their own bios and declare their own services, so this
+ * only groups what they already said. Sorted by how many of the chosen services
+ * a person covers, since someone who can do three of them is a shorter
+ * conversation than three separate people.
+ */
+export async function practitionersForServices(
+  serviceSlugs: string[]
+): Promise<AvailablePractitioner[]> {
+  const grouped = await practitionersByService(serviceSlugs);
+
+  const bySlug = new Map<string, AvailablePractitioner>();
+  for (const people of grouped.values()) {
+    for (const person of people) {
+      if (!bySlug.has(person.slug)) bySlug.set(person.slug, person);
+    }
+  }
+
+  return [...bySlug.values()].sort(
+    (a, b) => b.matched.length - a.matched.length || a.name.localeCompare(b.name)
+  );
 }
