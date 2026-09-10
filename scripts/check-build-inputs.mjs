@@ -8,9 +8,9 @@
  * serves a quietly diminished site: no rubrics, no playbook pages, or no
  * packages at all.
  *
- * The submodule is the likely one in practice. Most hosts, DigitalOcean App
- * Platform included, clone without --recurse-submodules unless told to, so this
- * is a first-deploy trap rather than a rare edge case.
+ * The playbooks were a git submodule until they were vendored into the repo,
+ * which is why this check exists. Keeping it: an empty playbooks directory
+ * still produces a site with no rubrics and nothing that fails to tell you.
  */
 
 import fs from 'node:fs';
@@ -30,13 +30,13 @@ const playbookFiles = fs.existsSync(playbooks)
 if (playbookFiles.length === 0) {
   problems.push(
     [
-      'The playbooks submodule is empty or missing.',
+      'The playbooks directory is empty or missing.',
       '',
       '  Every peer review rubric is read from it, so the site would build and',
       '  deploy without a single rubric and with every /playbooks page 404ing.',
       '',
-      '  Fix locally:   git submodule update --init --recursive',
-      '  Fix on a host: clone with submodules, or add that command as a pre-build step.',
+      '  The playbooks live in src/content/playbooks-external, committed directly.',
+      '  Restore them from git, or re-copy from oss-wishlist/wishlist-playbooks.',
     ].join('\n')
   );
 }

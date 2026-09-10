@@ -1,3 +1,0 @@
-[submodule "src/content/playbooks-external"]
-	path = src/content/playbooks-external
-	url = https://github.com/oss-wishlist/wishlist-playbooks.git
