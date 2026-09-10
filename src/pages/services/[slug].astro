@@ -3,6 +3,8 @@ import { getBasePath } from '../../lib/paths';
 import Layout from '../../components/Layout.astro';
 import { getEntry, getCollection, render } from 'astro:content';
 import { getApprovedPractitionersSafe } from '../../lib/practitioner-availability';
+import { getRubricForPlaybook } from '../../lib/rubrics';
+import RubricSummary from '../../components/RubricSummary.astro';
 
 const basePath = getBasePath();
 
@@ -85,6 +87,9 @@ const serviceSlug = toSlug(service.id);
 // Degrades to no practitioner list rather than a 500: this page still has a
 // service to explain when the database is unreachable.
 const allPractitioners = await getApprovedPractitionersSafe();
+
+// The rubric this service is assessed against, read from its playbook.
+const rubric = await getRubricForPlaybook(service.data.playbook);
 const matchingPractitioners = allPractitioners.filter(p =>
   (p.services || []).includes(serviceSlug)
 );
@@ -140,6 +145,12 @@ const structuredData = {
             <p class="text-gray-700 text-sm">{service.data.impact}</p>
           </div>
         )}
+        {rubric && (
+          <div class="border-t pt-6 mb-2">
+            <RubricSummary rubric={rubric} serviceTitle={service.data.title} />
+          </div>
+        )}
+
         <div class="flex flex-wrap gap-4 items-center border-t pt-6">
           {/* Playbook link removed */}
           <a href={`${basePath}invest`} class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
