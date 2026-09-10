@@ -95,7 +95,7 @@ cd oss-wishlist-website
 npm install
 npm run dev
 ```
-The site will work for browsing, but wishlist creation will be disabled without a GitHub token.
+The site works for browsing without a GitHub token; sign-in is only needed for practitioner profiles.
 
 ### Placeholder Mode
 The site includes a "Coming Soon" placeholder page for pre-launch use:
@@ -179,12 +179,10 @@ Note: Manual edits to submodule files should be done in the source repo via PR; 
 src/
 ├── pages/                 # Website pages (file-based routing)
 │   ├── index.astro       # Homepage
-│   ├── create-wishlist.astro # Create wishlists
-│   ├── fulfill.astro     # Fulfill wishlists (sponsors)
+│   ├── invest.astro      # The three step wizard
 │   └── api/              # API endpoints
 ├── content/              # Static content (markdown)
 │   ├── services/         # Service definitions
-│   ├── faq/              # FAQ entries
 │   ├── guardians/        # Sponsor organizations
 │   └── playbooks-external/ # Git submodule
 ├── components/           # Reusable UI components
@@ -196,14 +194,12 @@ src/
 ## 🎨 Making Changes
 
 ### Database Content
-- **Wishlists**: Created by maintainers via `/create-wishlist` form
 - **Practitioners**: Added via `/practitioner-submission` form
 - **Fulfillments**: Created when sponsors commit to fund services
 
 ### Static Content
 Content collections in `src/content/` (markdown files):
 - **Services**: Add/edit in `src/content/services/`
-- **FAQ**: Add/edit in `src/content/faq/`
 - **Guardians**: Add/edit in `src/content/guardians/`
 - **Playbooks**: External git submodule (see Playbooks section above)
 
@@ -250,11 +246,10 @@ npm test              # Run the test suite
 
 ### Key URLs (when running locally)
 - **Homepage**: `/` - Main landing page
-- **Sponsor a Service**: `/fund` - Browse critical packages and what might help them
+- **Find a project**: `/invest` - The three step wizard: package, motivation, how to invest
 - **Check Dependencies**: `/check` - See which critical packages a repository depends on
 - **Package Page**: `/p/:ecosystem/:name` - One package, its facts and its services
 - **Admin Panel**: `/admin` - Manage practitioners
-- **FAQ**: `/faq` - Frequently asked questions
 
 ### Content Structure Example (Static Content)
 ```markdown
@@ -280,7 +275,7 @@ Production platform connecting open source maintainers with practitioners and ec
 Portions of this codebase were developed with assistance from AI tools, specifically GitHub Copilot with Claude Sonnet 4.5. All AI-generated code has been reviewed, tested, and modified to meet project standards and security requirements.
 
 ### Contributing
-- **Database content**: Use web forms (`/create-wishlist`, `/practitioner-submission`)
+- **Database content**: Use the practitioner forms (`/apply-practitioner`, `/edit-practitioner`)
 - **Static content**: Edit markdown files in `src/content/`
 - **Code changes**: Edit `.astro`, `.tsx`, or `.ts` files as needed
 
