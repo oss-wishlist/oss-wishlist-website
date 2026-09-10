@@ -97,6 +97,17 @@ const activeMotivations = motivationsSubmitted
   ? chosenMotivations
   : evidence.map((e) => e.id as string);
 
+/**
+ * Evidenced motivations lead, the rest follow in declared order.
+ *
+ * Ordered by evidence rather than by what is currently ticked, so unticking
+ * something does not make it jump down the page while you are reading it.
+ */
+const orderedMotivations = [
+  ...MOTIVATIONS.filter((m) => evidenceById.has(m.id)),
+  ...MOTIVATIONS.filter((m) => !evidenceById.has(m.id)),
+];
+
 // ---- Step 3 content: services behind the chosen motivations ----
 const catalog = await getCollection('services');
 const slugOf = (entry: { id: string }) => entry.id.replace(/\.md$/, '');
@@ -135,7 +146,17 @@ const title =
 
     {step === 1 && (
       <>
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">Find a project to support</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Find a project to support</h1>
+        <p class="text-gray-600 mb-1">Start with an open source project you already use.</p>
+        <p class="text-xs text-gray-500 mb-5">
+          Searchable via
+          <a
+            href="https://ecosyste.ms"
+            class="underline hover:text-gray-700"
+            rel="noopener noreferrer"
+            target="_blank">ecosyste.ms</a
+          >.
+        </p>
 
         <form method="get" action={selfBase} class="mb-6" role="search">
           {ecosystem && <input type="hidden" name="ecosystem" value={ecosystem} />}
@@ -144,7 +165,7 @@ const title =
               type="search"
               name="q"
               value={query}
-              placeholder={ecosystem ? `Search ${ECOSYSTEMS.find((e) => e.id === ecosystem)?.label}` : 'Search by name, e.g. lodash, requests, nokogiri'}
+              placeholder={ecosystem ? `Search ${ECOSYSTEMS.find((e) => e.id === ecosystem)?.label}` : 'Search by project name, e.g. lodash, requests, nokogiri'}
               aria-label="Search packages by name"
               autocomplete="off"
               class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
@@ -198,7 +219,7 @@ const title =
         {!searching && featured.length > 0 && (
           <>
             <h2 class="text-xl font-bold text-gray-900 mb-1">Or start with these</h2>
-            <p class="text-gray-600 mb-6">Projects you have almost certainly used.</p>
+            <p class="text-gray-600 mb-6">Open source projects you have almost certainly used.</p>
             <PackageGrid packages={featured.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
           </>
         )}
@@ -218,7 +239,7 @@ const title =
           <input type="hidden" name="ms" value="1" />
 
           <div class="space-y-3 mb-8">
-            {MOTIVATIONS.map((m) => {
+            {orderedMotivations.map((m) => {
               const why = evidenceById.get(m.id);
               const checked = activeMotivations.includes(m.id);
               return (
@@ -251,9 +272,7 @@ const title =
 
         {services.length > 0 ? (
           <>
-            <p class="text-gray-600 mb-6 max-w-2xl">
-              {services.length === 1 ? 'This is the work that addresses it.' : 'This is the work that addresses it.'}
-            </p>
+            <p class="text-gray-600 mb-6 max-w-2xl">Here is a summary of your selections.</p>
 
             <ul class="space-y-4 mb-10">
               {services.map((s) => (
