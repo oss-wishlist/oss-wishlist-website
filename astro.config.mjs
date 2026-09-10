@@ -30,6 +30,7 @@ export default defineConfig({
     // There is no separate community surface; the practitioners are the people.
     '/helpers': '/practitioners',
     '/faq': '/about-us',
+    '/code-of-conduct': '/about-us',
   },
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],

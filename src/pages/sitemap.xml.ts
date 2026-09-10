@@ -28,7 +28,6 @@ export const GET: APIRoute = async ({ site }) => {
     { loc: 'playbooks', priority: 0.7 },
     { loc: 'about-us', priority: 0.6 },
     { loc: 'sitemap', priority: 0.5 },
-    { loc: 'code-of-conduct', priority: 0.5 },
     { loc: 'privacy-policy', priority: 0.5 },
   ];
   
