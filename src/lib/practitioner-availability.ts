@@ -24,6 +24,57 @@ export interface AvailablePractitioner {
   matched: string[];
 }
 
+
+/**
+ * Local preview data, so practitioner surfaces can be seen without Postgres.
+ *
+ * Guarded twice: it requires PRACTITIONER_DEMO=1 to be set explicitly, and it
+ * refuses to apply when DATABASE_URL exists. A deployment has a database, so
+ * this cannot displace real practitioners; without the env var it never loads
+ * at all. It is a development aid, not a fallback.
+ */
+const DEMO_PRACTITIONERS = [
+  {
+    slug: 'demo-ada-rivers',
+    name: 'Ada Rivers (demo)',
+    title: 'Governance and community consultant',
+    bio: 'Fifteen years helping projects write governance people actually follow, and moderation policy that holds up when it is tested.',
+    avatar_url: null,
+    availability: 'available',
+    accepts_pro_bono: true,
+    services: ['governance-setup', 'moderation-strategy', 'leadership-onboarding'],
+  },
+  {
+    slug: 'demo-kip-moreno',
+    name: 'Kip Moreno (demo)',
+    title: 'Security reviewer',
+    bio: 'CRA readiness, disclosure policy and vulnerability handling for small maintainer teams.',
+    avatar_url: null,
+    availability: 'limited',
+    accepts_pro_bono: false,
+    services: ['dependency-security-audit'],
+  },
+  {
+    slug: 'demo-sam-oyelaran',
+    name: 'Sam Oyelaran (demo)',
+    title: 'Funding strategist',
+    bio: 'Sponsorship, grant readiness and getting a funding route in place that does not depend on one person.',
+    avatar_url: null,
+    availability: 'available',
+    accepts_pro_bono: false,
+    services: ['funding-strategy', 'maintainer-task-contributor'],
+  },
+];
+
+function demoPractitioners(): AvailablePractitioner[] | null {
+  const enabled = import.meta.env.PRACTITIONER_DEMO === '1' || process.env.PRACTITIONER_DEMO === '1';
+  const hasDatabase = Boolean(import.meta.env.DATABASE_URL || process.env.DATABASE_URL);
+  if (!enabled || hasDatabase) return null;
+
+  console.warn('[practitioners] PRACTITIONER_DEMO is on: showing local preview data, not real practitioners.');
+  return DEMO_PRACTITIONERS as unknown as AvailablePractitioner[];
+}
+
 /**
  * Approved practitioners, or an empty list if the database cannot be reached.
  *
@@ -33,6 +84,9 @@ export interface AvailablePractitioner {
  * a zero.
  */
 export async function getApprovedPractitionersSafe() {
+  const demo = demoPractitioners();
+  if (demo) return demo as any[];
+
   try {
     return await getApprovedPractitioners();
   } catch (error) {
@@ -54,6 +108,10 @@ export async function practitionersByService(
   const grouped = new Map<string, AvailablePractitioner[]>();
 
   let practitioners;
+  const demo = demoPractitioners();
+  if (demo) {
+    practitioners = demo as any[];
+  } else {
   try {
     practitioners = await getApprovedPractitioners();
   } catch (error) {
@@ -61,6 +119,7 @@ export async function practitionersByService(
     // remain the route to the people who do this work.
     console.warn('[practitioners] lookup failed, continuing without:', error);
     return grouped;
+  }
   }
 
   for (const p of practitioners) {

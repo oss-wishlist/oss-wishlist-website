@@ -333,6 +333,46 @@ export function getPool(filters: FilterId[], ecosystem: EcosystemId | null = nul
   return base.filter((p) => filters.every((f) => p[f]));
 }
 
+/**
+ * Where to send someone who wants to look at the project itself.
+ *
+ * Prefers the repository, and falls back to the registry page, because 208 of
+ * the cached packages publish no repository URL at all (mostly NuGet and Maven)
+ * and a name with nowhere to click is a dead end.
+ */
+export function projectUrl(pkg: Pick<CriticalPackage, 'ecosystem' | 'name' | 'repository_url'>): string | null {
+  // Only a URL a browser can actually open. A few legacy records carry
+  // svn+ssh:// and git:// locations, which would render as a dead link.
+  if (pkg.repository_url && /^https?:\/\//i.test(pkg.repository_url)) return pkg.repository_url;
+
+  const name = pkg.name;
+  switch (pkg.ecosystem) {
+    case 'npm':
+      return `https://www.npmjs.com/package/${name}`;
+    case 'pypi':
+      return `https://pypi.org/project/${encodeURIComponent(name)}/`;
+    case 'rubygems':
+      return `https://rubygems.org/gems/${encodeURIComponent(name)}`;
+    case 'cargo':
+      return `https://crates.io/crates/${encodeURIComponent(name)}`;
+    case 'packagist':
+      return `https://packagist.org/packages/${name}`;
+    case 'nuget':
+      return `https://www.nuget.org/packages/${encodeURIComponent(name)}`;
+    case 'go':
+      return `https://pkg.go.dev/${name}`;
+    case 'maven': {
+      // Maven names are "group:artifact".
+      const [group, artifact] = name.split(':');
+      return group && artifact
+        ? `https://central.sonatype.com/artifact/${encodeURIComponent(group)}/${encodeURIComponent(artifact)}`
+        : null;
+    }
+    default:
+      return null;
+  }
+}
+
 /** Everything a card or package page needs, including its suggested services. */
 export function presentPackage(pkg: CriticalPackage) {
   return {

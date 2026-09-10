@@ -25,6 +25,8 @@ export default defineConfig({
     // /fund/all was an exhaustive alphabetical list. The point of this site is
     // to show a few things and hand over, not to be a directory.
     '/fund/all': '/fund',
+    // Pricing was removed with the rest of the cost content.
+    '/pricing': '/catalog',
   },
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],

@@ -34,6 +34,7 @@ import {
   countSearchMatches,
   isEcosystemId,
   packageKey,
+  projectUrl,
   ECOSYSTEMS,
   type CriticalPackage,
 } from '../lib/critical-packages';
@@ -104,6 +105,12 @@ const activeMotivations = motivationsSubmitted
  * Ordered by evidence rather than by what is currently ticked, so unticking
  * something does not make it jump down the page while you are reading it.
  */
+/** Advisories we can name and link, for the security evidence. */
+const advisories = (selected?.advisories ?? []).filter((a) => a.url || a.id);
+
+/** Always a link for the project name: repository, else its registry page. */
+const selectedUrl = selected ? projectUrl(selected) : null;
+
 const orderedMotivations = [
   ...MOTIVATIONS.filter((m) => evidenceById.has(m.id)),
   ...MOTIVATIONS.filter((m) => !evidenceById.has(m.id)),
@@ -241,7 +248,20 @@ const title =
 
     {step === 2 && selected && (
       <>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">What brings you to {selected.name}?</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          What brings you to{' '}
+          {selectedUrl ? (
+            <a
+              href={selectedUrl}
+              class="underline decoration-2 underline-offset-4 hover:text-purple-700"
+              rel="noopener noreferrer"
+              target="_blank"
+              title={`Open ${selected.name}`}>{selected.name}</a
+            >
+          ) : (
+            selected.name
+          )}?
+        </h1>
         <p class="text-gray-600 mb-8 max-w-2xl">
           We have ticked what the data shows. Change anything.
         </p>
@@ -266,6 +286,43 @@ const title =
                         we see: {why}
                       </span>
                     )}
+
+                    {/*
+                      The security claim is the one with a public paper trail, so
+                      show it rather than asking anyone to take the number on
+                      trust. Same pattern as the rubrics: the evidence exists, and
+                      here it is.
+                    */}
+                    {m.id === 'security' && advisories.length > 0 && (
+                      <span class="block mt-2">
+                        <details class="group">
+                          <summary class="cursor-pointer text-xs text-gray-700 hover:text-gray-900 underline list-none inline-flex items-center gap-1">
+                            <span class="transition-transform group-open:rotate-90" aria-hidden="true">&rsaquo;</span>
+                            See the issues
+                          </summary>
+                          <span class="block mt-2 pl-3 border-l-2 border-purple-200 space-y-1">
+                            {advisories.map((a) => (
+                              <span class="block text-xs text-gray-700">
+                                {a.severity && (
+                                  <span class="uppercase text-gray-500 mr-1">{a.severity.toLowerCase()}</span>
+                                )}
+                                {a.url ? (
+                                  <a
+                                    href={a.url}
+                                    class="underline hover:text-gray-900"
+                                    rel="noopener noreferrer"
+                                    target="_blank">{a.title ?? a.cve ?? a.id}</a
+                                  >
+                                ) : (
+                                  a.title ?? a.cve ?? a.id
+                                )}
+                                {a.cve && <span class="text-gray-500"> &middot; {a.cve}</span>}
+                              </span>
+                            ))}
+                          </span>
+                        </details>
+                      </span>
+                    )}
                   </span>
                 </label>
               );
@@ -281,7 +338,20 @@ const title =
 
     {step === 3 && selected && (
       <>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Supporting {selected.name}</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          Supporting{' '}
+          {selectedUrl ? (
+            <a
+              href={selectedUrl}
+              class="underline decoration-2 underline-offset-4 hover:text-purple-700"
+              rel="noopener noreferrer"
+              target="_blank"
+              title={`Open ${selected.name}`}>{selected.name}</a
+            >
+          ) : (
+            selected.name
+          )}
+        </h1>
 
         {services.length > 0 ? (
           <>
@@ -435,7 +505,7 @@ const title =
             data-summary={JSON.stringify({
               packageName: selected.name,
               ecosystem: selected.ecosystem,
-              repositoryUrl: selected.repository_url,
+              repositoryUrl: selectedUrl,
               motivations: MOTIVATIONS.filter((m) => activeMotivations.includes(m.id)).map((m) => m.label),
               services: services.map((s) => ({
                 title: s.data.title,
@@ -462,9 +532,9 @@ const title =
               <p class="text-gray-600">
                 Open Source Wishlist does not arrange any of this. Take it to the project, and to
                 whoever would do the work.
-                {selected.repository_url && (
+                {selectedUrl && (
                   <>
-                    {' '}<a href={selected.repository_url} class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank">{selected.name} repository &rarr;</a>
+                    {' '}<a href={selectedUrl} class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank">Open {selected.name} &rarr;</a>
                   </>
                 )}
               </p>
