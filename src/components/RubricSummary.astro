@@ -1,0 +1,57 @@
+---
+/**
+ * The rubric a service is measured against, collapsed until asked for.
+ *
+ * The rubrics exist already, written and scored, in the playbooks. Showing them
+ * is the point: someone deciding whether to invest should be asking what good
+ * would look like and how anyone would know, and this is the answer to both.
+ * Nothing here scores a project. It shows that the instrument exists and what
+ * it examines.
+ */
+import { getBasePath } from '../lib/paths';
+import type { Rubric } from '../lib/rubrics';
+
+export interface Props {
+  rubric: Rubric | null;
+  serviceTitle: string;
+}
+
+const { rubric, serviceTitle } = Astro.props as Props;
+const basePath = getBasePath();
+---
+
+{rubric && (
+  <details class="mt-3 group">
+    <summary
+      class="cursor-pointer text-sm text-gray-700 hover:text-gray-900 underline list-none inline-flex items-center gap-1"
+    >
+      <span class="transition-transform group-open:rotate-90" aria-hidden="true">&rsaquo;</span>
+      Rubric: what this is measured against
+      {rubric.totalPoints && <span class="text-gray-500">({rubric.totalPoints} points)</span>}
+    </summary>
+
+    <div class="mt-3 pl-4 border-l-2 border-gray-200">
+      <ul class="space-y-1">
+        {rubric.dimensions.map((d) => (
+          <li class="text-sm text-gray-700 flex gap-2">
+            <span class="text-gray-400 font-mono shrink-0">{d.letter}</span>
+            <span>
+              {d.name}
+              {d.maxPoints !== null && (
+                <span class="text-gray-500"> &middot; {d.maxPoints} pts</span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <p class="text-xs text-gray-500 mt-3">
+        Peer reviewed against this rubric, so the outcome is assessed rather than asserted.
+        <a
+          href={`${basePath}playbooks/${rubric.playbook}`}
+          class="underline hover:text-gray-700">Read the full {serviceTitle} playbook &rarr;</a
+        >
+      </p>
+    </div>
+  </details>
+)}

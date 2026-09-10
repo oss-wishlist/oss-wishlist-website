@@ -39,45 +39,30 @@ const companyServices = services.filter(service =>
           The expertise is ready.
         </p>
         
-        <!-- Main Cards -->
-        <div class="grid md:grid-cols-3 gap-6 mb-8 items-stretch" role="list">
-          <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-purple-700 mb-2">Practitioners</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Independent open source experts ready to take on work from a project that needs their skills.</p>
-            <a 
-              href={`${basePath}practitioners`}
-              class="btn-sparkle w-full"
-              aria-label="View practitioners"
-            >
-              <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span class="btn-sparkle-text">View Practitioners</span>
-              <span class="btn-sparkle-particles">
-                <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
-                <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
-                <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
-              </span>
-            </a>
-          </article>
-
-          <article class="relative bg-white p-6 md:p-8 md:-mt-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-purple-200 ring-1 ring-purple-100 flex flex-col" role="listitem">
+        <!-- Main Cards: two doors, nothing else -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8 max-w-3xl mx-auto" role="list">
+          <article
+            class="relative bg-white p-6 md:p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-purple-200 ring-1 ring-purple-100 flex flex-col"
+            role="listitem"
+          >
             <span
               class="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-gradient-to-r from-purple-500 to-violet-500"
               aria-hidden="true"
             ></span>
             <p class="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-2">Start here</p>
-            <h2 class="text-2xl font-semibold text-purple-700 mb-2">Find a critical package</h2>
-            <p class="text-gray-700 mb-5 flex-grow">Select from critical packages as defined by Ecosyste.ms and services that might help.</p>
-            <a 
-              href={`${basePath}fund`} 
+            <h2 class="text-2xl font-semibold text-purple-700 mb-2">Find a project to support</h2>
+            <p class="text-gray-700 mb-5 flex-grow">
+              Pick a package, work out what would actually help, and see how to pay for it.
+            </p>
+            <a
+              href={`${basePath}invest`}
               class="btn-sparkle w-full"
-              aria-label="Browse critical packages to sponsor a service for"
+              aria-label="Find a project to support"
             >
               <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
-              <span class="btn-sparkle-text">Browse Packages</span>
+              <span class="btn-sparkle-text">Get started</span>
               <span class="btn-sparkle-particles">
                 <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
                 <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
@@ -87,10 +72,12 @@ const companyServices = services.filter(service =>
           </article>
 
           <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-purple-700 mb-2">Services Catalogue</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Services with defined outcomes and rubrics, so projects know what they are getting and funders can see the impact of their investment.</p>
-            <a 
-              href={`${basePath}catalog`} 
+            <h2 class="text-xl font-semibold text-purple-700 mb-2">Services catalogue</h2>
+            <p class="text-gray-700 mb-4 flex-grow">
+              What the work involves, what it costs, the rubric it is measured against, and who does it.
+            </p>
+            <a
+              href={`${basePath}catalog`}
               class="btn-sparkle w-full"
               aria-label="Explore the services catalogue"
             >

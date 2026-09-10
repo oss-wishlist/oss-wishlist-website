@@ -1,0 +1,492 @@
+---
+/**
+ * /invest — a three step wizard, adapted from the Teaching Open Source Risk and
+ * Investment Framework (microsoft/OSPO).
+ *
+ *   1. Pick a package.
+ *   2. Say what brings you here. We pre-tick from what the data shows and say
+ *      why; you override freely.
+ *   3. Choose how you would invest, and leave with a summary.
+ *
+ * It is a teaching tool as much as a picker, so the reasoning is on the page:
+ * the evidence behind every suggestion, and the rubric each service is measured
+ * against. Open Source Wishlist still brokers nothing. You go to the people
+ * yourself.
+ *
+ * State lives entirely in the query string, so every step is linkable, the back
+ * button works, and none of it needs JavaScript.
+ */
+import { getCollection } from 'astro:content';
+import Layout from '../components/Layout.astro';
+import PackageGrid from '../components/PackageGrid.astro';
+import WizardSteps from '../components/WizardSteps.astro';
+import RubricSummary from '../components/RubricSummary.astro';
+import DataAttribution from '../components/DataAttribution.astro';
+import { getBasePath } from '../lib/paths';
+import {
+  getPackage,
+  presentPackage,
+  getFeaturedPackages,
+  getEcosystemCounts,
+  getHeadlinePool,
+  samplePackages,
+  searchPackages,
+  countSearchMatches,
+  isEcosystemId,
+  packageKey,
+  ECOSYSTEMS,
+  type CriticalPackage,
+} from '../lib/critical-packages';
+import { getRubricForPlaybook } from '../lib/rubrics';
+import {
+  MOTIVATIONS,
+  parseMotivations,
+  servicesForMotivations,
+  suggestedMotivations,
+} from '../../config/motivations.js';
+import { INVESTMENT_METHODS, parseMethods } from '../../config/investment-methods.js';
+import { SAMPLE_SIZE } from '../../config/data-sources.js';
+
+export const prerender = false;
+
+const basePath = getBasePath();
+const params = Astro.url.searchParams;
+const fmt = (n: number) => n.toLocaleString('en-US');
+
+// ---- Step 1 state: which package ----
+const rawEcosystem = params.get('ecosystem');
+const ecosystem = isEcosystemId(rawEcosystem) ? rawEcosystem : null;
+const query = (params.get('q') ?? '').trim();
+const searching = query.length >= 2;
+
+const pkgEcosystem = params.get('pe');
+const pkgName = params.get('pn');
+const selected: CriticalPackage | undefined =
+  pkgEcosystem && pkgName ? getPackage(pkgEcosystem, pkgName) : undefined;
+
+// ---- Step 2 state: motivations ----
+const chosenMotivations = parseMotivations(params.getAll('m'));
+// `touched` separates "arrived with nothing chosen" from "deliberately cleared".
+const motivationsSubmitted = params.get('ms') === '1';
+
+// ---- Step 3 state: how to invest ----
+const chosenMethods = parseMethods(params.getAll('method'));
+const methodsSubmitted = params.get('hs') === '1';
+
+const step: 1 | 2 | 3 = !selected ? 1 : !motivationsSubmitted ? 2 : 3;
+
+// ---- Step 1 content ----
+const ecosystemCounts = getEcosystemCounts();
+const featured = step === 1 && !ecosystem && !searching ? getFeaturedPackages() : [];
+const searchResults = step === 1 && searching ? searchPackages(query, ecosystem) : [];
+const searchTotal = step === 1 && searching ? countSearchMatches(query, ecosystem) : 0;
+const browse =
+  step === 1 && ecosystem && !searching
+    ? samplePackages(SAMPLE_SIZE, getHeadlinePool(ecosystem))
+    : [];
+
+/** Link that selects a package and moves to step 2. */
+const pickHref = (p: CriticalPackage) =>
+  `${basePath}invest?pe=${encodeURIComponent(p.ecosystem)}&pn=${encodeURIComponent(p.name)}`;
+
+// ---- Step 2 content ----
+const evidence = selected ? suggestedMotivations(selected) : [];
+const evidenceById = new Map(evidence.map((e) => [e.id, e.evidence]));
+// First arrival is pre-ticked from evidence; after that, respect what was chosen.
+const activeMotivations = motivationsSubmitted
+  ? chosenMotivations
+  : evidence.map((e) => e.id as string);
+
+// ---- Step 3 content: services behind the chosen motivations ----
+const catalog = await getCollection('services');
+const slugOf = (entry: { id: string }) => entry.id.replace(/\.md$/, '');
+const bySlug = new Map(catalog.map((e) => [slugOf(e), e]));
+
+const serviceSlugs = servicesForMotivations(activeMotivations) as string[];
+const services = await Promise.all(
+  serviceSlugs
+    .map((slug) => bySlug.get(slug))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e))
+    .map(async (entry) => ({
+      slug: slugOf(entry),
+      data: entry.data,
+      rubric: await getRubricForPlaybook(entry.data.playbook),
+    }))
+);
+
+const selfBase = `${basePath}invest`;
+const stepOneHref = selfBase;
+const stepTwoHref = selected
+  ? `${selfBase}?pe=${encodeURIComponent(selected.ecosystem)}&pn=${encodeURIComponent(selected.name)}`
+  : null;
+
+const title =
+  step === 1
+    ? 'Find a project to support'
+    : step === 2
+      ? `What brings you to ${selected?.name}?`
+      : `Supporting ${selected?.name}`;
+---
+
+<Layout title={`${title} | OSS Wishlist`} description="Work out what would help a critical open source package, and how to pay for it.">
+  <main class="max-w-4xl mx-auto px-4 py-12">
+    <div id="wizard">
+    <WizardSteps current={step} packageHref={stepOneHref} motivationHref={stepTwoHref} />
+
+    {step === 1 && (
+      <>
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">Find a project to support</h1>
+
+        <form method="get" action={selfBase} class="mb-6" role="search">
+          {ecosystem && <input type="hidden" name="ecosystem" value={ecosystem} />}
+          <div class="flex flex-wrap gap-3">
+            <input
+              type="search"
+              name="q"
+              value={query}
+              placeholder={ecosystem ? `Search ${ECOSYSTEMS.find((e) => e.id === ecosystem)?.label}` : 'Search by name, e.g. lodash, requests, nokogiri'}
+              aria-label="Search packages by name"
+              autocomplete="off"
+              class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button type="submit" class="bg-gray-800 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium">
+              Search
+            </button>
+          </div>
+        </form>
+
+        <div class="flex flex-wrap gap-2 mb-8" role="group" aria-label="Choose a package manager">
+          {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
+            <a
+              href={`${selfBase}?ecosystem=${e.id}`}
+              aria-pressed={ecosystem === e.id ? 'true' : 'false'}
+              class={`inline-flex items-baseline gap-2 rounded-full px-4 py-2 border transition-colors ${
+                ecosystem === e.id
+                  ? 'bg-gray-800 text-white border-gray-800'
+                  : 'bg-white border-gray-300 hover:border-purple-400 hover:bg-purple-50'
+              }`}
+            >
+              <span class="font-semibold">{e.label}</span>
+              <span class={`text-xs ${ecosystem === e.id ? 'text-gray-300' : 'text-gray-500'}`}>{e.language}</span>
+            </a>
+          ))}
+        </div>
+
+        {searching && (
+          searchResults.length > 0 ? (
+            <>
+              <h2 class="text-xl font-bold text-gray-900 mb-4">
+                {searchTotal === 1 ? `1 match for "${query}"` : `${fmt(searchTotal)} matches for "${query}"`}
+              </h2>
+              <PackageGrid packages={searchResults.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
+            </>
+          ) : (
+            <div class="bg-white border rounded-lg p-6">
+              <h2 class="text-xl font-bold text-gray-900 mb-2">Nothing here matches &ldquo;{query}&rdquo;</h2>
+              <p class="text-gray-700">
+                We cache the most depended-on packages per registry, not every one.
+                <a href="https://packages.ecosyste.ms/critical" class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank">Search the full list on ecosyste.ms &rarr;</a>
+              </p>
+            </div>
+          )
+        )}
+
+        {!searching && browse.length > 0 && (
+          <PackageGrid packages={browse.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
+        )}
+
+        {!searching && featured.length > 0 && (
+          <>
+            <h2 class="text-xl font-bold text-gray-900 mb-1">Or start with these</h2>
+            <p class="text-gray-600 mb-6">Projects you have almost certainly used.</p>
+            <PackageGrid packages={featured.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
+          </>
+        )}
+      </>
+    )}
+
+    {step === 2 && selected && (
+      <>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">What brings you to {selected.name}?</h1>
+        <p class="text-gray-600 mb-8 max-w-2xl">
+          We have ticked what the data shows. Change anything.
+        </p>
+
+        <form method="get" action={selfBase}>
+          <input type="hidden" name="pe" value={selected.ecosystem} />
+          <input type="hidden" name="pn" value={selected.name} />
+          <input type="hidden" name="ms" value="1" />
+
+          <div class="space-y-3 mb-8">
+            {MOTIVATIONS.map((m) => {
+              const why = evidenceById.get(m.id);
+              const checked = activeMotivations.includes(m.id);
+              return (
+                <label class={`flex gap-4 items-start p-5 rounded-lg border cursor-pointer transition-shadow hover:shadow-md ${why ? 'bg-purple-50 border-purple-200' : 'bg-white'}`}>
+                  <input type="checkbox" name="m" value={m.id} checked={checked} class="mt-1 h-4 w-4 shrink-0" />
+                  <span class="min-w-0">
+                    <span class="block text-lg font-semibold text-gray-900">{m.label}</span>
+                    <span class="block text-sm text-gray-600 mt-0.5">{m.question}</span>
+                    {why && (
+                      <span class="inline-block text-xs font-medium text-purple-800 bg-purple-100 border border-purple-200 rounded-full px-2 py-0.5 mt-2">
+                        we see: {why}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          <button type="submit" class="bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm">
+            Continue
+          </button>
+        </form>
+      </>
+    )}
+
+    {step === 3 && selected && (
+      <>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Supporting {selected.name}</h1>
+
+        {services.length > 0 ? (
+          <>
+            <p class="text-gray-600 mb-6 max-w-2xl">
+              {services.length === 1 ? 'This is the work that addresses it.' : 'This is the work that addresses it.'}
+            </p>
+
+            <ul class="space-y-4 mb-10">
+              {services.map((s) => (
+                <li class="bg-white border rounded-lg p-5">
+                  <h2 class="text-lg font-semibold text-gray-900">{s.data.title}</h2>
+                  <p class="text-sm text-gray-600 mt-1">{s.data.description}</p>
+                  <RubricSummary rubric={s.rubric} serviceTitle={s.data.title} />
+                  <a href={`${basePath}services/${s.slug}`} class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-3">
+                    Who does this work &rarr;
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p class="text-gray-700 mb-8">
+            Nothing selected.
+            <a href={stepTwoHref!} class="underline hover:text-gray-900">Go back and pick what brings you here</a>.
+          </p>
+        )}
+
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">How would you invest?</h2>
+        <form method="get" action={selfBase} class="mb-10">
+          <input type="hidden" name="pe" value={selected.ecosystem} />
+          <input type="hidden" name="pn" value={selected.name} />
+          <input type="hidden" name="ms" value="1" />
+          {activeMotivations.map((m) => <input type="hidden" name="m" value={m} />)}
+          <input type="hidden" name="hs" value="1" />
+
+          <div class="space-y-3 mb-6">
+            {INVESTMENT_METHODS.map((m) => (
+              <label class="flex gap-4 items-start bg-white p-5 rounded-lg border cursor-pointer hover:shadow-md transition-shadow">
+                <input type="checkbox" name="method" value={m.id} checked={chosenMethods.includes(m.id)} class="mt-1 h-4 w-4 shrink-0" />
+                <span class="min-w-0">
+                  <span class="block text-lg font-semibold text-gray-900">{m.label}</span>
+                  <span class="block text-sm text-gray-600 mt-0.5">{m.summary}</span>
+                  {m.caveat && m.caveatWhen(selected) && (
+                    <span class="block text-xs text-gray-700 bg-gray-100 border rounded px-2 py-1 mt-2">{m.caveat}</span>
+                  )}
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <button type="submit" class="bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm">
+            {methodsSubmitted ? 'Update summary' : 'Show me the summary'}
+          </button>
+        </form>
+
+        {methodsSubmitted && (
+          <section
+            class="bg-gray-50 border rounded-lg p-6"
+            aria-labelledby="summary"
+            data-summary={JSON.stringify({
+              packageName: selected.name,
+              ecosystem: selected.ecosystem,
+              repositoryUrl: selected.repository_url,
+              motivations: MOTIVATIONS.filter((m) => activeMotivations.includes(m.id)).map((m) => m.label),
+              services: services.map((s) => ({
+                title: s.data.title,
+                outcome: s.data.impact ?? '',
+                rubric: s.rubric
+                  ? `${s.rubric.dimensions.length} dimensions${s.rubric.totalPoints ? `, ${s.rubric.totalPoints} points` : ''}`
+                  : '',
+              })),
+              methods: INVESTMENT_METHODS.filter((m) => chosenMethods.includes(m.id)).map((m) => m.label),
+            })}
+          >
+            <h2 id="summary" class="text-xl font-bold text-gray-900 mb-4">Your plan</h2>
+            <pre id="summary-text" class="whitespace-pre-wrap text-sm text-gray-800 bg-white border rounded p-4 overflow-x-auto"></pre>
+
+            <div class="flex flex-wrap items-center gap-3 mt-4">
+              <button type="button" id="copy-summary" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors text-sm font-medium">
+                Copy
+              </button>
+              <span id="copy-status" class="text-sm text-gray-600" role="status" aria-live="polite"></span>
+            </div>
+
+            <div class="mt-5 pt-4 border-t text-sm text-gray-700">
+              <p class="font-semibold mb-1">Where to take it</p>
+              <p class="text-gray-600">
+                Open Source Wishlist does not arrange any of this. Take it to the project, and to
+                whoever would do the work.
+                {selected.repository_url && (
+                  <>
+                    {' '}<a href={selected.repository_url} class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank">{selected.name} repository &rarr;</a>
+                  </>
+                )}
+              </p>
+            </div>
+          </section>
+        )}
+      </>
+    )}
+
+    </div>
+
+    <DataAttribution />
+  </main>
+</Layout>
+
+<script>
+  /**
+   * Swap wizard steps in place instead of reloading the page.
+   *
+   * Progressive enhancement: the forms and links are ordinary GET forms and
+   * hrefs, so the wizard works with this script disabled. All this does is
+   * fetch the same URL the browser would have navigated to and replace the
+   * wizard body, which keeps the server as the single source of truth for what
+   * each step contains.
+   *
+   * Listeners are delegated from document, so nothing needs rebinding after a
+   * swap. Inline scripts inside swapped HTML never execute, which is why the
+   * summary reads its data from a data attribute rather than being rendered by
+   * a script in the markup.
+   */
+  const WIZARD = '#wizard';
+
+  function renderSummary() {
+    const section = document.querySelector('[data-summary]');
+    if (!section) return;
+
+    let data;
+    try {
+      data = JSON.parse(section.getAttribute('data-summary') || '{}');
+    } catch {
+      return;
+    }
+
+    const lines = [`Package: ${data.packageName} (${data.ecosystem})`];
+    if (data.repositoryUrl) lines.push(`Repository: ${data.repositoryUrl}`);
+    if (data.motivations?.length) lines.push(`Why: ${data.motivations.join(', ')}`);
+
+    if (data.services?.length) {
+      lines.push('', 'Work that addresses it:');
+      for (const s of data.services) {
+        lines.push(`- ${s.title}`);
+        if (s.outcome) lines.push(`  Outcome: ${s.outcome}`);
+        if (s.rubric) lines.push(`  Measured against a peer review rubric (${s.rubric})`);
+      }
+    }
+
+    if (data.methods?.length) {
+      lines.push('', 'How we would invest:');
+      for (const m of data.methods) lines.push(`- ${m}`);
+    }
+
+    const output = section.querySelector('#summary-text');
+    if (output) output.textContent = lines.join('\n');
+  }
+
+  async function swapTo(url, { push = true } = {}) {
+    const wizard = document.querySelector(WIZARD);
+    if (!wizard) return;
+
+    wizard.setAttribute('aria-busy', 'true');
+    wizard.style.opacity = '0.6';
+
+    try {
+      const res = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const html = await res.text();
+      const next = new DOMParser().parseFromString(html, 'text/html').querySelector(WIZARD);
+      if (!next) throw new Error('no wizard in response');
+
+      wizard.innerHTML = next.innerHTML;
+      if (push) history.pushState({}, '', url);
+
+      renderSummary();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      // Fall back to a normal navigation rather than leaving a dead button.
+      window.location.href = url;
+    } finally {
+      wizard.removeAttribute('aria-busy');
+      wizard.style.opacity = '';
+    }
+  }
+
+  const inWizard = (el) => el && el.closest(WIZARD);
+
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest?.('a');
+    if (!link || !inWizard(link) || link.target === '_blank') return;
+
+    const url = new URL(link.href, window.location.origin);
+    // Only intercept our own wizard links; anything else navigates normally.
+    if (url.origin !== window.location.origin || !url.pathname.endsWith('/invest')) return;
+
+    event.preventDefault();
+    swapTo(url.pathname + url.search);
+  });
+
+  document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!inWizard(form)) return;
+
+    // Read the attributes, not the properties. A control named "method" or
+    // "action" shadows the form property of the same name, and step 3 has
+    // checkboxes named "method", so form.method is a RadioNodeList there.
+    const method = (form.getAttribute('method') || 'get').toLowerCase();
+    if (method !== 'get') return;
+
+    event.preventDefault();
+    const action = new URL(form.getAttribute('action') || window.location.pathname, window.location.origin);
+    const params = new URLSearchParams(new FormData(form));
+    swapTo(`${action.pathname}?${params.toString()}`);
+  });
+
+  document.addEventListener('click', async (event) => {
+    if (!event.target.closest?.('#copy-summary')) return;
+    const output = document.querySelector('#summary-text');
+    const status = document.querySelector('#copy-status');
+    if (!output) return;
+
+    try {
+      await navigator.clipboard.writeText(output.textContent ?? '');
+      if (status) status.textContent = 'Copied.';
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(output);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      if (status) status.textContent = 'Select and copy the text above.';
+    }
+  });
+
+  // Back and forward should move through the wizard, not out of it.
+  window.addEventListener('popstate', () => {
+    swapTo(window.location.pathname + window.location.search, { push: false });
+  });
+
+  renderSummary();
+</script>
