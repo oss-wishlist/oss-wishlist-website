@@ -1,0 +1,415 @@
+---
+/**
+ * /fund — browse critical packages worth sponsoring a service for.
+ *
+ * A fresh random set on every load, reshuffled by "show another set". There is
+ * no ranking, no score, no leaderboard and no fixed order: no package sits above
+ * another. Counts in the headline are computed from the data, never hand-edited,
+ * and each one narrows the set rather than just stating a total.
+ */
+import Layout from '../components/Layout.astro';
+import PackageGrid from '../components/PackageGrid.astro';
+import DataAttribution from '../components/DataAttribution.astro';
+import { getBasePath } from '../lib/paths';
+import {
+  samplePackages,
+  presentPackage,
+  getPool,
+  getHeadlinePool,
+  getEcosystemCounts,
+  getFeaturedPackages,
+  criticalListUrl,
+  searchPackages,
+  countSearchMatches,
+  parseFilters,
+  isEcosystemId,
+  ECOSYSTEMS,
+  FILTERS,
+} from '../lib/critical-packages';
+import { SAMPLE_SIZE } from '../../config/data-sources.js';
+
+export const prerender = false;
+
+const basePath = getBasePath();
+
+/**
+ * The registry comes first: the visitor says where they work before being shown
+ * anything. Without one, the page is the question and nothing else.
+ */
+const requestedEcosystem = Astro.url.searchParams.get('ecosystem');
+const ecosystem = isEcosystemId(requestedEcosystem) ? requestedEcosystem : null;
+const ecosystemMeta = ECOSYSTEMS.find((e) => e.id === ecosystem) ?? null;
+const ecosystemCounts = getEcosystemCounts();
+
+// A typed query searches by name across the cache. It runs against bundled data,
+// so it costs nothing beyond the render.
+const query = (Astro.url.searchParams.get('q') ?? '').trim();
+const searching = query.length >= 2;
+const searchResults = searching
+  ? searchPackages(query, ecosystem).map(presentPackage)
+  : [];
+const searchTotal = searching ? countSearchMatches(query, ecosystem) : 0;
+
+// Filters combine, so several can be on at once and they narrow together.
+const active = parseFilters(Astro.url.searchParams.getAll('flag'));
+
+// Unfiltered, sample from the flagged-and-widely-used pool for this registry.
+// A filter means the visitor asked a specific question, so answer it exactly.
+const pool = active.length > 0 ? getPool(active, ecosystem) : getHeadlinePool(ecosystem);
+const packages = ecosystem ? samplePackages(SAMPLE_SIZE, pool).map(presentPackage) : [];
+
+// The landing view: a hand-picked set of well-known projects, so there is
+// something worth looking at before any choice is made.
+const featured = ecosystem || searching ? [] : getFeaturedPackages().map(presentPackage);
+
+/** Query string carrying the registry and any active filters. */
+const queryFor = (ids: string[]) => {
+  const parts = [...(ecosystem ? [`ecosystem=${ecosystem}`] : []), ...ids.map((f) => `flag=${f}`)];
+  return parts.length ? `?${parts.join('&')}` : '';
+};
+
+const fmt = (n: number) => n.toLocaleString('en-US');
+
+/**
+ * Each filter states its own count, and only appears when that count is above
+ * zero. Some registries report no sole-maintainer data at all, so a filter built
+ * blindly could offer "0 maintained by one person" — an empty number is an
+ * argument against the point this page exists to make.
+ */
+const filters = FILTERS.map((f) => {
+  const isActive = active.includes(f.id);
+  // Toggling this chip gives this set...
+  const next = isActive ? active.filter((id) => id !== f.id) : [...active, f.id];
+  // ...and this many packages. Showing the resulting number rather than the
+  // flag's own total makes the effect of combining filters legible before
+  // anyone clicks: "no funding link 2,947" alone, but "268" once
+  // "one maintainer" is already on.
+  const resulting = getPool(parseFilters(next), ecosystem).length;
+  return {
+    ...f,
+    isActive,
+    resulting,
+    total: getPool([f.id], ecosystem).length,
+    href: `${basePath}fund${queryFor(next)}`,
+  };
+}).filter((f) => f.total > 0);
+
+const activeLabels = FILTERS.filter((f) => active.includes(f.id)).map((f) =>
+  f.label.toLowerCase()
+);
+
+const clearHref = `${basePath}fund${ecosystem ? `?ecosystem=${ecosystem}` : ''}`;
+---
+
+<Layout
+  title="Sponsor a service | OSS Wishlist"
+  description="Critical open source packages, and the services that might help the people maintaining them."
+>
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    {!ecosystem ? (
+      <>
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">
+          Find a critical package you want to help with
+        </h1>
+
+        <form method="get" action={`${basePath}fund`} class="mb-6" role="search">
+          <div class="flex flex-wrap gap-3">
+            <input
+              type="search"
+              name="q"
+              value={query}
+              placeholder="Search by name, e.g. lodash, requests, nokogiri"
+              aria-label="Search packages by name"
+              autocomplete="off"
+              class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button
+              type="submit"
+              class="bg-gray-800 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+
+        {searching ? (
+          <section class="mb-10">
+            {searchResults.length > 0 ? (
+              <>
+                <h2 class="text-xl font-bold text-gray-900 mb-1">
+                  {searchTotal === 1
+                    ? `1 package matching "${query}"`
+                    : `${fmt(searchTotal)} packages matching "${query}"`}
+                </h2>
+                {searchTotal > searchResults.length && (
+                  <p class="text-sm text-gray-600 mb-4">
+                    Showing the closest {searchResults.length}.
+                  </p>
+                )}
+                <div class="mt-4">
+                  <PackageGrid packages={searchResults} />
+                </div>
+              </>
+            ) : (
+              <div class="bg-white border rounded-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-2">
+                  Nothing here matches &ldquo;{query}&rdquo;
+                </h2>
+                <p class="text-gray-700">
+                  We cache the most depended-on packages per registry, not every one, so plenty
+                  of real projects will not be here.
+                  <a
+                    href={criticalListUrl(null)}
+                    class="underline hover:text-gray-900"
+                    rel="noopener noreferrer"
+                    target="_blank">Search the full list on ecosyste.ms &rarr;</a
+                  >
+                </p>
+              </div>
+            )}
+          </section>
+        ) : null}
+
+        {/*
+          The registry choice sits above the fold. It was previously below
+          thirteen cards, where nobody scrolled far enough to find it.
+        */}
+        <p class="text-gray-700 mb-2">Or start with your package manager:</p>
+        <div class="flex flex-wrap gap-2 mb-8" role="group" aria-label="Choose a package manager">
+          {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
+            <a
+              href={`${basePath}fund?ecosystem=${e.id}`}
+              class="inline-flex items-baseline gap-2 bg-white border border-gray-300 rounded-full px-4 py-2 hover:border-purple-400 hover:bg-purple-50 transition-colors"
+            >
+              <span class="font-semibold text-gray-900">{e.label}</span>
+              <span class="text-xs text-gray-500">{e.language}</span>
+            </a>
+          ))}
+        </div>
+
+        {featured.length > 0 && (
+          <>
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">Or start with these</h2>
+            <p class="text-gray-600 mb-6">
+              Projects you have almost certainly used, and what they are carrying.
+            </p>
+            <PackageGrid packages={featured} />
+
+            <p class="text-sm text-gray-600 mt-8">
+              <a
+                href={criticalListUrl(null)}
+                class="underline hover:text-gray-900"
+                rel="noopener noreferrer"
+                target="_blank">See the full critical list on ecosyste.ms &rarr;</a
+              >
+            </p>
+          </>
+        )}
+      </>
+    ) : (
+      <>
+        <nav class="mb-4">
+          <a href={`${basePath}fund`} class="text-sm text-gray-600 hover:text-gray-900 underline"
+            >&larr; Choose a different package manager</a
+          >
+        </nav>
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">
+          Critical packages on {ecosystemMeta?.label}
+        </h1>
+
+        <form method="get" action={`${basePath}fund`} class="mb-6" role="search">
+          {/* Keeps the visitor in the registry they chose while searching. */}
+          <input type="hidden" name="ecosystem" value={ecosystem} />
+          <div class="flex flex-wrap gap-3">
+            <input
+              type="search"
+              name="q"
+              value={query}
+              placeholder={`Search ${ecosystemMeta?.label} by name`}
+              aria-label={`Search ${ecosystemMeta?.label} packages by name`}
+              autocomplete="off"
+              class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button
+              type="submit"
+              class="bg-gray-800 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+
+        {searching && (
+          <section class="mb-10">
+            {searchResults.length > 0 ? (
+              <>
+                <h2 class="text-xl font-bold text-gray-900 mb-1">
+                  {searchTotal === 1
+                    ? `1 match for "${query}"`
+                    : `${fmt(searchTotal)} matches for "${query}"`}
+                </h2>
+                {searchTotal > searchResults.length && (
+                  <p class="text-sm text-gray-600 mb-4">
+                    Showing the closest {searchResults.length}.
+                  </p>
+                )}
+                <div class="mt-4">
+                  <PackageGrid packages={searchResults} />
+                </div>
+              </>
+            ) : (
+              <div class="bg-white border rounded-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-2">
+                  No {ecosystemMeta?.label} package here matches &ldquo;{query}&rdquo;
+                </h2>
+                <p class="text-gray-700">
+                  We cache the most depended-on packages per registry, not every one.
+                  <a
+                    href={criticalListUrl(ecosystem)}
+                    class="underline hover:text-gray-900"
+                    rel="noopener noreferrer"
+                    target="_blank">Search the full list on ecosyste.ms &rarr;</a
+                  >
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        <p class="text-lg text-gray-700 mb-5 max-w-3xl">
+          {packages.length} picked at random from the most widely used, as defined by
+          <a
+            href="https://ecosyste.ms"
+            class="underline hover:text-gray-900"
+            rel="noopener noreferrer"
+            target="_blank">ecosyste.ms</a
+          >.
+        </p>
+
+        {filters.length > 0 && (
+          <div class="mb-8">
+            {/*
+              No visible heading: the chips read as filters on sight. The group is
+              named for assistive technology only, which would otherwise meet three
+              unexplained pills.
+            */}
+            <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filter packages">
+              {filters.map((f) => (
+                <a
+                  href={f.href}
+                  aria-pressed={f.isActive ? 'true' : 'false'}
+                  class={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                    f.isActive
+                      ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-700'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  {f.label}{' '}
+                  {f.isActive ? (
+                    <span aria-hidden="true">&times;</span>
+                  ) : (
+                    <span class="opacity-70">{fmt(f.resulting)}</span>
+                  )}
+                </a>
+              ))}
+
+              {active.length > 0 && (
+                <a href={clearHref} class="text-sm text-gray-600 hover:text-gray-900 underline ml-1"
+                  >Clear all</a
+                >
+              )}
+            </div>
+
+            {active.length > 0 && (
+              <p
+                aria-live="polite"
+                class="inline-block mt-3 rounded-lg px-4 py-2 text-sm border bg-purple-50 border-purple-300 text-purple-900"
+              >
+                Showing <span class="font-bold">{packages.length}</span> of {fmt(pool.length)} with
+                {' '}{activeLabels.join(' and ')}.
+              </p>
+            )}
+
+            {active.includes('sole_maintainer') && (
+              <p class="text-xs text-gray-500 mt-1 max-w-3xl">
+                Go and Maven have no registry maintainer accounts, so their packages cannot
+                appear here either way.
+              </p>
+            )}
+          </div>
+        )}
+
+        {searching ? null : packages.length > 0 ? (
+          <>
+            <div id="package-set">
+              <PackageGrid packages={packages} />
+            </div>
+
+            <div class="flex flex-col items-center gap-3 mt-8">
+              <button
+                id="reshuffle"
+                type="button"
+                class="inline-flex items-center gap-2 bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm disabled:opacity-60"
+              >
+                Show me another {SAMPLE_SIZE}
+              </button>
+              {/*
+                We cache a slice of the critical list, so anyone who wants the
+                whole thing goes to the source rather than being offered a
+                directory here.
+              */}
+              <a
+                href={criticalListUrl(ecosystem)}
+                class="text-sm text-gray-600 hover:text-gray-900 underline"
+                rel="noopener noreferrer"
+                target="_blank"
+                >See the full {ecosystemMeta?.label} list on ecosyste.ms &rarr;</a
+              >
+            </div>
+
+            <p id="reshuffle-error" class="text-sm text-gray-600 mt-3 text-center" hidden>
+              Could not load another set just now. Reload the page to see different packages.
+            </p>
+          </>
+        ) : (
+          <p class="text-gray-700">
+            Nothing matches that combination on {ecosystemMeta?.label}.
+            <a href={clearHref} class="underline hover:text-gray-900">Clear the filters</a> to see
+            the rest.
+          </p>
+        )}
+      </>
+    )}
+
+    <DataAttribution />
+  </main>
+</Layout>
+
+<script
+  define:vars={{
+    sampleUrl: `${basePath}fund/sample${queryFor(active)}`,
+  }}
+>
+  // "Show another set" swaps in a freshly sampled grid rendered by the server,
+  // so the cards stay in one place (PackageCard.astro) rather than being
+  // duplicated in client-side markup. The active filter travels with the request.
+  const button = document.getElementById('reshuffle');
+  const target = document.getElementById('package-set');
+  const errorLine = document.getElementById('reshuffle-error');
+
+  button?.addEventListener('click', async () => {
+    button.disabled = true;
+    errorLine.hidden = true;
+
+    try {
+      const res = await fetch(sampleUrl, { headers: { 'X-Requested-With': 'fetch' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      target.innerHTML = await res.text();
+    } catch {
+      errorLine.hidden = false;
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>

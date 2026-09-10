@@ -1,0 +1,34 @@
+---
+/**
+ * HTML fragment for /fund's "show another set" button — a freshly sampled grid
+ * and nothing else. Exists so the card markup lives in exactly one place.
+ *
+ * Not a destination: it renders no layout and is excluded from the sitemap.
+ */
+import PackageGrid from '../../components/PackageGrid.astro';
+import {
+  samplePackages,
+  presentPackage,
+  getPool,
+  getHeadlinePool,
+  parseFilters,
+  isEcosystemId,
+} from '../../lib/critical-packages';
+import { SAMPLE_SIZE } from '../../../config/data-sources.js';
+
+export const prerender = false;
+
+// The active filter travels with the request, so reshuffling keeps the set the
+// visitor narrowed to rather than silently widening back out.
+const requested = Astro.url.searchParams.get('ecosystem');
+const ecosystem = isEcosystemId(requested) ? requested : null;
+const active = parseFilters(Astro.url.searchParams.getAll('flag'));
+const pool = active.length > 0 ? getPool(active, ecosystem) : getHeadlinePool(ecosystem);
+const packages = samplePackages(SAMPLE_SIZE, pool).map(presentPackage);
+
+// Each request must produce a new set, so nothing may cache this.
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex');
+---
+
+<PackageGrid packages={packages} />

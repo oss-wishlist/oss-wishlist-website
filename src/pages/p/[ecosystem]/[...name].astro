@@ -1,0 +1,358 @@
+---
+/**
+ * /p/:ecosystem/:name — the permanent page for one cached package.
+ *
+ * Facts, the services that address them, and links out. This site does not
+ * broker anything: the practitioners are on the service pages, the maintainers
+ * are on their own repository, and the visitor goes to both directly.
+ *
+ * A rest parameter is used for the name because package names legitimately
+ * contain slashes (npm scopes like @babel/core, Go module paths, Packagist
+ * vendor/package) and colons (Maven group:artifact).
+ */
+import Layout from '../../../components/Layout.astro';
+import ServiceSelector from '../../../components/ServiceSelector.astro';
+import DataAttribution from '../../../components/DataAttribution.astro';
+import { getBasePath } from '../../../lib/paths';
+import { getPackage, packageHref } from '../../../lib/critical-packages';
+import { checkRepositoryForPackage } from '../../../lib/dependency-check';
+import { labelsFor } from '../../../../config/service-map.js';
+
+export const prerender = false;
+
+const basePath = getBasePath();
+const { ecosystem, name } = Astro.params;
+
+// The rest parameter arrives encoded; opted-out packages are already absent
+// from getPackage(), so they 404 here exactly as they vanish everywhere else.
+const decodedName = decodeURIComponent(name ?? '');
+const pkg = ecosystem ? getPackage(decodeURIComponent(ecosystem), decodedName) : undefined;
+
+if (!pkg) {
+  return new Response(null, { status: 404, statusText: 'Package not found' });
+}
+
+const facts = labelsFor(pkg) as string[];
+
+// Only maintainers we can actually name. Anyone whose registry login was an
+// email address was dropped at fetch time and is simply absent here.
+const maintainers = (pkg.maintainers ?? []).filter((m) => m.login || m.name);
+
+// Older cached records predate advisory details, so guard rather than assume.
+const advisories = (pkg.advisories ?? []).filter((a) => a.url || a.id);
+
+// Zero is treated as "no figure to show" rather than printed: some records
+// report 0 dependents or 0 downloads, and this site never displays an empty count.
+const fmt = (n: number | null) =>
+  typeof n === 'number' && n > 0 ? n.toLocaleString('en-US') : null;
+const dependents = fmt(pkg.dependent_repos_count);
+const downloads = fmt(pkg.downloads);
+
+const lastRelease = pkg.latest_release_published_at
+  ? new Date(pkg.latest_release_published_at)
+  : null;
+const lastReleaseLabel =
+  lastRelease && !Number.isNaN(lastRelease.getTime())
+    ? lastRelease.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+const correctionUrl =
+  'https://github.com/oss-wishlist/oss-wishlist-website/issues/new' +
+  `?template=package-correction.yml&title=${encodeURIComponent(`[package] ${pkg.name}`)}`;
+
+/**
+ * "Do you depend on this package?" — asked and answered on the package page
+ * itself, so the question is about the package in front of you rather than a
+ * separate site-wide report. Nothing is stored and no result is recorded.
+ */
+const submittedRepo = Astro.url.searchParams.get('repo')?.trim() ?? '';
+const dependencyCheck = submittedRepo
+  ? await checkRepositoryForPackage(submittedRepo, pkg.ecosystem, pkg.name)
+  : null;
+
+const checkProblem =
+  dependencyCheck && dependencyCheck.status !== 'ok'
+    ? (dependencyCheck as Extract<typeof dependencyCheck, { message: string }>).message
+    : null;
+
+// The form posts back to this same page, so the answer appears in context.
+const selfPath = `${basePath}${packageHref(pkg).replace(/^\//, '')}`;
+---
+
+<Layout
+  title={`${pkg.name} | OSS Wishlist`}
+  description={pkg.description ?? `Services that might help ${pkg.name}.`}
+>
+  <main class="max-w-4xl mx-auto px-4 py-12">
+    <nav class="mb-6">
+      <a href={`${basePath}fund`} class="text-sm text-gray-600 hover:text-gray-900 underline"
+        >&larr; Browse packages</a
+      >
+    </nav>
+
+    <div class="flex items-baseline flex-wrap gap-3 mb-3">
+      <h1 class="text-3xl font-bold text-gray-900 break-all">
+        {pkg.repository_url ? (
+          <a
+            href={pkg.repository_url}
+            class="hover:underline decoration-2 underline-offset-4"
+            rel="noopener noreferrer"
+            target="_blank"
+            title={`Open the ${pkg.name} project`}>{pkg.name}</a
+          >
+        ) : (
+          pkg.name
+        )}
+      </h1>
+      <span class="text-sm font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded"
+        >{pkg.ecosystem}</span
+      >
+    </div>
+
+    {pkg.description && <p class="text-lg text-gray-700 mb-6">{pkg.description}</p>}
+
+    <section class="mb-8 bg-white border rounded-lg p-6" aria-labelledby="depend-check">
+      <h2 id="depend-check" class="text-2xl font-bold text-gray-900 mb-2">
+        See if you depend on this package
+      </h2>
+      <p class="text-gray-600 mb-4 max-w-3xl">
+        Paste one of your repositories and we will tell you whether it depends on
+        <span class="font-semibold">{pkg.name}</span>. Nothing is stored.
+      </p>
+
+      <form method="get" action={selfPath}>
+        <label for="repo" class="block text-sm font-semibold text-gray-900 mb-2">
+          Repository URL
+        </label>
+        <div class="flex flex-wrap gap-3">
+          <input
+            type="text"
+            id="repo"
+            name="repo"
+            value={submittedRepo}
+            placeholder="https://github.com/owner/repo"
+            required
+            autocomplete="off"
+            spellcheck="false"
+            class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          />
+          <button
+            type="submit"
+            class="bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+          >
+            Check
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">GitHub, GitLab and Codeberg. Public repositories only.</p>
+      </form>
+
+      {checkProblem && <p class="mt-4 text-gray-800">{checkProblem}</p>}
+
+      {dependencyCheck?.status === 'ok' && (
+        <div
+          id="depend-result"
+          role="status"
+          aria-live="polite"
+          class={`mt-6 rounded-xl border-2 p-6 ${
+            dependencyCheck.dependsOn
+              ? 'border-purple-500 bg-purple-50 shadow-md'
+              : 'border-gray-300 bg-gray-50'
+          }`}
+        >
+          <p
+            class={`text-3xl font-extrabold mb-2 ${
+              dependencyCheck.dependsOn ? 'text-purple-700' : 'text-gray-900'
+            }`}
+          >
+            {dependencyCheck.dependsOn ? 'Yes' : 'No'}
+          </p>
+          <p class="text-lg text-gray-800">
+            {dependencyCheck.dependsOn ? (
+              <>
+                <span class="font-semibold">{dependencyCheck.repo.label}</span> depends on
+                <span class="font-semibold"> {pkg.name}</span>.
+              </>
+            ) : (
+              <>
+                We read {dependencyCheck.dependencyCount.toLocaleString('en-US')} dependencies for
+                <span class="font-semibold"> {dependencyCheck.repo.label}</span> and {pkg.name} is
+                not among them.
+              </>
+            )}
+          </p>
+
+          {dependencyCheck.dependsOn ? (
+            <a
+              href="#suggested-services"
+              class="inline-block bg-purple-600 text-white px-5 py-2 rounded mt-4 hover:bg-purple-700 transition-colors text-sm font-semibold"
+              >See what might help &darr;</a
+            >
+          ) : (
+            <a
+              href={`${basePath}fund`}
+              class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-3"
+              >Browse other critical packages &rarr;</a
+            >
+          )}
+        </div>
+      )}
+    </section>
+
+    <script>
+      // Bring the answer into view after a check. The form is a plain GET, so
+      // the page reloads at the top and the result would otherwise be easy to
+      // miss on a long package page.
+      const result = document.getElementById('depend-result');
+      if (result) {
+        result.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    </script>
+
+
+    <dl class="grid gap-4 sm:grid-cols-2 bg-white border rounded-lg p-6 mb-6">
+      {dependents && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Dependent repositories</dt>
+          <dd class="text-lg font-semibold text-gray-900">{dependents}</dd>
+        </div>
+      )}
+      {downloads && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Downloads</dt>
+          <dd class="text-lg font-semibold text-gray-900">{downloads}</dd>
+        </div>
+      )}
+      {lastReleaseLabel && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Latest release</dt>
+          <dd class="text-lg font-semibold text-gray-900">{lastReleaseLabel}</dd>
+        </div>
+      )}
+      {pkg.licenses && (
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Licence</dt>
+          <dd class="text-lg font-semibold text-gray-900 break-all">{pkg.licenses}</dd>
+        </div>
+      )}
+    </dl>
+
+    {facts.length > 0 && (
+      <section class="mb-6">
+        <h2 class="text-sm uppercase tracking-wide text-gray-500 mb-2">What the data shows</h2>
+        <ul class="flex flex-wrap gap-2">
+          {facts.map((fact) => (
+            <li
+              class="text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full"
+            >
+              {fact}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {advisories.length > 0 && (
+      <section class="mb-8" aria-labelledby="security-issues">
+        <h2 id="security-issues" class="text-xl font-bold text-gray-900 mb-1">
+          Known security issues
+        </h2>
+        <p class="text-sm text-gray-600 mb-4 max-w-3xl">
+          Problems that were found, reported publicly and written up, so anyone using this
+          package can see them. Being listed here is normal, and usually a sign the project
+          handled things in the open.
+        </p>
+
+        <ul class="space-y-2">
+          {advisories.map((a) => (
+            <li class="bg-white border rounded-lg p-4">
+              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                {a.severity && (
+                  <span class="text-xs font-semibold uppercase tracking-wide text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">
+                    {a.severity.toLowerCase()}
+                  </span>
+                )}
+                <span class="text-gray-900 font-medium">{a.title ?? a.cve ?? a.id}</span>
+              </div>
+              <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
+                {a.url && (
+                  <a
+                    href={a.url}
+                    class="text-gray-600 hover:text-gray-900 underline"
+                    rel="noopener noreferrer"
+                    target="_blank">Read the advisory &rarr;</a
+                  >
+                )}
+                {a.cve && <span class="text-gray-500">{a.cve}</span>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <div class="flex flex-wrap gap-4 mb-2">
+      {pkg.repository_url && (
+        <a
+          href={pkg.repository_url}
+          class="text-sm text-gray-600 hover:text-gray-900 underline"
+          rel="noopener noreferrer"
+          target="_blank">Repository &rarr;</a
+        >
+      )}
+      {pkg.funding_links?.map((link) => (
+        <a
+          href={link}
+          class="text-sm text-gray-600 hover:text-gray-900 underline"
+          rel="noopener noreferrer"
+          target="_blank">Funding link &rarr;</a
+        >
+      ))}
+    </div>
+
+    <ServiceSelector pkg={pkg} />
+
+    {maintainers.length > 0 && (
+      <section class="mt-10" aria-labelledby="reach-out">
+        <h2 id="reach-out" class="text-2xl font-bold text-gray-900 mb-2">Reaching out</h2>
+        <p class="text-gray-600 mb-4 max-w-3xl">
+          Open Source Wishlist does not contact maintainers and does not arrange anything. If
+          you want to help, go to them directly. You can offer to fund the work, or simply ask
+          whether a practitioner&rsquo;s help would be useful. Don&rsquo;t guess, ask.
+        </p>
+
+        <ul class="flex flex-wrap gap-3 mb-4">
+          {maintainers.map((person) => (
+            <li>
+              {person.profile_url ? (
+                <a
+                  href={person.profile_url}
+                  class="inline-block text-sm text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                  rel="noopener noreferrer"
+                  target="_blank">{person.name || person.login} &rarr;</a
+                >
+              ) : (
+                <span
+                  class="inline-block text-sm text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full"
+                  >{person.name || person.login}</span
+                >
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <p class="text-sm text-gray-500 max-w-3xl">
+          Profiles link to each maintainer&rsquo;s public registry page. We publish no contact
+          details of our own.
+        </p>
+      </section>
+    )}
+
+    <p class="text-sm text-gray-600 mt-10 pt-6 border-t">
+      <a href={correctionUrl} class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank"
+        >I maintain this package</a
+      >. Ask for a correction, or to have it removed. Removal needs no reason.
+    </p>
+
+    <DataAttribution />
+  </main>
+</Layout>

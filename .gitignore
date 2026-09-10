@@ -122,3 +122,7 @@ CODE_REVIEW_FINDINGS.md
 
 # Database seed files (local use only)
 database/*-seed.sql
+
+# Local test/scratch output
+vitest-out.txt
+vt.txt

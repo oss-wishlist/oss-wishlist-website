@@ -1,98 +1,85 @@
 ---
+/**
+ * /maintainers — the services available to people maintaining a project.
+ *
+ * This was previously "My Wishlists" and required a login to see anything. It
+ * now shows the maintainer-facing half of the catalog, which needs no account:
+ * the services already carry their own descriptions, outcomes and practitioners.
+ */
 import Layout from '../components/Layout.astro';
 import ServiceCard from '../components/ServiceCard.astro';
-import YourWishlistsGrid from '../components/YourWishlistsGrid.tsx';
 import { getCollection } from 'astro:content';
 import { getBasePath } from '../lib/paths';
+import { withSlug } from '../lib/entry-slug';
 
-const services = await getCollection('services');
-const maintainerServices = services.filter(service => 
-  service.data.target_audience === 'maintainer' || service.data.target_audience === 'both'
-);
-
-// Get user from middleware
-const user = Astro.locals.user;
 const basePath = getBasePath();
 
-// Handle authentication redirect server-side to prevent flash
-if (!user) {
-  const currentPath = Astro.url.pathname;
-  const searchParams = Astro.url.search;
-  
-  // Strip the base path if it exists to get the relative path
-  let relativePath = currentPath.startsWith(basePath.slice(0, -1)) 
-    ? currentPath.slice(basePath.slice(0, -1).length)
-    : currentPath;
-  
-  // Ensure relativePath starts with /
-  if (relativePath && !relativePath.startsWith('/')) {
-    relativePath = '/' + relativePath;
-  }
-  if (!relativePath) {
-    relativePath = '/';
-  }
-  
-  // Redirect to login page with return URL
-  const fullReturnPath = relativePath + searchParams;
-  const returnTo = encodeURIComponent(fullReturnPath);
-  return Astro.redirect(`${basePath}login?returnTo=${returnTo}`);
-}
+const services = (await getCollection('services')).map(withSlug);
+const maintainerServices = services.filter(
+  (service) =>
+    service.data.target_audience === 'maintainer' || service.data.target_audience === 'both'
+);
 ---
 
-<Layout title="Services for Open Source Maintainers - OSS Wishlist" description="Practitioner services to help open source maintainers scale projects, build communities, and create sustainable funding.">
-  <!-- Hero Section -->
+<Layout
+  title="Services for Open Source Maintainers - OSS Wishlist"
+  description="Practitioner services to help open source maintainers scale projects, build communities, and create sustainable funding."
+>
   <section class="bg-gray-50 py-12" id="hero-section">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Breadcrumb -->
-      <nav class="mb-4 text-sm text-gray-500" aria-label="Breadcrumb">
-        <a href={`${basePath}wishlists`} class="hover:text-gray-800">&larr; Wishlists</a>
-      </nav>
       <div class="max-w-4xl mx-auto text-center">
         <h1 class="text-5xl font-bold text-gray-900 mb-4" id="page-title">
-          My <span class="text-accent">Wishlists</span>
+          Support for <span class="text-accent">maintainers</span>
         </h1>
-        <p class="text-gray-600 text-base" id="page-description">
-          Manage your open source project wishlists. View, edit, or create new wishes below.
+        <p class="text-gray-600 text-base">
+          Work that other people can take off your plate: governance, funding, security,
+          succession, release load. Each one has practitioners who do it.
         </p>
       </div>
     </div>
   </section>
 
-  <!-- Your Wishlists Grid Section -->
-  <section id="your-wishlists-section" class="py-12 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <YourWishlistsGrid client:load user={user} />
+  {maintainerServices.length > 0 && (
+    <section class="py-12 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {maintainerServices.map((service) => (
+            <ServiceCard
+              title={service.data.title}
+              description={service.data.description}
+              slug={service.slug}
+              type={service.data.type}
+              available={service.data.available}
+              unavailable_reason={service.data.unavailable_reason}
+              impact={service.data.impact}
+            />
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
-  <!-- Create New Wishlist CTA Section -->
-  <section id="create-wishlist-cta" class="py-12 bg-gray-50">
+  <section class="py-12 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">
-          Create a New Wishlist
-        </h2>
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Looking for a package to support?</h2>
         <p class="text-gray-600 text-base mb-8">
-          Need sustainability support for your project? Create a wishlist to connect with practitioners who can help.
+          Browse critical packages and the services that might help them, or check which ones
+          your own project already depends on.
         </p>
-        <a 
-          href={`${basePath}create-wishlist`}
-          class="btn-sparkle inline-flex items-center"
-        >
-          <svg class="btn-sparkle-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          <span class="btn-sparkle-text">Create Your Wishlist</span>
-          <div class="btn-sparkle-particles">
-            <span class="btn-sparkle-particle"></span>
-            <span class="btn-sparkle-particle"></span>
-            <span class="btn-sparkle-particle"></span>
-          </div>
-        </a>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a
+            href={`${basePath}fund`}
+            class="inline-block bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+            >Browse packages</a
+          >
+          <a
+            href={`${basePath}check`}
+            class="inline-block border border-gray-400 text-gray-700 px-5 py-2 rounded hover:bg-gray-100 transition-colors text-sm font-medium"
+            >Check your dependencies</a
+          >
+        </div>
       </div>
     </div>
   </section>
-
 </Layout>

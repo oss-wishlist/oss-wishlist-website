@@ -1,0 +1,138 @@
+---
+/**
+ * /check — "do you depend on this?"
+ *
+ * One field: paste a repository URL. The lookup runs on the server, nothing is
+ * stored, and no result is recorded. Zero matches is a normal answer, not an
+ * error.
+ */
+import Layout from '../components/Layout.astro';
+import PackageGrid from '../components/PackageGrid.astro';
+import DataAttribution from '../components/DataAttribution.astro';
+import { getBasePath } from '../lib/paths';
+import { checkRepository } from '../lib/dependency-check';
+import { presentPackage, getCounts } from '../lib/critical-packages';
+
+export const prerender = false;
+
+const basePath = getBasePath();
+const submitted = Astro.url.searchParams.get('repo') ?? '';
+const result = submitted ? await checkRepository(submitted) : null;
+
+const fmt = (n: number) => n.toLocaleString('en-US');
+const counts = getCounts();
+
+const matches = result?.status === 'ok' ? result.matches : [];
+const presented = matches.map(presentPackage);
+
+// Only state a figure that is above zero: "0 are maintained by one person" is
+// noise, and the absence of a line says the same thing more honestly.
+const breakdown =
+  result?.status === 'ok'
+    ? ([
+        matches.filter((p) => p.sole_maintainer).length > 0 &&
+          `${fmt(matches.filter((p) => p.sole_maintainer).length)} maintained by one person.`,
+        matches.filter((p) => p.unfunded).length > 0 &&
+          `${fmt(matches.filter((p) => p.unfunded).length)} have no funding link.`,
+        matches.filter((p) => p.quiet).length > 0 &&
+          `${fmt(matches.filter((p) => p.quiet).length)} have not had a release in 18 months.`,
+      ].filter(Boolean) as string[])
+    : [];
+
+const problem =
+  result && result.status !== 'ok'
+    ? (result as Extract<typeof result, { message: string }>).message
+    : null;
+---
+
+<Layout
+  title="Do you depend on this? | OSS Wishlist"
+  description="Paste a repository and see which of its dependencies are critical packages."
+>
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold text-gray-900 mb-3">Do you depend on this?</h1>
+    <p class="text-lg text-gray-700 mb-8 max-w-3xl">
+      Paste a repository and we will show which of its dependencies are among the
+      {fmt(counts.total)} critical packages we track. Nothing is stored and nothing is sent anywhere.
+    </p>
+
+    <form method="get" action={`${basePath}check`} class="mb-10">
+      <label for="repo" class="block text-sm font-semibold text-gray-900 mb-2">
+        Repository URL
+      </label>
+      <div class="flex flex-wrap gap-3">
+        <input
+          type="text"
+          id="repo"
+          name="repo"
+          value={submitted}
+          placeholder="https://github.com/owner/repo"
+          required
+          autocomplete="off"
+          spellcheck="false"
+          class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400"
+        />
+        <button
+          type="submit"
+          class="bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+        >
+          Check
+        </button>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">GitHub, GitLab and Codeberg. Public repositories only.</p>
+    </form>
+
+    {problem && (
+      <div class="bg-white border rounded-lg p-6 mb-8">
+        <p class="text-gray-800">{problem}</p>
+        <a
+          href={`${basePath}fund`}
+          class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-3"
+          >Browse critical packages instead &rarr;</a
+        >
+      </div>
+    )}
+
+    {result?.status === 'ok' && (
+      <section>
+        {matches.length > 0 ? (
+          <>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">
+              {result.repo.label} depends on {fmt(matches.length)}
+              {matches.length === 1 ? ' package' : ' packages'} we track as critical
+            </h2>
+            {breakdown.length > 0 && (
+              <p class="text-lg text-gray-700 mb-2">{breakdown.join(' ')}</p>
+            )}
+            <p class="text-gray-600 mb-8 max-w-3xl">
+              Out of {fmt(result.dependencyCount)} dependencies we could read. Choose a package
+              to see which services might help and who does that work.
+            </p>
+
+            <PackageGrid packages={presented} />
+          </>
+        ) : (
+          <div class="bg-white border rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">
+              None of {result.repo.label}&rsquo;s dependencies are in the set we track
+            </h2>
+            <p class="text-gray-700">
+              {result.dependencyCount > 0
+                ? `We read ${fmt(result.dependencyCount)} dependencies and none of them are among the ${fmt(counts.total)} critical packages cached here.`
+                : `We could read its manifests but found no dependencies listed in them.`}
+              {' '}That is a normal result. The cache covers the most depended-on packages
+              per registry, not everything.
+            </p>
+            <a
+              href={`${basePath}fund`}
+              class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-3"
+              >Browse critical packages instead &rarr;</a
+            >
+          </div>
+        )}
+      </section>
+    )}
+
+    <DataAttribution />
+  </main>
+</Layout>

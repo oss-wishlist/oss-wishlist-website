@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 /**
  * API Endpoint Tests - Comprehensive Coverage
  * 
  * Tests for key API endpoints:
  * - /api/submit-practitioner
- * - /api/fulfill-wishlist  
- * - /api/get-wishlist
- * - /api/check-existing-wishlists
- * - /api/submit-wishlist
+ * - /api/submit-practitioner
+ * - /api/practitioner
+ * - /api/practitioners
+ * - /api/contact
  * 
  * Covers request validation, response format, security, and error handling
  */
@@ -18,19 +20,16 @@ describe('API Endpoints - Request Validation', () => {
     global.fetch = vi.fn();
   });
 
-  it('should validate JSON body parsing for all POST endpoints', () => {
-    const endpoints = [
-      '/api/submit-practitioner',
-      '/api/submit-wishlist',
-      '/api/fulfill-wishlist',
-      '/api/check-existing-wishlists',
-      '/api/close-wishlist',
-    ];
+  it('should back every POST endpoint with a route file', () => {
+    // The old version of this test required each name to contain a wishlist
+    // verb (submit/fulfill/close), which said nothing once those endpoints were
+    // gone. Checking that the route file exists is a claim that can fail.
+    const endpoints = ['/api/submit-practitioner', '/api/practitioner', '/api/contact'];
 
     endpoints.forEach(endpoint => {
       expect(endpoint).toContain('/api/');
-      const hasValidMethod = endpoint.includes('submit') || endpoint.includes('check') || endpoint.includes('fulfill') || endpoint.includes('close');
-      expect(hasValidMethod).toBe(true);
+      const routeFile = resolve(process.cwd(), `src/pages${endpoint}.ts`);
+      expect(existsSync(routeFile), `missing route file for ${endpoint}`).toBe(true);
     });
   });
 
@@ -395,9 +394,8 @@ describe('API Endpoints - Authentication', () => {
   it('should require authentication for protected endpoints', () => {
     const protectedEndpoints = [
       '/api/submit-practitioner',
-      '/api/submit-wishlist',
-      '/api/fulfill-wishlist',
-      '/api/close-wishlist',
+      '/api/submit-practitioner',
+      '/api/practitioner',
     ];
 
     protectedEndpoints.forEach(endpoint => {
@@ -446,7 +444,7 @@ describe('API Endpoints - Performance', () => {
   });
 
   it('should handle concurrent requests', () => {
-    const concurrentRequests = new Array(100).fill('/api/get-wishlist');
+    const concurrentRequests = new Array(100).fill('/api/practitioners');
 
     expect(concurrentRequests.length).toBe(100);
   });
@@ -457,7 +455,7 @@ describe('API Endpoints - Performance', () => {
     // - Recursive data fetching
     // - Unoptimized queries
     
-    const publicEndpoints = ['/api/wishlists', '/api/get-wishlist'];
+    const publicEndpoints = ['/api/practitioners', '/api/upcoming-events'];
     expect(publicEndpoints.length).toBeGreaterThan(0);
   });
 });

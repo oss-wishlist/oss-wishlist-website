@@ -1,8 +1,0 @@
----
-import AuthButton from './AuthButton.tsx';
-
-// Get user from middleware (set in Astro.locals)
-const user = Astro.locals.user;
----
-
-<AuthButton client:load user={user} />

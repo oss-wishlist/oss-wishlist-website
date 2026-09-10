@@ -95,7 +95,7 @@ cd oss-wishlist-website
 npm install
 npm run dev
 ```
-The site will work for browsing, but wishlist creation will be disabled without a GitHub token.
+The site works for browsing without a GitHub token; sign-in is only needed for practitioner profiles.
 
 ### Placeholder Mode
 The site includes a "Coming Soon" placeholder page for pre-launch use:
@@ -117,10 +117,14 @@ The placeholder page displays:
 
 ## 🎯 What This Platform Does
 
-- **For Maintainers**: Create wishlists describing what help your project needs
-- **For Practitioners**: Browse projects that need your expertise 
-- **For Ecosystem Sponsors**: Support critical open source infrastructure
-- **Service Catalog**: Browse available services and expertise areas
+- **Browse critical packages** (`/fund`): a fresh random set of critical open source packages, with the plain facts about each — one maintainer, no funding link, no recent release — and the services that address them.
+- **Check your dependencies** (`/check`): paste a repository URL and see which of its dependencies are packages we track as critical.
+- **For Practitioners**: list the services you can help with, and appear on those service pages.
+- **Service Catalog**: browse available services and expertise areas.
+
+This site does not broker anything. It shows the connection — package, service,
+the people who do that work, the project itself — and you go to the practitioner
+and the maintainer directly.
 
 ## 🛠️ Tech Stack
 
@@ -128,7 +132,8 @@ The placeholder page displays:
 - **Tailwind CSS** (v3.x) - Styling
 - **React** + **TypeScript** - Interactive components
 - **GitHub OAuth** - Authentication
-- **PostgreSQL** - Database for wishlists, practitioners, and fulfillments
+- **PostgreSQL** - Database for practitioner profiles
+- **ecosyste.ms** - Critical package data, cached into `data/` at build time
 - **Markdown** - Content collections for services, FAQ, and documentation
 
 ## 📒 Playbooks (submodule)
@@ -174,12 +179,10 @@ Note: Manual edits to submodule files should be done in the source repo via PR; 
 src/
 ├── pages/                 # Website pages (file-based routing)
 │   ├── index.astro       # Homepage
-│   ├── create-wishlist.astro # Create wishlists
-│   ├── fulfill.astro     # Fulfill wishlists (sponsors)
+│   ├── invest.astro      # The three step wizard
 │   └── api/              # API endpoints
 ├── content/              # Static content (markdown)
 │   ├── services/         # Service definitions
-│   ├── faq/              # FAQ entries
 │   ├── guardians/        # Sponsor organizations
 │   └── playbooks-external/ # Git submodule
 ├── components/           # Reusable UI components
@@ -191,14 +194,12 @@ src/
 ## 🎨 Making Changes
 
 ### Database Content
-- **Wishlists**: Created by maintainers via `/create-wishlist` form
 - **Practitioners**: Added via `/practitioner-submission` form
 - **Fulfillments**: Created when sponsors commit to fund services
 
 ### Static Content
 Content collections in `src/content/` (markdown files):
 - **Services**: Add/edit in `src/content/services/`
-- **FAQ**: Add/edit in `src/content/faq/`
 - **Guardians**: Add/edit in `src/content/guardians/`
 - **Playbooks**: External git submodule (see Playbooks section above)
 
@@ -236,18 +237,19 @@ This will:
 
 ### Available Scripts
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production  
-npm run preview  # Preview production build
+npm run dev           # Start development server
+npm run build         # Build for production
+npm run preview       # Preview production build
+npm run refresh-data  # Re-fetch the ecosyste.ms package cache into data/
+npm test              # Run the test suite
 ```
 
 ### Key URLs (when running locally)
 - **Homepage**: `/` - Main landing page
-- **Create Wishlist**: `/create-wishlist` - Maintainers create wishlists
-- **Fulfill Wishlist**: `/fulfill` - Sponsors commit funding
-- **Browse Wishlists**: `/wishlists` - View all approved wishlists
-- **Admin Panel**: `/admin` - Manage wishlists and practitioners
-- **FAQ**: `/faq` - Frequently asked questions
+- **Find a project**: `/invest` - The three step wizard: package, motivation, how to invest
+- **Check Dependencies**: `/check` - See which critical packages a repository depends on
+- **Package Page**: `/p/:ecosystem/:name` - One package, its facts and its services
+- **Admin Panel**: `/admin` - Manage practitioners
 
 ### Content Structure Example (Static Content)
 ```markdown
@@ -273,10 +275,36 @@ Production platform connecting open source maintainers with practitioners and ec
 Portions of this codebase were developed with assistance from AI tools, specifically GitHub Copilot with Claude Sonnet 4.5. All AI-generated code has been reviewed, tested, and modified to meet project standards and security requirements.
 
 ### Contributing
-- **Database content**: Use web forms (`/create-wishlist`, `/practitioner-submission`)
+- **Database content**: Use the practitioner forms (`/apply-practitioner`, `/edit-practitioner`)
 - **Static content**: Edit markdown files in `src/content/`
 - **Code changes**: Edit `.astro`, `.tsx`, or `.ts` files as needed
 
 ### Support
 For questions about setup or deployment, check the git history for configuration details or contact the development team.
 
+## 📊 Data and licensing
+
+Package data comes from [ecosyste.ms](https://ecosyste.ms) and is licensed
+**CC-BY-SA-4.0**. The redistributed files under `data/` keep that licence, and
+every page that displays the data carries visible attribution.
+
+A GitHub Action (`.github/workflows/refresh-data.yml`) refreshes the cache
+weekly and commits it, so the browser never calls ecosyste.ms — the public API
+rate-limits hard, and a client-side site would break exactly when it got
+attention. Set the `ECOSYSTEMS_CONTACT` repository variable to a contact address
+so requests join the ecosyste.ms "polite pool"; it is read from the environment
+and never committed.
+
+**No email addresses are stored.** The upstream API carries them in several
+places — maintainer records, security advisory references, email-as-login on
+some registries, and VCS URL userinfo — and all of them are stripped before
+anything is written to disk. The fetch script refuses to write the file if an
+email-shaped string survives.
+
+Maintainers can ask for a correction or removal via the
+[package correction issue template](.github/ISSUE_TEMPLATE/package-correction.yml).
+**Removal needs no reason.** Entries in `data/optout.json` are honoured at build
+across `/fund`, `/check`, the package page and the sitemap.
+
+The rubric is CC-BY, the code is MIT, and any organisation that wants to run
+this can take it.

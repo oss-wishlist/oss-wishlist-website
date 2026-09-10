@@ -1,0 +1,54 @@
+---
+/**
+ * Where you are in the wizard. Three steps, and you can go back to any you have
+ * already passed.
+ *
+ * Deliberately just numbers and short labels: the step you are on should be
+ * obvious at a glance without being read.
+ */
+export interface Props {
+  current: 1 | 2 | 3;
+  packageHref?: string | null;
+  motivationHref?: string | null;
+}
+
+const { current, packageHref = null, motivationHref = null } = Astro.props as Props;
+
+const steps = [
+  { n: 1, label: 'Pick a package', href: current > 1 ? packageHref : null },
+  { n: 2, label: 'What brings you here', href: current > 2 ? motivationHref : null },
+  { n: 3, label: 'How to invest', href: null },
+] as const;
+---
+
+<nav class="mb-8" aria-label="Progress">
+  <ol class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+    {steps.map((step, i) => (
+      <li class="flex items-center gap-3">
+        {i > 0 && <span class="text-gray-300" aria-hidden="true">&rarr;</span>}
+        <span class="flex items-center gap-2">
+          <span
+            class={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+              step.n === current
+                ? 'bg-purple-600 text-white'
+                : step.n < current
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-gray-200 text-gray-500'
+            }`}
+            aria-hidden="true">{step.n}</span
+          >
+          {step.href ? (
+            <a href={step.href} class="text-gray-700 hover:text-gray-900 underline"
+              >{step.label}</a
+            >
+          ) : (
+            <span
+              class={step.n === current ? 'font-semibold text-gray-900' : 'text-gray-500'}
+              aria-current={step.n === current ? 'step' : undefined}>{step.label}</span
+            >
+          )}
+        </span>
+      </li>
+    ))}
+  </ol>
+</nav>

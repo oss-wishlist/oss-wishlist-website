@@ -20,11 +20,9 @@ import { getBasePath } from './lib/paths';
  * Note: /maintainers page handles its own auth via AuthenticatedForm component
  * so it's not listed here - users can view the page but must log in to use the form
  */
-const PROTECTED_ROUTES = [
-  '/api/wishlists/create',
-  '/api/wishlists/update',
-  '/api/submit-wishlist',
-  '/api/close-wishlist',
+const PROTECTED_ROUTES: string[] = [
+  // The wishlist endpoints that used to be listed here are gone. Practitioner
+  // endpoints verify the session themselves, as they always did.
 ];
 
 /**

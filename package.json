@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "astro dev",
     "start": "node ./dist/server/entry.mjs",
+    "prebuild": "node scripts/check-build-inputs.mjs",
     "build": "astro build",
     "build:gh-pages": "astro build --base /oss-wishlist-website",
     "preview": "astro preview",
     "astro": "astro",
+    "refresh-data": "node scripts/fetch-ecosystems.mjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui"

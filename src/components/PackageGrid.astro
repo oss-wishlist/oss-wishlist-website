@@ -1,0 +1,18 @@
+---
+/**
+ * A set of package cards. Shared by /fund, /fund/sample (the "show another set"
+ * fragment) and the /check results, so they all render identically.
+ */
+import PackageCard from './PackageCard.astro';
+import type { PresentedPackage } from '../lib/critical-packages';
+
+export interface Props {
+  packages: PresentedPackage[];
+}
+
+const { packages } = Astro.props as Props;
+---
+
+<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+  {packages.map((pkg) => <PackageCard pkg={pkg} />)}
+</div>

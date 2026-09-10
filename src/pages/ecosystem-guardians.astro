@@ -61,9 +61,11 @@ const sortedGuardians: never[] = [];
             </div>
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
-                <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                  Wishes fulfilled: {guardian.data.projects_supported ?? 0}
-                </span>
+                {guardian.data.projects_supported > 0 && (
+                  <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                    Projects supported: {guardian.data.projects_supported}
+                  </span>
+                )}
               </div>
             </div>
           </div>

@@ -34,64 +34,46 @@ const companyServices = services.filter(service =>
         <h1 id="hero-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-950 mb-4">
           Open Source <span class="text-accent">Wishlist</span>
         </h1>
-        <p class="text-base md:text-lg lg:text-xl text-gray-700 mb-8">
-          Connecting open source maintainers with practitioners who can help
+        <p class="text-base md:text-lg lg:text-xl text-gray-700 mb-3">
+          Finding the projects that need help is easy. We know how to resolve most
+          sustainability issues. The expertise is available right now.
+        </p>
+        <p class="text-lg md:text-xl font-semibold text-gray-900 mb-8">
+          What are you waiting for?
         </p>
         
-        <!-- Main Cards -->
-        <div class="grid md:grid-cols-3 gap-6 mb-8" role="list">
-          <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-purple-700 mb-2">Wishlists</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Maintainers can post specific needs and have them fulfilled through a practitioner, a funded contributor, or employee time from a supporting company.</p>
-            <a 
-              href={`${basePath}wishlists`} 
+        <!-- One door -->
+        <div class="max-w-md mx-auto mb-8" role="list">
+          <article
+            class="relative bg-white p-6 md:p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-purple-200 ring-1 ring-purple-100 flex flex-col"
+            role="listitem"
+          >
+            <span
+              class="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-gradient-to-r from-purple-500 to-violet-500"
+              aria-hidden="true"
+            ></span>
+            <h2 class="text-2xl font-semibold text-purple-700 mb-2">Find a project to support</h2>
+            <p class="text-gray-700 mb-2 flex-grow">
+              Start with an open source project you already use.
+            </p>
+            <p class="text-xs text-gray-500 mb-5">
+              Searchable via
+              <a
+                href="https://ecosyste.ms"
+                class="underline hover:text-gray-700"
+                rel="noopener noreferrer"
+                target="_blank">ecosyste.ms</a
+              >.
+            </p>
+            <a
+              href={`${basePath}invest`}
               class="btn-sparkle w-full"
-              aria-label="Browse or create wishlists"
+              aria-label="Find a project to support"
             >
               <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
-              <span class="btn-sparkle-text">Wishlists</span>
-              <span class="btn-sparkle-particles">
-                <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
-                <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
-                <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
-              </span>
-            </a>
-          </article>
-          
-          <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-purple-700 mb-2">Practitioners</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Independent open source experts ready to take on a wish from a project that needs their skills.</p>
-            <a 
-              href={`${basePath}practitioners`}
-              class="btn-sparkle w-full"
-              aria-label="View practitioners"
-            >
-              <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span class="btn-sparkle-text">View Practitioners</span>
-              <span class="btn-sparkle-particles">
-                <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
-                <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
-                <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
-              </span>
-            </a>
-          </article>
-          
-          <article class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col" role="listitem">
-            <h2 class="text-xl font-semibold text-purple-700 mb-2">Services &amp; Workshops</h2>
-            <p class="text-gray-700 mb-4 flex-grow">Services and workshops with defined outcomes and rubrics, so projects know what they are getting and funders can see the impact of their investment.</p>
-            <a 
-              href={`${basePath}catalog`} 
-              class="btn-sparkle w-full"
-              aria-label="Explore services and workshops catalog"
-            >
-              <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <span class="btn-sparkle-text">Explore Services &amp; Workshops</span>
+              <span class="btn-sparkle-text">Get started</span>
               <span class="btn-sparkle-particles">
                 <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
                 <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
@@ -100,17 +82,6 @@ const companyServices = services.filter(service =>
             </a>
           </article>
         </div>
-
-        <!-- Read More Link -->
-        <p class="text-sm text-gray-600 mt-2">
-          Read more about Open Source Wishlist &rarr;
-          <a
-            href="https://sunnydeveloper.com/open-source-wishlist-community-infrastructure-for-oss-sustainability/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="link-secondary font-medium"
-          >Open Source Wishlist: Community Infrastructure for OSS Sustainability</a>
-        </p>
 
       </div>
     </section>

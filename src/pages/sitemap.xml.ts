@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { withSlug } from '../lib/entry-slug';
+import { getAllPackages, packageHref } from '../lib/critical-packages';
 
 export const GET: APIRoute = async ({ site }) => {
   const siteUrl = site?.toString() || 'https://oss-wishlist.com';
@@ -16,22 +17,17 @@ export const GET: APIRoute = async ({ site }) => {
   const staticPages = [
     { loc: '', priority: 1.0 },
     { loc: 'catalog', priority: 0.9 },
-    { loc: 'wishlists', priority: 0.9 },
-    { loc: 'helpers', priority: 0.8 },
+    { loc: 'fund', priority: 0.9 },
     { loc: 'practitioners', priority: 0.8 },
     { loc: 'ecosystem-guardians', priority: 0.8 },
     { loc: 'maintainers', priority: 0.8 },
-    { loc: 'faq', priority: 0.7 },
-    { loc: 'create-wishlist', priority: 0.7 },
+    { loc: 'check', priority: 0.9 },
     { loc: 'apply-practitioner', priority: 0.7 },
     { loc: 'calendar', priority: 0.6 },
-    { loc: 'pricing', priority: 0.6 },
     { loc: 'take-action', priority: 0.7 },
-    { loc: 'browse-wishlists', priority: 0.7 },
     { loc: 'playbooks', priority: 0.7 },
     { loc: 'about-us', priority: 0.6 },
     { loc: 'sitemap', priority: 0.5 },
-    { loc: 'code-of-conduct', priority: 0.5 },
     { loc: 'privacy-policy', priority: 0.5 },
   ];
   
@@ -64,6 +60,18 @@ export const GET: APIRoute = async ({ site }) => {
     });
   });
   
+  // Package pages. getAllPackages() already excludes anything in
+  // data/optout.json, so an opt-out drops out of the sitemap along with every
+  // other surface, with no separate list to keep in step.
+  getAllPackages().forEach(pkg => {
+    urls.push({
+      loc: `${siteUrl}${packageHref(pkg).replace(/^\//, '')}`,
+      lastmod: new Date().toISOString(),
+      changefreq: 'weekly',
+      priority: 0.5,
+    });
+  });
+
   // Generate XML
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

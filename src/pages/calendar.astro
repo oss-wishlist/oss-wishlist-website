@@ -6,25 +6,25 @@ import Layout from '../components/Layout.astro';
 export const prerender = false;
 ---
 
-<Layout title="Community Calendar | Open Source Wishlist" description="Join workshops, popup discussions, and community events">
+<Layout title="Calendar | Open Source Wishlist" description="Workshops, popup discussions and events">
   <div class="max-w-7xl mx-auto px-4 py-10">
     
     <!-- Header -->
     <div class="text-center mb-10">
       <h1 class="text-5xl font-bold text-gray-900 mb-6">
-        Community <span class="text-accent">Calendar</span>
+        <span class="text-accent">Calendar</span>
       </h1>
       <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-        Join workshops, popup discussions, and community events.
+        Workshops, popup discussions and events.
       </p>
       <a 
-        href={`${basePath}helpers`}
+        href={`${basePath}practitioners`}
         class="inline-flex items-center text-gray-600 hover:text-purple-600 font-medium transition-colors mt-4"
       >
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Back to Community
+        Back to Practitioners
       </a>
     </div>
 
@@ -32,7 +32,7 @@ export const prerender = false;
     <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
       <div class="mb-6 text-center">
         <p class="text-gray-600 mb-4">
-          View and register for upcoming community events.
+          View and register for upcoming events.
         </p>
         <a 
           href="https://lu.ma/cal-UKTU3T5iJaB28YN" 
@@ -57,7 +57,7 @@ export const prerender = false;
             allowfullscreen=""
             aria-hidden="false"
             tabindex="0"
-            title="OSS Wishlist Community Calendar"
+            title="OSS Wishlist Calendar"
           ></iframe>
         </div>
       </div>
