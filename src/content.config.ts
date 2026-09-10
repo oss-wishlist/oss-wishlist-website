@@ -34,15 +34,6 @@ const services = defineCollection({
   }),
 });
 
-const faq = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/faq' }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    category: z.string(),
-    order: z.number().optional(),
-  }),
-});
 
 const pages = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/pages' }),
@@ -78,7 +69,6 @@ const events = defineCollection({
 
 export const collections = {
   services,
-  faq,
   pages,
   events,
   'playbooks-external': playbooksExternal,

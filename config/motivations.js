@@ -23,6 +23,28 @@
  * pretending otherwise would teach the wrong lesson.
  */
 
+/**
+ * A release gap long enough that winding down is worth raising.
+ *
+ * Deliberately longer than the 18 months behind the `quiet` flag. Eighteen
+ * months without a release is common in a stable library and mostly asks who
+ * takes over; two years starts to ask whether anyone intends to. Suggesting a
+ * wind-down at the shorter gap would put words in a maintainer's mouth.
+ */
+const DORMANT_AFTER_MONTHS = 24;
+
+function monthsSinceRelease(pkg) {
+  if (!pkg.latest_release_published_at) return null;
+  const released = new Date(pkg.latest_release_published_at);
+  if (Number.isNaN(released.getTime())) return null;
+  return (Date.now() - released.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+}
+
+export function isDormant(pkg) {
+  const months = monthsSinceRelease(pkg);
+  return months !== null && months >= DORMANT_AFTER_MONTHS;
+}
+
 export const MOTIVATIONS = [
   {
     id: 'security',
@@ -45,7 +67,10 @@ export const MOTIVATIONS = [
     id: 'continuity',
     label: 'Leadership continuity',
     question: 'What happens if the people running it stop.',
-    services: ['leadership-onboarding', 'winding-down'],
+    // Winding down is only offered once a project has been quiet long enough
+    // that the question is honest. See DORMANT_AFTER_MONTHS.
+    services: ['leadership-onboarding'],
+    dormantServices: ['leadership-onboarding', 'winding-down'],
     evidence: (pkg) => {
       if (!pkg.quiet) return null;
       const year = pkg.latest_release_published_at
@@ -97,12 +122,19 @@ export function parseMotivations(values) {
   return MOTIVATION_IDS.filter((id) => values.includes(id));
 }
 
-/** Service slugs for a set of motivations, deduped, in declared order. */
-export function servicesForMotivations(ids) {
+/**
+ * Service slugs for a set of motivations, deduped, in declared order.
+ *
+ * Takes the package because one motivation varies by it: continuity suggests
+ * succession planning for a quiet project and adds winding down only once it
+ * has been dormant long enough for that to be a fair question.
+ */
+export function servicesForMotivations(ids, pkg = null) {
   const slugs = [];
   for (const m of MOTIVATIONS) {
     if (!ids.includes(m.id)) continue;
-    for (const slug of m.services) if (!slugs.includes(slug)) slugs.push(slug);
+    const list = m.dormantServices && pkg && isDormant(pkg) ? m.dormantServices : m.services;
+    for (const slug of list) if (!slugs.includes(slug)) slugs.push(slug);
   }
   return slugs;
 }

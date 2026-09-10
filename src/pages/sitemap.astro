@@ -9,7 +9,6 @@ const basePath = getBasePath();
 // Get all content collections for sitemap
 const services = (await getCollection('services')).map(withSlug);
 const playbooks = (await getCollection('playbooks-external')).map(withSlug);
-const faq = await getCollection('faq');
 
 export const prerender = false;
 ---
@@ -35,10 +34,8 @@ export const prerender = false;
           <li><a href={`${basePath}`} class="text-gray-700 hover:text-gray-900 underline">Home</a></li>
           <li><a href={`${basePath}catalog`} class="text-gray-700 hover:text-gray-900 underline">Service Catalog</a></li>
           <li><a href={`${basePath}wishlists`} class="text-gray-700 hover:text-gray-900 underline">Project Wishlists</a></li>
-          <li><a href={`${basePath}helpers`} class="text-gray-700 hover:text-gray-900 underline">Helpers & Community</a></li>
           <li><a href={`${basePath}practitioners`} class="text-gray-700 hover:text-gray-900 underline">Practitioners Directory</a></li>
           <li><a href={`${basePath}ecosystem-guardians`} class="text-gray-700 hover:text-gray-900 underline">Ecosystem Sponsors</a></li>
-          <li><a href={`${basePath}faq`} class="text-gray-700 hover:text-gray-900 underline">FAQ</a></li>
         </ul>
       </section>
 

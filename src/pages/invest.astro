@@ -120,7 +120,7 @@ const catalog = await getCollection('services');
 const slugOf = (entry: { id: string }) => entry.id.replace(/\.md$/, '');
 const bySlug = new Map(catalog.map((e) => [slugOf(e), e]));
 
-const serviceSlugs = servicesForMotivations(activeMotivations) as string[];
+const serviceSlugs = servicesForMotivations(activeMotivations, selected) as string[];
 
 // Who can actually do each of these. Empty when the database is unreachable or
 // nobody has listed themselves, in which case the card renders no section at

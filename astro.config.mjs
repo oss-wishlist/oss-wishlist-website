@@ -27,6 +27,9 @@ export default defineConfig({
     '/fund/all': '/fund',
     // Pricing was removed with the rest of the cost content.
     '/pricing': '/catalog',
+    // There is no separate community surface; the practitioners are the people.
+    '/helpers': '/practitioners',
+    '/faq': '/about-us',
   },
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],

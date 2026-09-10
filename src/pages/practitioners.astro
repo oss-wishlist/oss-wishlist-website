@@ -5,7 +5,8 @@ import Layout from '../components/Layout.astro';
 import { getCollection } from 'astro:content';
 import { withSlug } from '../lib/entry-slug';
 import { verifySession } from '../lib/github-oauth';
-import { getApprovedPractitioners, getPractitionersBySubmitter } from '../lib/db';
+import { getPractitionersBySubmitter } from '../lib/db';
+import { getApprovedPractitionersSafe } from '../lib/practitioner-availability';
 
 // Check if user is logged in
 const sessionCookie = Astro.cookies.get('oss_session') || Astro.cookies.get('github_session');
@@ -19,15 +20,20 @@ if (sessionCookie?.value) {
   // Check if logged-in user has a practitioner profile
   const userIdentifier = session?.user?.login || session?.user?.username;
   if (userIdentifier) {
-    const profiles = await getPractitionersBySubmitter(userIdentifier);
-    if (profiles.length > 0) {
-      userPractitioner = profiles[0];
+    // Their own profile is a nicety; the directory must render regardless.
+    try {
+      const profiles = await getPractitionersBySubmitter(userIdentifier);
+      if (profiles.length > 0) {
+        userPractitioner = profiles[0];
+      }
+    } catch {
+      // no database, so no personalised state
     }
   }
 }
 
-// Fetch practitioners directly from database (faster than API call)
-const allPractitioners = await getApprovedPractitioners();
+// Degrades to an empty directory rather than a 500 when the database is down.
+const allPractitioners = await getApprovedPractitionersSafe();
 
 const allServices = (await getCollection('services')).map(withSlug);
 const filteredServices = allServices.filter(s => s.data.type === 'service');

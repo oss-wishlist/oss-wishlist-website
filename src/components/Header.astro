@@ -5,8 +5,8 @@ import { getPractitionerByUsername } from '../lib/db';
 // This is a standalone header component for Open Source Wishlist
 // It contains a simple navigation menu with:
 // - Open Source Wishlist logo and home link
-// - Community top-level link
-// - About dropdown (About Us, FAQ, Terms & Conditions, Login/Logout)
+// - Practitioners top-level link
+// - About dropdown (About Us, Terms & Conditions, Login/Logout)
 
 const basePath = getBasePath(); // Returns with trailing slash
 const logoUrl = '/logo.png';
@@ -48,12 +48,12 @@ if (user?.login || user?.username) {
           Services
         </a>
 
-        <!-- Community Link -->
+        <!-- Practitioners Link -->
         <a
-          href={`${basePath}helpers`}
+          href={`${basePath}practitioners`}
           class="text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1 min-h-[44px] flex items-center"
         >
-          Community
+          Practitioners
         </a>
 
         <!-- Practitioner shortcuts -->
@@ -102,7 +102,6 @@ if (user?.login || user?.username) {
           >
             <div class="py-1" role="none">
               <a href={`${basePath}about-us`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">About Us</a>
-              <a href={`${basePath}faq`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">FAQ</a>
               <a href={`${basePath}contact`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">Get in Touch</a>
               <a href={`${basePath}terms`} class="wishlist-menu-item block px-4 py-2 text-sm text-gray-900 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none min-h-[44px] flex items-center transition-all relative" role="menuitem" tabindex="-1">Terms & Conditions</a>
               <div class="border-t my-1"></div>
@@ -137,7 +136,7 @@ if (user?.login || user?.username) {
       <div class="space-y-1">
         <a href={`${basePath}invest`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Find a Project</a>
         <a href={`${basePath}catalog`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Services</a>
-        <a href={`${basePath}helpers`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Community</a>
+        <a href={`${basePath}practitioners`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Practitioners</a>
         {userPractitionerSlug && (
           <>
             <a href={`${basePath}maintainers`} class="btn-sparkle btn-sparkle-purple w-full justify-start">
@@ -158,7 +157,6 @@ if (user?.login || user?.username) {
         )}
         <div class="border-t border-gray-200 my-2"></div>
         <a href={`${basePath}about-us`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">About Us</a>
-        <a href={`${basePath}faq`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">FAQ</a>
         <a href={`${basePath}contact`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Get in Touch</a>
         <a href={`${basePath}terms`} class="wishlist-menu-item block px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-purple-500 hover:to-violet-700 hover:text-white focus:outline-none rounded min-h-[44px] flex items-center transition-all relative">Terms & Conditions</a>
         <div class="border-t border-gray-200 my-2"></div>
