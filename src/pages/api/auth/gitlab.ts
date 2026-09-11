@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { normalizeReturnPath } from '../../../lib/return-path';
 import { getOAuthProvider } from '../../../lib/oauth/registry.js';
 import { generateState } from '../../../lib/github-oauth';
 
@@ -28,7 +29,12 @@ export const GET: APIRoute = async ({ cookies, redirect, request }) => {
     // Get returnTo parameter from query string
     const url = new URL(request.url);
     const forceLogin = url.searchParams.get('force') === 'true';
-    const returnTo = url.searchParams.get('returnTo');
+    // Validated here as well as in the callback, so a hostile value is never
+    // written into the cookie in the first place.
+    const rawReturnTo = url.searchParams.get('returnTo');
+    const returnTo = rawReturnTo
+      ? normalizeReturnPath(rawReturnTo, import.meta.env.BASE_URL || '/')
+      : null;
 
     // Store returnTo in a cookie so we can use it after OAuth callback
     if (returnTo) {

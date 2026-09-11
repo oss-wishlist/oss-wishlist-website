@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { verifySession } from '../../../lib/github-oauth';
 import { approvePractitioner } from '../../../lib/db';
 import { jsonSuccess, jsonError } from '../../../lib/api-response';
+import { isAdminSession, adminLabel } from '../../../lib/admin';
 import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../../lib/rate-limit';
 
 export const prerender = false;
@@ -21,14 +22,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
     const session = verifySession(sessionCookie.value, sessionSecret);
     
-    // Read admin usernames dynamically from environment
-    const ADMIN_USERNAMES = (import.meta.env.ADMIN_USERNAMES || 'emmairwin').split(',').map(u => u.trim());
-    
-    // Check both login (GitHub) and username (all providers) fields
-    const userIdentifier = session?.user?.login || session?.user?.username;
-    if (!userIdentifier || !ADMIN_USERNAMES.includes(userIdentifier)) {
+    // Admins come from ADMIN_USERNAMES and are tied to the provider that
+    // issued the login; an unset variable means nobody is an admin.
+    if (!isAdminSession(session)) {
       return jsonError('Forbidden', 'Admin access required', 403);
     }
+    const userIdentifier = adminLabel(session);
 
     const { id } = await request.json();
     

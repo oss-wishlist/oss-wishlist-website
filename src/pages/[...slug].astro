@@ -5,12 +5,26 @@ import { getBasePath } from '../lib/paths';
 
 export const prerender = false;
 
-// Server-rendered: resolve content dynamically at request time
+// Server-rendered: resolve content dynamically at request time.
 const { slug } = Astro.params;
 const pageSlug = Array.isArray(slug) ? slug.join('/') : slug || '';
-const page = await getEntry('pages', pageSlug);
+
+/*
+  This route catches every URL that nothing else matched, which in practice
+  means a lot of scanner traffic: /.git/config, /.env, /wp-login.php. Handing
+  those straight to getEntry made the content layer log "Entry pages -> .git/
+  config was not found" for each one, which is how they turned up in the
+  production logs.
+
+  Content page slugs are lowercase words, digits and hyphens, optionally nested
+  one locale deep. Anything else cannot name a page, so it does not need to be
+  looked up.
+*/
+const LOOKS_LIKE_A_PAGE = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
+
+const page = LOOKS_LIKE_A_PAGE.test(pageSlug) ? await getEntry('pages', pageSlug) : undefined;
 if (!page) {
-  return Astro.redirect('/404');
+  return Astro.redirect(`${getBasePath()}404`);
 }
 const { Content } = await render(page);
 const basePath = getBasePath();

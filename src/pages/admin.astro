@@ -2,6 +2,7 @@
 import Layout from '../components/Layout.astro';
 import { getBasePath } from '../lib/paths';
 import { verifySession } from '../lib/github-oauth';
+import { isAdminSession } from '../lib/admin';
 import { getAllPractitioners } from '../lib/db';
 
 const basePath = getBasePath();
@@ -9,19 +10,15 @@ const basePath = getBasePath();
 // Check if user is logged in and is admin
 const sessionCookie = Astro.cookies.get('oss_session') || Astro.cookies.get('github_session');
 const sessionSecret = import.meta.env.OAUTH_STATE_SECRET;
-const ADMIN_USERNAMES = (import.meta.env.ADMIN_USERNAMES || 'emmairwin').split(',').map(u => u.trim());
 
 let session = null;
 let isAdmin = false;
 
 if (sessionCookie?.value) {
   session = verifySession(sessionCookie.value, sessionSecret);
-  
-  // Check both login (GitHub) and username (all providers) fields
-  const userIdentifier = session?.user?.login || session?.user?.username;
-  if (userIdentifier) {
-    isAdmin = ADMIN_USERNAMES.includes(userIdentifier);
-  }
+  // Admins come from ADMIN_USERNAMES and are tied to the provider that issued
+  // the login; an unset variable means nobody is an admin.
+  isAdmin = isAdminSession(session);
 }
 
 if (!isAdmin) {
