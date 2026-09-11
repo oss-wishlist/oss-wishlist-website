@@ -163,8 +163,8 @@ const backHref =
                 )}
                 {s.rubric && (
                   <p class="text-sm text-gray-600 mt-2">
-                    <span class="font-semibold">Measured against:</span>{' '}
-                    {s.rubric.dimensions.map((d) => d.name).join(', ')}
+                    <span class="font-semibold">Rubric:</span>{' '}
+                    {s.rubric.dimensions.map((d) => d.name).join(' · ')}
                   </p>
                 )}
               </div>
