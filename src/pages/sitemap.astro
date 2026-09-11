@@ -8,7 +8,6 @@ const basePath = getBasePath();
 
 // Get all content collections for sitemap
 const services = (await getCollection('services')).map(withSlug);
-const playbooks = (await getCollection('playbooks-external')).map(withSlug);
 
 export const prerender = false;
 ---
@@ -68,20 +67,6 @@ export const prerender = false;
         </ul>
       </section>
 
-      <!-- Playbooks -->
-      <section class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Playbooks ({playbooks.length})</h2>
-        <ul class="space-y-2 max-h-96 overflow-y-auto">
-          {playbooks.sort((a, b) => (a.data.title || '').localeCompare(b.data.title || '')).map(playbook => (
-            <li>
-              <a href={`${basePath}playbooks/${playbook.slug}`} class="text-gray-700 hover:text-gray-900 underline">
-                {playbook.data.title || playbook.slug}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <!-- About & Legal -->
       <section class="bg-white p-6 rounded-lg border border-gray-200">
         <h2 class="text-2xl font-bold text-gray-900 mb-4">About & Legal</h2>
@@ -97,7 +82,7 @@ export const prerender = false;
     <div class="mt-16 p-6 bg-gray-100 rounded-lg">
       <h2 class="text-xl font-bold text-gray-900 mb-4">For Search Engines</h2>
       <p class="text-gray-600 mb-4">
-        Machine-readable sitemap for search engine crawlers (includes all services and playbooks from submodule):
+        Machine-readable sitemap for search engine crawlers:
       </p>
       <ul class="space-y-2">
         <li>

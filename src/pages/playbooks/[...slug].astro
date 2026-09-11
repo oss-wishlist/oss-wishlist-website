@@ -1,198 +1,45 @@
 ---
-import { getEntry, render } from 'astro:content';
-import Layout from '../../components/Layout.astro';
+/**
+ * /playbooks/:folder — kept only to forward to the service page.
+ *
+ * There were two pages rendering the same markdown. The service page renders
+ * the whole playbook, all eighteen headings of it, and surrounds it with what
+ * makes it useful: what the service is, what it costs, the rubric it is
+ * assessed against, and the practitioners who cover it. This route rendered
+ * the same text with none of that, was reachable only from a link at the
+ * bottom of the page it duplicated, and returned a 502 to everyone until the
+ * commit before this one.
+ *
+ * So the service page is where a playbook is read, and this forwards to it.
+ * A redirect rather than a deletion, because the URLs are in the wild: the
+ * sitemap listed them and search engines have them indexed. /playbooks already
+ * forwards to /catalog, so this does what its parent does.
+ */
+import { getCollection } from 'astro:content';
 import { getBasePath } from '../../lib/paths';
-import { playbookTitle, playbookFolder } from '../../lib/playbook-title';
-const basePath = getBasePath();
+import { playbookFolder } from '../../lib/playbook-title';
 
 export const prerender = false;
 
-// Server-rendered: resolve content dynamically at request time
-const { playbook: propsPlaybook } = Astro.props;
+const basePath = getBasePath();
 const { slug } = Astro.params;
-/**
- * Entry ids from the glob loader are "<folder>/playbook", so a link to the bare
- * folder name has to be resolved to that. Both forms are accepted because the
- * sitemap links the full id while services link the folder.
- */
-const playbook =
-  propsPlaybook ||
-  (slug ? await getEntry('playbooks-external', slug) : undefined) ||
-  (slug ? await getEntry('playbooks-external', `${slug}/playbook`) : undefined);
+const requested = playbookFolder(Array.isArray(slug) ? slug.join('/') : slug || '');
 
-// Check if playbook exists
-if (!playbook) {
-  return Astro.redirect('/404');
-}
+/** The service that declares this playbook, by either frontmatter field. */
+const services = await getCollection('services');
+const owner = services.find((service) => {
+  const declared = Array.isArray(service.data.playbooks)
+    ? service.data.playbooks
+    : service.data.playbook
+      ? [service.data.playbook]
+      : [];
+  return declared.includes(requested);
+});
 
-// Render the markdown content
-const { Content } = await render(playbook);
+// Nothing claims it, so the catalogue rather than nowhere.
+const target = owner
+  ? `${basePath}services/${owner.id.replace(/\.md$/, '')}`
+  : `${basePath}catalog`;
 
-/*
-  The playbooks are written in another repository and carry no frontmatter, so
-  every `data` field on them is undefined. That was fatal rather than untidy:
-  further down, .toLowerCase() was called on the missing title, and it threw
-  after the response had already started streaming. Locally that looks like a
-  200 with a truncated body, so it passed every check here; through Cloudflare
-  a broken stream is a 502, which is how every playbook page on the live site
-  came to be dead, along with the "read the full playbook" link on six service
-  pages.
-
-  So the title is taken from the document itself, the way a reader would take
-  it: the first heading, falling back to the folder name. Nothing below may
-  assume a frontmatter field exists.
-*/
-const folder = playbookFolder(playbook.id);
-const title = playbookTitle(playbook.data, playbook.body, folder);
-
-// GitHub edit URL
-const githubRepoUrl = 'https://github.com/oss-wishlist/wishlist-playbooks';
-const githubFolder = playbook.data.github_folder || folder;
-const githubEditUrl = `${githubRepoUrl}/edit/main/${githubFolder}/playbook.md`;
-const githubViewUrl = `${githubRepoUrl}/tree/main/${githubFolder}`;
-
-// Build SEO description
-const seoDescription =
-  playbook.data.description ||
-  `Professional playbook guide for ${title}. Step-by-step guidance for open source practitioners.`;
+return Astro.redirect(target, 301);
 ---
-
-<Layout 
-  title={`${title} - Professional Playbook Guide | OSS Wishlist`}
-  description={seoDescription}
-  type="article"
->
-  <!-- Breadcrumb -->
-  <nav class="bg-gray-50 border-b">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <ol class="flex items-center space-x-2 text-sm">
-        <li>
-          <a href={basePath} class="text-gray-500 hover:text-gray-700">Home</a>
-        </li>
-        <li class="text-gray-400">/</li>
-        <li>
-          <a href={`${basePath}playbooks`} class="text-gray-500 hover:text-gray-700">Playbooks</a>
-        </li>
-        <li class="text-gray-400">/</li>
-        <li class="text-gray-900 font-medium">{title}</li>
-      </ol>
-    </div>
-  </nav>
-
-  <!-- Header -->
-  <section class="py-12 bg-white border-b">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-start justify-between mb-6">
-        <div class="flex-1">
-          <h1 class="text-4xl font-bold text-gray-900 mb-4">
-            {title}
-          </h1>
-          <p class="text-xl text-gray-600 mb-6">
-            {playbook.data.description ?? ""}
-          </p>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex flex-wrap gap-3">
-        <a 
-          href={githubEditUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors text-sm"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-          </svg>
-          <span>Improve this Playbook</span>
-        </a>
-        
-        <a 
-          href={githubViewUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm border border-gray-300"
-        >
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-          </svg>
-          <span>View on GitHub</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Playbook Content -->
-  <article class="py-12 bg-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="prose prose-lg prose-gray max-w-none">
-        <Content />
-      </div>
-    </div>
-  </article>
-
-  <!-- Contribution CTA -->
-  <section class="py-12 bg-gray-50 border-t">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="bg-white rounded-lg shadow-sm border p-8">
-        <div class="flex items-start gap-6">
-          <div class="bg-gray-100 p-4 rounded-lg">
-            <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-          </div>
-          <div class="flex-1">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Help Improve This Playbook</h3>
-            <p class="text-gray-600 mb-4">
-              Have experience with {title.toLowerCase()}? Share your insights, add resources, 
-              or suggest improvements. All contributions are welcome!
-            </p>
-            <div class="flex gap-3">
-              <a 
-                href={githubEditUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors text-sm"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                <span>Edit on GitHub</span>
-              </a>
-              <a 
-                href={`${githubRepoUrl}/issues/new?title=Suggestion for ${encodeURIComponent(title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm border border-gray-300"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-                </svg>
-                <span>Suggest Changes</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</Layout>
-
-<style>
-  /* Enhance prose styling for playbook content */
-  .prose h2 {
-    @apply text-2xl font-bold text-gray-900 mt-8 mb-4 border-b pb-2;
-  }
-  
-  .prose h3 {
-    @apply text-xl font-bold text-gray-900 mt-6 mb-3;
-  }
-  
-  .prose ul {
-    @apply space-y-2;
-  }
-  
-  .prose a {
-    @apply text-gray-600 hover:text-gray-900 underline;
-  }
-</style>
