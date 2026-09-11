@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { avatarThumb } from '../src/lib/avatar';
 
 import { parseRubric } from '../src/lib/rubric-parser';
 import { parseRepoInput } from '../src/lib/dependency-check';
@@ -215,5 +216,40 @@ describe('excluded owners', () => {
     ['pypi', 'requests', 'https://github.com/psf/requests'],
   ])('keeps %s/%s', (ecosystem, name, repository_url) => {
     expect(isExcludedOwner({ ecosystem, name, repository_url })).toBe(false);
+  });
+});
+
+describe('avatarThumb', () => {
+  it('asks GitHub for the size it will actually display', () => {
+    expect(avatarThumb('https://avatars.githubusercontent.com/u/123?v=4', 96)).toBe(
+      'https://avatars.githubusercontent.com/u/123?v=4&s=96'
+    );
+  });
+
+  it('replaces a size already on the URL rather than appending a second one', () => {
+    const out = avatarThumb('https://avatars.githubusercontent.com/u/123?s=460', 96)!;
+    expect(out).toContain('s=96');
+    expect(out).not.toContain('s=460');
+  });
+
+  it('uses the parameter each host actually understands', () => {
+    expect(avatarThumb('https://gitlab.com/uploads/avatar.png', 96)).toContain('width=96');
+    expect(avatarThumb('https://www.gravatar.com/avatar/abc', 96)).toContain('s=96');
+  });
+
+  it('leaves a host with no known resize convention untouched', () => {
+    const url = 'https://example.com/me.png';
+    expect(avatarThumb(url, 96)).toBe(url);
+  });
+
+  it('returns null for a missing avatar so nothing renders', () => {
+    expect(avatarThumb(null, 96)).toBeNull();
+    expect(avatarThumb(undefined, 96)).toBeNull();
+    expect(avatarThumb('', 96)).toBeNull();
+  });
+
+  it('refuses a non-http scheme', () => {
+    expect(avatarThumb('javascript:alert(1)', 96)).toBeNull();
+    expect(avatarThumb('data:image/png;base64,AAAA', 96)).toBeNull();
   });
 });

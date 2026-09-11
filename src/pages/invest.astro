@@ -40,6 +40,7 @@ import {
 import { getRubricForPlaybook } from '../lib/rubrics';
 import { practitionersForServices } from '../lib/practitioner-availability';
 import { checkRepositoryForPackage } from '../lib/dependency-check';
+import { avatarThumb } from '../lib/avatar';
 import {
   MOTIVATIONS,
   parseMotivations,
@@ -177,7 +178,7 @@ const title =
       : `Supporting ${selected?.name}`;
 ---
 
-<Layout title={`${title} | OSS Wishlist`} description="Work out what would help a critical open source package, and how to pay for it.">
+<Layout title={`${title} | OSS Wishlist`} description="Work out what would help a critical open source project, and how to pay for it.">
   <main class="max-w-4xl mx-auto px-4 py-12">
     <div id="wizard">
     <WizardSteps current={step} packageHref={stepOneHref} motivationHref={stepTwoHref} />
@@ -204,7 +205,7 @@ const title =
               name="q"
               value={query}
               placeholder={ecosystem ? `Search ${ECOSYSTEMS.find((e) => e.id === ecosystem)?.label}` : 'Search by project name, e.g. lodash, requests, nokogiri'}
-              aria-label="Search packages by name"
+              aria-label="Search projects by name"
               autocomplete="off"
               class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
@@ -214,7 +215,7 @@ const title =
           </div>
         </form>
 
-        <div class="flex flex-wrap gap-2 mb-8" role="group" aria-label="Choose a package manager">
+        <div class="flex flex-wrap gap-2 mb-8" role="group" aria-label="Filter by registry">
           {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
             <a
               href={`${selfBase}?ecosystem=${e.id}`}
@@ -243,7 +244,7 @@ const title =
             <div class="bg-white border rounded-lg p-6">
               <h2 class="text-xl font-bold text-gray-900 mb-2">Nothing here matches &ldquo;{query}&rdquo;</h2>
               <p class="text-gray-700">
-                We cache the most depended-on packages per registry, not every one.
+                We cache the most depended-on projects per registry, not every one.
                 <a href="https://packages.ecosyste.ms/critical" class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank">Search the full list on ecosyste.ms &rarr;</a>
               </p>
             </div>
@@ -505,7 +506,7 @@ const title =
                             <input type="checkbox" name="p" value={person.slug} checked={chosenPractitioners.includes(person.slug)} class="mt-1 h-4 w-4 shrink-0" />
 
                             {person.avatar_url ? (
-                              <img src={person.avatar_url} alt="" width="40" height="40" loading="lazy" class="w-10 h-10 rounded-full object-cover shrink-0" />
+                              <img src={avatarThumb(person.avatar_url, 80)!} alt="" width="40" height="40" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover shrink-0" />
                             ) : (
                               <span class="w-10 h-10 rounded-full bg-gray-200 shrink-0"></span>
                             )}
