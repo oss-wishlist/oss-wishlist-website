@@ -12,6 +12,11 @@ date: 2026-02-15
 
 Special thanks to [Open Collective](https://opencollective.com) and [Ecosyste.ms](https://ecosyste.ms) for their support and collaboration.
 
+## Appreciate This Work?
+
+This is free to use and always will be. If it was useful, you can support it by
+subscribing to my blog at **[sunnydeveloper.com](https://sunnydeveloper.com/)**.
+
 ## Find Us
 
 - **[GitHub](https://github.com/oss-wishlist)**
