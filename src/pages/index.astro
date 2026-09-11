@@ -57,13 +57,13 @@ const companyServices = services.filter(service =>
               Start with an open source project you already use.
             </p>
             <p class="text-xs text-gray-500 mb-5">
-              Searchable via
+              Search covers the
               <a
-                href="https://ecosyste.ms"
+                href="https://packages.ecosyste.ms/critical"
                 class="underline hover:text-gray-700"
                 rel="noopener noreferrer"
-                target="_blank">ecosyste.ms</a
-              >.
+                target="_blank">ecosyste.ms critical packages</a
+              > dataset, not every package published.
             </p>
             <a
               href={`${basePath}invest`}
@@ -81,6 +81,16 @@ const companyServices = services.filter(service =>
               </span>
             </a>
           </article>
+
+          <!--
+            Said before the click, not after it. Someone arriving on the home
+            page is deciding whether this site does the thing they came for,
+            and the honest answer shapes what they expect from the wizard.
+          -->
+          <p class="text-sm text-gray-600 mt-5 text-center" role="note">
+            OSS Wishlist is a teaching tool. It shows you what would help a project and who
+            works on that kind of problem. It does not sell, provide or broker any of it.
+          </p>
         </div>
 
       </div>
