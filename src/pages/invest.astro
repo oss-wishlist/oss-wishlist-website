@@ -173,7 +173,7 @@ const title =
   step === 1
     ? 'Find a project to support'
     : step === 2
-      ? `What brings you to ${selected?.name}?`
+      ? `How do you want to help ${selected?.name}?`
       : `Supporting ${selected?.name}`;
 ---
 
@@ -267,7 +267,7 @@ const title =
     {step === 2 && selected && (
       <>
         <h1 class="text-3xl font-bold text-gray-900 mb-2">
-          What brings you to{' '}
+          How do you want to help{' '}
           {selectedUrl ? (
             <a
               href={selectedUrl}
@@ -281,7 +281,7 @@ const title =
           )}?
         </h1>
         <p class="text-gray-600 mb-8 max-w-2xl">
-          We have ticked what the data shows. Change anything.
+          Pre-selected services are those which Ecosyste.ms data indicates might be helpful.
         </p>
 
         <details class="mb-6 bg-white border rounded-lg p-5" open={Boolean(dependencyCheck || dependencyProblem)}>
@@ -356,7 +356,10 @@ const title =
                 <label class={`flex gap-4 items-start p-5 rounded-lg border cursor-pointer transition-shadow hover:shadow-md ${why ? 'bg-purple-50 border-purple-200' : 'bg-white'}`}>
                   <input type="checkbox" name="m" value={m.id} checked={checked} class="mt-1 h-4 w-4 shrink-0" />
                   <span class="min-w-0">
-                    <span class="block text-lg font-semibold text-gray-900">{m.label}</span>
+                    <span class="block text-lg text-gray-900">
+                      <span class="text-gray-500">I want to help with</span>{' '}
+                      <span class="font-semibold">{m.label.toLowerCase()}</span>
+                    </span>
                     <span class="block text-sm text-gray-600 mt-0.5">{m.question}</span>
                     {why && (
                       <span class="inline-block text-xs font-medium text-purple-800 bg-purple-100 border border-purple-200 rounded-full px-2 py-0.5 mt-2">
@@ -460,77 +463,76 @@ const title =
           <input type="hidden" name="pn" value={selected.name} />
           {activeMotivations.map((m) => <input type="hidden" name="m" value={m} />)}
 
-          {matchedPractitioners.length > 0 && (
-            <section class="mb-10" aria-labelledby="people">
-              <h2 id="people" class="text-2xl font-bold text-gray-900 mb-1">
-                Practitioners with this expertise
-              </h2>
-              <p class="text-gray-600 mb-5">
-                Pick any you would approach. They listed these services themselves.
-              </p>
-
-              <ul class="space-y-3">
-                {matchedPractitioners.map((person) => (
-                  <li>
-                    <label class="bg-white border rounded-lg p-5 flex gap-4 cursor-pointer hover:shadow-md transition-shadow">
-                      <input
-                        type="checkbox"
-                        name="p"
-                        value={person.slug}
-                        checked={chosenPractitioners.includes(person.slug)}
-                        class="mt-1 h-4 w-4 shrink-0"
-                      />
-
-                      {person.avatar_url ? (
-                        <img src={person.avatar_url} alt="" width="48" height="48" loading="lazy" class="w-12 h-12 rounded-full object-cover shrink-0" />
-                      ) : (
-                        <span class="w-12 h-12 rounded-full bg-gray-200 shrink-0"></span>
-                      )}
-
-                      <span class="min-w-0">
-                        <span class="block font-semibold text-gray-900">
-                          {person.name}
-                          {person.accepts_pro_bono && (
-                            <span class="ml-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">pro bono</span>
-                          )}
-                          {person.availability === 'limited' && (
-                            <span class="ml-2 text-xs font-medium text-gray-600">limited availability</span>
-                          )}
-                        </span>
-                        {person.title && <span class="block text-sm text-gray-600">{person.title}</span>}
-                        {person.bio && <span class="block text-sm text-gray-700 mt-2 line-clamp-3">{person.bio}</span>}
-                        <span class="block text-xs text-gray-600 mt-2">
-                          Covers {person.matched.map((m) => serviceTitles.get(m) ?? m).join(', ')}
-                        </span>
-                      </span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
 
           <h2 class="text-2xl font-bold text-gray-900 mb-2">How would you invest?</h2>
 
           <div class="space-y-3 mb-6">
             {INVESTMENT_METHODS.map((m) => (
-              <label class="flex gap-4 items-start bg-white p-5 rounded-lg border cursor-pointer hover:shadow-md transition-shadow">
-                <input type="checkbox" name="method" value={m.id} checked={chosenMethods.includes(m.id)} class="mt-1 h-4 w-4 shrink-0" />
-                <span class="min-w-0">
-                  <span class="block text-lg font-semibold text-gray-900">{m.label}</span>
-                  <span class="block text-sm text-gray-600 mt-0.5">{m.summary}</span>
-                  {m.id === 'practitioner' && practitionerCount > 0 && (
-                    <span class="block text-xs text-gray-700 mt-1">
-                      {practitionerCount === 1
-                        ? '1 practitioner listed for this work'
-                        : `${practitionerCount} practitioners listed for this work`}
-                    </span>
-                  )}
-                  {m.caveat && m.caveatWhen(selected) && (
-                    <span class="block text-xs text-gray-700 bg-gray-100 border rounded px-2 py-1 mt-2">{m.caveat}</span>
-                  )}
-                </span>
-              </label>
+              <div class="method-block">
+                <label class="flex gap-4 items-start bg-white p-5 rounded-lg border cursor-pointer hover:shadow-md transition-shadow">
+                  <input type="checkbox" name="method" value={m.id} checked={chosenMethods.includes(m.id)} class="mt-1 h-4 w-4 shrink-0" />
+                  <span class="min-w-0">
+                    <span class="block text-lg font-semibold text-gray-900">{m.label}</span>
+                    <span class="block text-sm text-gray-600 mt-0.5">{m.summary}</span>
+                    {m.id === 'practitioner' && practitionerCount > 0 && (
+                      <span class="block text-xs text-gray-700 mt-1">
+                        {practitionerCount === 1
+                          ? '1 practitioner listed for this work'
+                          : `${practitionerCount} practitioners listed for this work`}
+                      </span>
+                    )}
+                    {m.caveat && m.caveatWhen(selected) && (
+                      <span class="block text-xs text-gray-700 bg-gray-100 border rounded px-2 py-1 mt-2">{m.caveat}</span>
+                    )}
+                  </span>
+                </label>
+
+                {/*
+                  Who you would approach is only a question once you have said
+                  you would pay someone. Revealed by CSS when the option above is
+                  ticked, and rendered visible when it arrives already ticked, so
+                  it works with JavaScript off too.
+                */}
+                {m.id === 'practitioner' && matchedPractitioners.length > 0 && (
+                  <div class="practitioner-picker mt-3 ml-8 pl-4 border-l-2 border-purple-200">
+                    <p class="text-sm font-semibold text-gray-800 mb-1">Who would you approach?</p>
+                    <p class="text-sm text-gray-600 mb-4">They listed these services themselves. Pick any, or none.</p>
+
+                    <ul class="space-y-3">
+                      {matchedPractitioners.map((person) => (
+                        <li>
+                          <label class="bg-white border rounded-lg p-4 flex gap-4 cursor-pointer hover:shadow-md transition-shadow">
+                            <input type="checkbox" name="p" value={person.slug} checked={chosenPractitioners.includes(person.slug)} class="mt-1 h-4 w-4 shrink-0" />
+
+                            {person.avatar_url ? (
+                              <img src={person.avatar_url} alt="" width="40" height="40" loading="lazy" class="w-10 h-10 rounded-full object-cover shrink-0" />
+                            ) : (
+                              <span class="w-10 h-10 rounded-full bg-gray-200 shrink-0"></span>
+                            )}
+
+                            <span class="min-w-0">
+                              <span class="block font-semibold text-gray-900">
+                                {person.name}
+                                {person.accepts_pro_bono && (
+                                  <span class="ml-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">pro bono</span>
+                                )}
+                                {person.availability === 'limited' && (
+                                  <span class="ml-2 text-xs font-medium text-gray-600">limited availability</span>
+                                )}
+                              </span>
+                              {person.title && <span class="block text-sm text-gray-600">{person.title}</span>}
+                              {person.bio && <span class="block text-sm text-gray-700 mt-1 line-clamp-2">{person.bio}</span>}
+                              <span class="block text-xs text-gray-600 mt-2">
+                                Covers {person.matched.map((x) => serviceTitles.get(x) ?? x).join(', ')}
+                              </span>
+                            </span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 
@@ -547,6 +549,30 @@ const title =
     <DataAttribution />
   </main>
 </Layout>
+
+<style>
+  /*
+   * The practitioner list belongs to the "pay a practitioner" option, so it
+   * only appears once that option is ticked. Done in CSS rather than script so
+   * it responds instantly and still works with JavaScript disabled: the server
+   * renders the option already ticked when it arrives that way, and :has()
+   * handles it from there.
+   */
+  .practitioner-picker {
+    display: none;
+  }
+
+  .method-block:has(input[name='method']:checked) .practitioner-picker {
+    display: block;
+  }
+
+  /* Without :has(), show it rather than hiding a choice someone cannot reach. */
+  @supports not selector(:has(*)) {
+    .practitioner-picker {
+      display: block;
+    }
+  }
+</style>
 
 <script>
   /**

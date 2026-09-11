@@ -16,7 +16,7 @@ const { current, packageHref = null, motivationHref = null } = Astro.props as Pr
 
 const steps = [
   { n: 1, label: 'Pick a package', href: current > 1 ? packageHref : null },
-  { n: 2, label: 'What brings you here', href: current > 2 ? motivationHref : null },
+  { n: 2, label: 'How to help', href: current > 2 ? motivationHref : null },
   { n: 3, label: 'How to invest', href: null },
 ] as const;
 ---
