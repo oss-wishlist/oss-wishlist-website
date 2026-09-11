@@ -29,26 +29,7 @@ When you sign in with GitHub OAuth, we receive and temporarily store:
 
 **Retention:** Session data (including the access token) is automatically deleted when you log out or after 24 hours of inactivity. We do not store access tokens in any database.
 
-### 2. Wishlist Data
-
-When you create a wishlist, we collect:
-- Project repository information
-- Service needs and descriptions
-- Technologies used
-- Preferred fulfillment methods
-- Your GitHub username (as the maintainer)
-
-**Purpose:** To publicly display open source projects' needs and connect maintainers with sponsors and practitioners.
-
-**Storage:** All wishlists are stored in our **PostgreSQL database** hosted on Digital Ocean (Toronto, Canada). Approved wishlists are publicly visible on our website. Pending wishlists are visible only to administrators until approved.
-
-**Database Location:** Digital Ocean Managed Database, Toronto, Canada
-
-**Retention:** Wishlists remain in the database until you close or delete them. When you close a wishlist, it is marked as "closed" but remains in the database. When you delete a wishlist, it is permanently removed from our database.
-
-**Approval Status:** New wishlists are initially set to "pending" status and require administrator approval before appearing publicly. You will be notified via email when your wishlist is approved or rejected.
-
-### 3. Practitioner Application Data
+### 2. Practitioner Application Data
 
 When you join as a practitioner, we collect:
 - Full name
@@ -71,19 +52,6 @@ When you join as a practitioner, we collect:
 
 **Approval Status:** New practitioner applications are set to "pending" status and require administrator review. You will be notified via email when your application is approved or rejected.
 
-### 4. Sponsor Request Data
-
-When you submit a fulfillment request, we collect:
-- Your contact information
-- Organization details (if applicable)
-- Service offering details
-
-**Purpose:** To facilitate connections between sponsors/practitioners and maintainers.
-
-**Storage:** Request data is **sent directly to the wishlist creator via email** and is **not stored in our database**.
-
-**Retention:** Email requests are retained according to our email hosting provider's policies (Resend). We do not maintain a separate copy in our database.
-
 ## Database Management
 
 ### Data Controller
@@ -101,14 +69,14 @@ Our PostgreSQL database is:
 ### Data Processing
 We process your data solely for:
 1. Authenticating users and maintaining secure sessions
-2. Storing and displaying wishlists and practitioner profiles
+2. Storing and displaying practitioner profiles
 3. Managing approval workflows for new submissions
 4. Facilitating connections between maintainers and practitioners/sponsors
 5. Sending email notifications about your submissions
 
 ### Administrator Access
 A limited number of authorized administrators have access to:
-- Approve or reject pending wishlists and practitioner applications
+- Approve or reject pending practitioner applications
 - View all records in the database (including pending submissions)
 - Delete records upon user request
 - Manage user accounts and permissions
@@ -117,7 +85,7 @@ A limited number of authorized administrators have access to:
 
 ### Legal Basis for Processing (GDPR)
 For users in the European Economic Area (EEA), we process your data based on:
-- **Consent:** When you submit a wishlist or practitioner application
+- **Consent:** When you submit a practitioner application
 - **Legitimate interests:** To operate our platform and connect open source maintainers with practitioners
 - **Legal obligations:** When required by law to retain or disclose information
 
@@ -133,7 +101,7 @@ We explicitly do not collect:
 
 We use collected information solely to:
 1. Authenticate users and maintain secure sessions
-2. Display public wishlists and practitioner profiles
+2. Display public practitioner profiles
 3. Facilitate connections between maintainers and practitioners/sponsors
 4. Respond to support requests and communications
 
@@ -147,38 +115,10 @@ We **never**:
 
 ### Public Data
 The following information is **intentionally public** once approved:
-- Approved wishlists (project information, service needs, technologies)
 - Approved practitioner profiles (name, bio, services, contact information you chose to share)
 - Project repository information
 
-**Pending Data:** Wishlists and practitioner applications with "pending" status are NOT publicly visible and can only be accessed by authorized administrators.
-
-### Public JSON Data Feed
-We provide a **public JSON data feed** of all approved wishlists at `/wishlist-cache/all-wishlists.json`. This feed contains **minimal information only**:
-- Unique wishlist ID (format: `{database_id}-{repository_name}`)
-- Repository URL
-- Link to full wishlist page on our website
-
-**What is NOT included:** The JSON feed does NOT contain:
-- Project descriptions, names, or details
-- Service needs or wishes
-- Technologies or resources
-- Maintainer email addresses or any personal information beyond what is publicly visible in the GitHub repository URL
-- Urgency, project size, or other metadata
-
-Users must visit the full wishlist page on our website to view complete information.
-
-**Purpose:** To enable third-party integrations and discovery tools while minimizing data exposure.
-
-**Third-Party Access:** This JSON feed is publicly accessible and may be ingested by third-party services, including:
-- **[Ecosyste.ms](https://ecosyste.ms/):** An open source project discovery and analysis platform (see [Ecosyste.ms Privacy Policy](https://ecosyste.ms/privacy))
-
-**Data Synchronization:** When you delete or close a wishlist through our UI:
-1. The wishlist is immediately removed from our database and JSON feed
-2. Third-party services that have ingested the data (like ecosyste.ms) will receive the update on their next synchronization cycle
-3. **Note:** We cannot control the exact timing of when third-party services refresh their cached data. Most services sync periodically (daily or weekly).
-
-**Deletion Propagation:** While we remove data immediately from our systems, it may take additional time for third-party integrations to reflect deletions. Contact the third-party service directly if you need urgent removal from their systems.
+**Pending Data:** Practitioner applications with "pending" status are NOT publicly visible and can only be accessed by authorized administrators.
 
 ### Third-Party Services
 We use the following third-party services that may process your data:
@@ -202,8 +142,8 @@ We may disclose your information if required by law, legal process, or governmen
 
 ### Access and Control
 You have the right to:
-- **Access:** View your public wishlist data and practitioner profile at any time
-- **Correction:** Update or correct your wishlist or practitioner profile by logging in and resubmitting your information through the application form, or by contacting us
+- **Access:** View your public practitioner profile at any time
+- **Correction:** Update or correct your practitioner profile by logging in and resubmitting your information through the application form, or by contacting us
 - **Deletion:** Request deletion of your data (see below)
 - **Export:** Download your data by contacting us (we will provide it in machine-readable format within 30 days)
 - **Objection:** Object to processing of your data for specific purposes
@@ -214,9 +154,6 @@ You have the right to:
 
 ### Data Deletion
 To delete your data:
-- **Wishlist:** You can close or delete your wishlist through your dashboard at `/wishlists/me`, or [contact us](/contact)
-  - **Close:** Marks wishlist as "closed" but keeps it in database (can be reopened)
-  - **Delete:** Permanently removes wishlist from database (cannot be undone)
 - **Practitioner Profile:** Use our [contact form](/contact) to request deletion of your practitioner profile
 - **Session Data:** Log out or clear your browser cookies
 - **Complete Account Deletion:** Contact us to request deletion of all your data from our database
@@ -227,7 +164,7 @@ To delete your data:
 
 ### Withdraw Consent
 You can withdraw your consent for data processing at any time by:
-- Deleting your wishlist or practitioner profile
+- Deleting your practitioner profile
 - Contacting us to request account deletion
 - Note: Withdrawal does not affect the lawfulness of processing before withdrawal
 
@@ -282,9 +219,6 @@ We retain your data according to the following schedule:
 | Data Type | Retention Period | Reason |
 |-----------|------------------|--------|
 | Session cookies | 24 hours or logout | Authentication |
-| Approved wishlists | Until you delete/close | Service provision |
-| Closed wishlists | Indefinitely (marked closed) | Historical records |
-| Deleted wishlists | 90 days in backups only | Disaster recovery |
 | Approved practitioner profiles | Until you request deletion | Service provision |
 | Rejected applications | Indefinitely (not public) | Administrative records |
 | Email notifications | Per Resend's policy | Third-party service |

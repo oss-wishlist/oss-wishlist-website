@@ -1,16 +1,10 @@
 ---
 title: About Us
-description: "Open Source Wishlist connects open source maintainers with expert practitioners for sustainability challenges: governance, funding, security audits, and community health."
+description: "Who made Open Source Wishlist, a teaching tool for finding open source projects worth supporting and working out what would help them."
 date: 2026-02-15
 ---
 
 # <span class="text-accent">About</span> <span class="text-accent">Us</span>
-
-## What This Is
-
-Open Source Wishlist is an independent, grassroots community of practitioners connecting to drive impact through sustainability, openness in AI, digital sovereignty, and beyond, while supporting each other along the way.
-
-We support each other through workshops, events, and practical tools like wishlists, where maintainers express needs and the community helps fulfill them.
 
 ## Who Made This
 
@@ -18,15 +12,7 @@ We support each other through workshops, events, and practical tools like wishli
 
 Special thanks to [Open Collective](https://opencollective.com) and [Ecosyste.ms](https://ecosyste.ms) for their support and collaboration.
 
-## Who Funds This
-
-No one, although [sponsorship](https://github.com/sponsors/emmairwin) is greatly appreciated. [Wishlist fulfillment](/wishlists) is another way to help open source projects.
-
-## Connect With Us
-
-Join our community conversations across these channels:
+## Find Us
 
 - **[GitHub](https://github.com/oss-wishlist)**
 - **[LinkedIn](https://www.linkedin.com/company/110187652)**
-
-**[Join the Community →](/helpers)**
