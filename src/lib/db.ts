@@ -6,6 +6,7 @@
 import pg from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
+import { sslConfigFor } from './db-ssl';
 
 const { Pool } = pg;
 
@@ -52,22 +53,18 @@ function getPool(): pg.Pool {
     );
   }
 
-  // SSL configuration for Digital Ocean managed PostgreSQL
-  const shouldUseSSL =
-    DATABASE_URL.includes('sslmode=require') ||
-    DATABASE_URL.includes('ssl=true') ||
-    PGSSLMODE === 'require';
-
-  // For Digital Ocean managed databases, we need to disable certificate validation.
-  // NOTE: This MUST be set before pool creation and left set for database operations.
-  if (shouldUseSSL) {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-    console.log('[Database] Using SSL connection with certificate validation disabled');
-  }
+  /*
+    TLS for this connection only. The line that used to be here set
+    NODE_TLS_REJECT_UNAUTHORIZED = '0', which is process-wide: it disabled
+    certificate verification for the OAuth token exchange, the profile fetch
+    carrying the access token, ecosyste.ms and mail, not just Postgres.
+    See src/lib/db-ssl.ts for how the CA certificate is found.
+  */
+  const ssl = sslConfigFor(DATABASE_URL);
 
   pool = new Pool({
     connectionString: DATABASE_URL,
-    ssl: shouldUseSSL ? { rejectUnauthorized: false } : false,
+    ssl,
     // Connection pool settings
     max: 20, // Maximum number of clients in the pool
     idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
