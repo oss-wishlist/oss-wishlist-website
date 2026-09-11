@@ -188,13 +188,13 @@ const title =
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Find a project to support</h1>
         <p class="text-gray-600 mb-1">Start with an open source project you already use.</p>
         <p class="text-xs text-gray-500 mb-5">
-          Searchable via
+          Search covers the
           <a
-            href="https://ecosyste.ms"
+            href="https://packages.ecosyste.ms/critical"
             class="underline hover:text-gray-700"
             rel="noopener noreferrer"
-            target="_blank">ecosyste.ms</a
-          >.
+            target="_blank">ecosyste.ms critical packages</a
+          > dataset, not every package published.
         </p>
 
         <form method="get" action={selfBase} class="mb-6" role="search">
@@ -466,6 +466,10 @@ const title =
 
 
           <h2 class="text-2xl font-bold text-gray-900 mb-2">How would you like to invest?</h2>
+          <p class="text-gray-600 mb-6 max-w-2xl">
+            Whoever does the work, it is delivered against the same playbook rubric. These are
+            routes to it, not different standards.
+          </p>
 
           <div class="space-y-3 mb-6">
             {INVESTMENT_METHODS.map((m) => (
@@ -478,8 +482,8 @@ const title =
                     {m.id === 'practitioner' && practitionerCount > 0 && (
                       <span class="block text-xs text-gray-700 mt-1">
                         {practitionerCount === 1
-                          ? '1 practitioner listed for this work'
-                          : `${practitionerCount} practitioners listed for this work`}
+                          ? '1 practitioner with this speciality'
+                          : `${practitionerCount} practitioners with this speciality`}
                       </span>
                     )}
                     {m.caveat && m.caveatWhen(selected) && (

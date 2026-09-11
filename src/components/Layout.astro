@@ -14,7 +14,8 @@ export interface Props {
 
 const { 
   title, 
-  description = "Open Source Wishlist: connecting open source maintainers with practitioners who can help with governance, funding, security, and more.", 
+  description = "Open Source Wishlist is a teaching tool. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it.",
+  
   showHeader = true,
   image = '/logo.png',
   type = 'website',
@@ -83,7 +84,7 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
         "name": "Open Source Wishlist",
         "url": "https://oss-wishlist.com",
         "logo": "https://oss-wishlist.com/logo.png",
-        "description": "Open Source Wishlist: connecting open source maintainers with practitioners who can help with governance, funding, security, and more.",
+        "description": "Open Source Wishlist is a teaching tool. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it.",
         "sameAs": [
           "https://github.com/oss-wishlist",
           "https://www.linkedin.com/company/110187652"
@@ -164,6 +165,15 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
               <span class="hidden sm:inline">Contact Us</span>
             </a>
           </div>
+
+          <!--
+            What the site is, said once, in the one place that is on every page.
+            It belongs here rather than on each surface because it is a standing
+            fact about the project, not a caveat about any particular screen.
+          -->
+          <p class="mt-8 pt-6 border-t border-gray-800 text-sm text-gray-400">
+            OSS Wishlist is a teaching tool.
+          </p>
         </div>
 
       </div>
