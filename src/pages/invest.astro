@@ -42,6 +42,11 @@ import { practitionersForServices } from '../lib/practitioner-availability';
 import { checkRepositoryForPackage } from '../lib/dependency-check';
 import { avatarThumb } from '../lib/avatar';
 import {
+  recentAdvisories,
+  recentAdvisoryCount,
+  ADVISORY_LIST_LIMIT,
+} from '../../config/advisories.js';
+import {
   MOTIVATIONS,
   parseMotivations,
   servicesForMotivations,
@@ -108,7 +113,12 @@ const activeMotivations = motivationsSubmitted
  * something does not make it jump down the page while you are reading it.
  */
 /** Advisories we can name and link, for the security evidence. */
-const advisories = (selected?.advisories ?? []).filter((a) => a.url || a.id);
+// The same window the fact above describes, newest first, so the list is
+// evidence for the number rather than a different set of things.
+const advisories = selected
+  ? recentAdvisories(selected).filter((a) => a.url || a.id).slice(0, ADVISORY_LIST_LIMIT)
+  : [];
+const advisoryTotal = selected ? recentAdvisoryCount(selected) : 0;
 
 /** Always a link for the project name: repository, else its registry page. */
 const selectedUrl = selected ? projectUrl(selected) : null;
@@ -379,7 +389,7 @@ const title =
                         <details class="group">
                           <summary class="cursor-pointer text-xs text-gray-700 hover:text-gray-900 underline list-none inline-flex items-center gap-1">
                             <span class="transition-transform group-open:rotate-90" aria-hidden="true">&rsaquo;</span>
-                            See the issues
+                            See the advisories
                           </summary>
                           <span class="block mt-2 pl-3 border-l-2 border-purple-200 space-y-1">
                             {advisories.map((a) => (
@@ -400,6 +410,11 @@ const title =
                                 {a.cve && <span class="text-gray-500"> &middot; {a.cve}</span>}
                               </span>
                             ))}
+                            {advisoryTotal > advisories.length && (
+                              <span class="block text-xs text-gray-500">
+                                and {advisoryTotal - advisories.length} more.
+                              </span>
+                            )}
                           </span>
                         </details>
                       </span>

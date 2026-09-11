@@ -11,7 +11,8 @@
 import criticalData from '../../data/critical.json';
 import metaData from '../../data/_meta.json';
 import optoutData from '../../data/optout.json';
-import { flagsFor, labelsFor, servicesFor } from '../../config/service-map.js';
+import { flagsFor, labelsFor, factsFor, servicesFor } from '../../config/service-map.js';
+import { hasRecentAdvisories } from '../../config/advisories.js';
 import { isExcludedOwner } from '../../config/excluded-owners.js';
 import { FEATURED_PACKAGES } from '../../config/featured.js';
 
@@ -183,7 +184,9 @@ export function isEcosystemId(value: string | null): value is EcosystemId {
 }
 
 const hasAnyFlag = (p: CriticalPackage) =>
-  p.sole_maintainer || p.unfunded || p.quiet || p.has_advisories;
+  // Recency, to match the fact shown: a package whose only advisory is from
+  // 2019 carries no flag any more, and its card would show nothing.
+  p.sole_maintainer || p.unfunded || p.quiet || hasRecentAdvisories(p);
 
 /** Below this a pool is too thin to feel random, so widen rather than repeat. */
 const SAMPLE_FALLBACK_MIN = 24;
@@ -369,6 +372,7 @@ export function presentPackage(pkg: CriticalPackage) {
     href: packageHref(pkg),
     flags: flagsFor(pkg) as string[],
     labels: labelsFor(pkg) as string[],
+    facts: factsFor(pkg) as Array<{ flag: string; text: string; href: string | null }>,
     serviceSlugs: servicesFor(pkg) as string[],
   };
 }

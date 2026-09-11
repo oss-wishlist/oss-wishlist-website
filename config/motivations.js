@@ -23,6 +23,8 @@
  * pretending otherwise would teach the wrong lesson.
  */
 
+import { recentAdvisoryLabel } from './advisories.js';
+
 /**
  * A release gap long enough that winding down is worth raising.
  *
@@ -51,10 +53,9 @@ export const MOTIVATIONS = [
     label: 'Security',
     question: 'Known vulnerabilities, or fixes that are slow to arrive.',
     services: ['dependency-security-audit'],
-    evidence: (pkg) =>
-      pkg.has_advisories
-        ? `${pkg.advisory_count} known security ${pkg.advisory_count === 1 ? 'issue' : 'issues'} published`
-        : null,
+    // Recent disclosure activity, not the lifetime total; see
+    // config/advisories.js for why the stored count cannot be used.
+    evidence: (pkg) => recentAdvisoryLabel(pkg),
   },
   {
     id: 'project-health',

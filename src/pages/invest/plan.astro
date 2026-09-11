@@ -15,7 +15,8 @@ import { getCollection } from 'astro:content';
 import Layout from '../../components/Layout.astro';
 import { getBasePath } from '../../lib/paths';
 import { getPackage, projectUrl } from '../../lib/critical-packages';
-import { labelsFor } from '../../../config/service-map.js';
+import { factsFor } from '../../../config/service-map.js';
+import { recentAdvisories, ADVISORY_LIST_LIMIT } from '../../../config/advisories.js';
 import { getRubricForPlaybook } from '../../lib/rubrics';
 import { practitionersForServices } from '../../lib/practitioner-availability';
 import { avatarThumb } from '../../lib/avatar';
@@ -61,7 +62,8 @@ const practitioners = allMatched.filter((p) => practitionerSlugs.includes(p.slug
 
 const serviceTitles = new Map(services.map((s) => [s.slug, s.data.title]));
 const pkgUrl = projectUrl(pkg);
-const facts = labelsFor(pkg) as string[];
+const facts = factsFor(pkg) as Array<{ flag: string; text: string; href: string | null }>;
+const planAdvisories = recentAdvisories(pkg).slice(0, ADVISORY_LIST_LIMIT);
 
 const printedOn = new Date().toLocaleDateString('en-GB', {
   day: 'numeric',
@@ -124,8 +126,37 @@ const backHref =
         <section class="mb-8">
           <h2 class="text-lg font-bold text-gray-900 mb-2">What Ecosyste.ms data shows</h2>
           <ul class="list-disc pl-5 text-gray-800 space-y-1">
-            {facts.map((f) => <li>{f}</li>)}
+            {facts.map((f) => (
+              <li>
+                {f.href ? (
+                  <a href={f.href} class="underline" rel="noopener noreferrer" target="_blank">{f.text}</a>
+                ) : (
+                  f.text
+                )}
+              </li>
+            ))}
           </ul>
+
+          {/*
+            A printed page cannot be clicked, and a bare count of security
+            advisories next to someone's project is an accusation without the
+            list behind it. So the advisories are named here.
+          */}
+          {planAdvisories.length > 0 && (
+            <ul class="mt-3 pl-5 space-y-1">
+              {planAdvisories.map((a) => (
+                <li class="text-sm text-gray-700">
+                  {a.severity && <span class="uppercase text-gray-500 mr-1">{a.severity.toLowerCase()}</span>}
+                  {a.url ? (
+                    <a href={a.url} class="underline" rel="noopener noreferrer" target="_blank">{a.title ?? a.cve ?? a.id}</a>
+                  ) : (
+                    a.title ?? a.cve ?? a.id
+                  )}
+                  {a.cve && <span class="text-gray-500"> &middot; {a.cve}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
 
