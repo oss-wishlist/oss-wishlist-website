@@ -14,8 +14,10 @@ Special thanks to [Open Collective](https://opencollective.com) and [Ecosyste.ms
 
 ## Appreciate This Work?
 
-This is free to use and always will be. If it was useful, you can support it by
-subscribing to my blog at **[sunnydeveloper.com](https://sunnydeveloper.com/)**.
+This is free to use and always will be. If it was useful:
+
+- **[Sponsor me on GitHub](https://github.com/sponsors/emmairwin)**
+- **[Subscribe to my blog](https://sunnydeveloper.com/)**
 
 ## Find Us
 
