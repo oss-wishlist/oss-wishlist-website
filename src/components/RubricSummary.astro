@@ -44,12 +44,13 @@ const basePath = getBasePath();
         ))}
       </ul>
 
+      {/*
+        There used to be a "read the full playbook" link here. The playbook is
+        already further down this page, so it offered to show you what you were
+        reading.
+      */}
       <p class="text-xs text-gray-500 mt-3">
         Peer reviewed against this rubric, so the outcome is assessed rather than asserted.
-        <a
-          href={`${basePath}playbooks/${rubric.playbook}`}
-          class="underline hover:text-gray-700">Read the full {serviceTitle} playbook &rarr;</a
-        >
       </p>
     </div>
   </details>

@@ -201,18 +201,18 @@ const backHref =
                 <h3 class="font-semibold text-gray-900">
                   {s.data.title}
                   {/*
-                    The rubric below is a summary. The playbook is the whole
-                    method, so link it here rather than leaving the list looking
-                    like all there is.
+                    The service page renders the playbook itself, along with the
+                    full rubric and the practitioners, so it is one link rather
+                    than two to the same markdown. Absolute, because the print
+                    stylesheet spells hrefs out and a printed plan has to be
+                    typeable.
                   */}
-                  {s.data.playbook && (
-                    <a
-                      href={`${Astro.url.origin}${basePath}playbooks/${s.data.playbook}`}
-                      class="ml-2 text-sm font-normal underline text-gray-600 hover:text-gray-900"
-                      rel="noopener noreferrer"
-                      target="_blank">Playbook</a
-                    >
-                  )}
+                  <a
+                    href={`${Astro.url.origin}${basePath}services/${s.slug}`}
+                    class="ml-2 text-sm font-normal underline text-gray-600 hover:text-gray-900"
+                    rel="noopener noreferrer"
+                    target="_blank">Full description and playbook</a
+                  >
                 </h3>
                 <p class="text-sm text-gray-700 mt-1">{s.data.description}</p>
                 {s.data.impact && (
