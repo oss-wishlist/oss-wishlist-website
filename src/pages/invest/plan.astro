@@ -1,0 +1,282 @@
+---
+/**
+ * /invest/plan — the plan, on its own page, built to be printed.
+ *
+ * It was previously a block of pre-formatted text at the bottom of step 3,
+ * which meant scrolling past the services and the practitioners to reach it and
+ * then copying it out of a scrollable box. A plan someone is meant to take to
+ * a colleague or a budget holder should be a page: readable, linkable, and
+ * printable to PDF without the site's furniture around it.
+ *
+ * Everything comes from the query string, so the URL is the plan. It can be
+ * bookmarked, sent to someone, or reopened later.
+ */
+import { getCollection } from 'astro:content';
+import Layout from '../../components/Layout.astro';
+import { getBasePath } from '../../lib/paths';
+import { getPackage, projectUrl } from '../../lib/critical-packages';
+import { labelsFor } from '../../../config/service-map.js';
+import { getRubricForPlaybook } from '../../lib/rubrics';
+import { practitionersForServices } from '../../lib/practitioner-availability';
+import { MOTIVATIONS, parseMotivations, servicesForMotivations } from '../../../config/motivations.js';
+import { INVESTMENT_METHODS, parseMethods } from '../../../config/investment-methods.js';
+
+export const prerender = false;
+
+const basePath = getBasePath();
+const params = Astro.url.searchParams;
+
+const pkg = getPackage(params.get('pe') ?? '', params.get('pn') ?? '');
+if (!pkg) {
+  return Astro.redirect(`${basePath}invest`);
+}
+
+const motivationIds = parseMotivations(params.getAll('m'));
+const methodIds = parseMethods(params.getAll('method'));
+const practitionerSlugs = params.getAll('p');
+
+const motivations = MOTIVATIONS.filter((m) => motivationIds.includes(m.id));
+const methods = INVESTMENT_METHODS.filter((m) => methodIds.includes(m.id));
+
+const serviceSlugs = servicesForMotivations(motivationIds, pkg) as string[];
+const catalog = await getCollection('services');
+const slugOf = (entry: { id: string }) => entry.id.replace(/\.md$/, '');
+const bySlug = new Map(catalog.map((e) => [slugOf(e), e]));
+
+const services = await Promise.all(
+  serviceSlugs
+    .map((slug) => bySlug.get(slug))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e))
+    .map(async (entry) => ({
+      slug: slugOf(entry),
+      data: entry.data,
+      rubric: await getRubricForPlaybook(entry.data.playbook),
+    }))
+);
+
+// Only the practitioners actually chosen, in the order they were offered.
+const allMatched = await practitionersForServices(serviceSlugs);
+const practitioners = allMatched.filter((p) => practitionerSlugs.includes(p.slug));
+
+const serviceTitles = new Map(services.map((s) => [s.slug, s.data.title]));
+const pkgUrl = projectUrl(pkg);
+const facts = labelsFor(pkg) as string[];
+
+const printedOn = new Date().toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+/** Back to step 3 with everything still selected. */
+const backHref =
+  `${basePath}invest?pe=${encodeURIComponent(pkg.ecosystem)}&pn=${encodeURIComponent(pkg.name)}&ms=1` +
+  motivationIds.map((m) => `&m=${m}`).join('') +
+  methodIds.map((m) => `&method=${m}`).join('') +
+  practitionerSlugs.map((p) => `&p=${encodeURIComponent(p)}`).join('');
+---
+
+<Layout
+  title={`Plan for ${pkg.name} | OSS Wishlist`}
+  description={`A plan for supporting ${pkg.name}.`}
+  noindex={true}
+>
+  <main class="max-w-3xl mx-auto px-4 py-12">
+    <div class="flex flex-wrap items-center gap-3 mb-8 no-print">
+      <a href={backHref} class="text-sm text-gray-600 hover:text-gray-900 underline">
+        &larr; Change anything
+      </a>
+      <span class="flex-1"></span>
+      <button
+        type="button"
+        id="print-plan"
+        class="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold"
+      >
+        Print or save as PDF
+      </button>
+      <button
+        type="button"
+        id="copy-plan"
+        class="border border-gray-400 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+      >
+        Copy as text
+      </button>
+      <span id="copy-status" class="text-sm text-gray-600" role="status" aria-live="polite"></span>
+    </div>
+
+    <article id="plan">
+      <header class="border-b pb-5 mb-8">
+        <p class="text-xs uppercase tracking-widest text-gray-500 mb-2">Open source support plan</p>
+        <h1 class="text-3xl font-bold text-gray-900">
+          {pkgUrl ? (
+            <a href={pkgUrl} class="hover:underline" rel="noopener noreferrer" target="_blank">{pkg.name}</a>
+          ) : (
+            pkg.name
+          )}
+          <span class="text-base font-normal text-gray-500">({pkg.ecosystem})</span>
+        </h1>
+        {pkg.description && <p class="text-gray-700 mt-2">{pkg.description}</p>}
+        <p class="text-sm text-gray-500 mt-3">Prepared {printedOn}</p>
+      </header>
+
+      {facts.length > 0 && (
+        <section class="mb-8">
+          <h2 class="text-lg font-bold text-gray-900 mb-2">What the data shows</h2>
+          <ul class="list-disc pl-5 text-gray-800 space-y-1">
+            {facts.map((f) => <li>{f}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {motivations.length > 0 && (
+        <section class="mb-8">
+          <h2 class="text-lg font-bold text-gray-900 mb-2">Why we would invest</h2>
+          <ul class="list-disc pl-5 text-gray-800 space-y-1">
+            {motivations.map((m) => (
+              <li><span class="font-medium">{m.label}.</span> {m.question}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {services.length > 0 && (
+        <section class="mb-8">
+          <h2 class="text-lg font-bold text-gray-900 mb-3">The work</h2>
+          <div class="space-y-4">
+            {services.map((s) => (
+              <div class="border rounded-lg p-4">
+                <h3 class="font-semibold text-gray-900">{s.data.title}</h3>
+                <p class="text-sm text-gray-700 mt-1">{s.data.description}</p>
+                {s.data.impact && (
+                  <p class="text-sm text-gray-700 mt-2">
+                    <span class="font-semibold">Outcome:</span> {s.data.impact}
+                  </p>
+                )}
+                {s.rubric && (
+                  <p class="text-sm text-gray-600 mt-2">
+                    <span class="font-semibold">Measured against:</span>{' '}
+                    {s.rubric.dimensions.map((d) => d.name).join(', ')}
+                    {s.rubric.totalPoints ? ` (${s.rubric.totalPoints} points)` : ''}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {practitioners.length > 0 && (
+        <section class="mb-8">
+          <h2 class="text-lg font-bold text-gray-900 mb-3">Who could do it</h2>
+          <div class="space-y-3">
+            {practitioners.map((person) => (
+              <div class="border rounded-lg p-4">
+                <p class="font-semibold text-gray-900">
+                  {person.name}
+                  {person.accepts_pro_bono && <span class="ml-2 text-xs text-gray-600">pro bono</span>}
+                  {person.availability === 'limited' && (
+                    <span class="ml-2 text-xs text-gray-600">limited availability</span>
+                  )}
+                </p>
+                {person.title && <p class="text-sm text-gray-600">{person.title}</p>}
+                {person.bio && <p class="text-sm text-gray-700 mt-1">{person.bio}</p>}
+                <p class="text-xs text-gray-600 mt-2">
+                  Covers {person.matched.map((m) => serviceTitles.get(m) ?? m).join(', ')}
+                </p>
+                <p class="text-xs text-gray-600 mt-1">
+                  Profile: {Astro.url.origin}{basePath}practitioners/{person.slug}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {methods.length > 0 && (
+        <section class="mb-8">
+          <h2 class="text-lg font-bold text-gray-900 mb-2">How we would fund it</h2>
+          <ul class="list-disc pl-5 text-gray-800 space-y-1">
+            {methods.map((m) => (
+              <li><span class="font-medium">{m.label}.</span> {m.summary}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section class="border-t pt-5 text-sm text-gray-600">
+        <p class="font-semibold text-gray-800 mb-1">Next step</p>
+        <p>
+          Approach the project and whoever would do the work, directly.
+          {pkgUrl && <> The project is at {pkgUrl}.</>}
+        </p>
+        <p class="mt-3">
+          OSS Wishlist does not facilitate support. This is a teaching tool based on industry
+          expertise, and package data comes from ecosyste.ms.
+        </p>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<style>
+  /*
+   * Printing should yield the plan and nothing else: no navigation, no footer,
+   * no buttons, and links spelled out since a printed page cannot be clicked.
+   */
+  @media print {
+    :global(header),
+    :global(footer),
+    :global(nav),
+    .no-print {
+      display: none !important;
+    }
+
+    :global(body),
+    :global(main) {
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: none !important;
+    }
+
+    #plan {
+      font-size: 11pt;
+    }
+
+    #plan a::after {
+      content: ' (' attr(href) ')';
+      font-size: 9pt;
+      color: #555;
+      word-break: break-all;
+    }
+
+    #plan section,
+    #plan div {
+      break-inside: avoid;
+    }
+  }
+</style>
+
+<script>
+  document.getElementById('print-plan')?.addEventListener('click', () => window.print());
+
+  document.getElementById('copy-plan')?.addEventListener('click', async () => {
+    const plan = document.getElementById('plan');
+    const status = document.getElementById('copy-status');
+    if (!plan) return;
+
+    // Plain text for pasting into an email or a ticket.
+    const text = (plan.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+
+    try {
+      await navigator.clipboard.writeText(text);
+      if (status) status.textContent = 'Copied.';
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(plan);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      if (status) status.textContent = 'Select and copy the plan above.';
+    }
+  });
+</script>

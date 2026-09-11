@@ -73,6 +73,7 @@ const motivationsSubmitted = params.get('ms') === '1';
 
 // ---- Step 3 state: how to invest ----
 const chosenMethods = parseMethods(params.getAll('method'));
+const chosenPractitioners = params.getAll('p');
 const methodsSubmitted = params.get('hs') === '1';
 
 const step: 1 | 2 | 3 = !selected ? 1 : !motivationsSubmitted ? 2 : 3;
@@ -454,69 +455,62 @@ const title =
           </p>
         )}
 
-        {matchedPractitioners.length > 0 && (
-          <section class="mb-10" aria-labelledby="people">
-            <h2 id="people" class="text-2xl font-bold text-gray-900 mb-1">
-              Practitioners with this expertise
-            </h2>
-            <p class="text-gray-600 mb-5">
-              They listed these services themselves. Approach them directly.
-            </p>
-
-            <ul class="space-y-3">
-              {matchedPractitioners.map((person) => (
-                <li class="bg-white border rounded-lg p-5 flex gap-4">
-                  {person.avatar_url ? (
-                    <img
-                      src={person.avatar_url}
-                      alt=""
-                      width="48"
-                      height="48"
-                      loading="lazy"
-                      class="w-12 h-12 rounded-full object-cover shrink-0"
-                    />
-                  ) : (
-                    <span class="w-12 h-12 rounded-full bg-gray-200 shrink-0"></span>
-                  )}
-
-                  <div class="min-w-0">
-                    <p class="font-semibold text-gray-900">
-                      {person.name}
-                      {person.accepts_pro_bono && (
-                        <span class="ml-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">
-                          pro bono
-                        </span>
-                      )}
-                      {person.availability === 'limited' && (
-                        <span class="ml-2 text-xs font-medium text-gray-600">limited availability</span>
-                      )}
-                    </p>
-                    {person.title && <p class="text-sm text-gray-600">{person.title}</p>}
-                    {person.bio && <p class="text-sm text-gray-700 mt-2 line-clamp-3">{person.bio}</p>}
-
-                    <p class="text-xs text-gray-600 mt-2">
-                      Covers {person.matched.map((m) => serviceTitles.get(m) ?? m).join(', ')}
-                    </p>
-
-                    <a
-                      href={`${basePath}practitioners/${person.slug}`}
-                      class="inline-block text-sm text-gray-600 hover:text-gray-900 underline mt-2"
-                      >See {person.name}&rsquo;s profile &rarr;</a
-                    >
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">How would you invest?</h2>
-        <form method="get" action={selfBase} class="mb-10">
+        <form method="get" action={`${basePath}invest/plan`} id="plan-form">
           <input type="hidden" name="pe" value={selected.ecosystem} />
           <input type="hidden" name="pn" value={selected.name} />
-          <input type="hidden" name="ms" value="1" />
           {activeMotivations.map((m) => <input type="hidden" name="m" value={m} />)}
-          <input type="hidden" name="hs" value="1" />
+
+          {matchedPractitioners.length > 0 && (
+            <section class="mb-10" aria-labelledby="people">
+              <h2 id="people" class="text-2xl font-bold text-gray-900 mb-1">
+                Practitioners with this expertise
+              </h2>
+              <p class="text-gray-600 mb-5">
+                Pick any you would approach. They listed these services themselves.
+              </p>
+
+              <ul class="space-y-3">
+                {matchedPractitioners.map((person) => (
+                  <li>
+                    <label class="bg-white border rounded-lg p-5 flex gap-4 cursor-pointer hover:shadow-md transition-shadow">
+                      <input
+                        type="checkbox"
+                        name="p"
+                        value={person.slug}
+                        checked={chosenPractitioners.includes(person.slug)}
+                        class="mt-1 h-4 w-4 shrink-0"
+                      />
+
+                      {person.avatar_url ? (
+                        <img src={person.avatar_url} alt="" width="48" height="48" loading="lazy" class="w-12 h-12 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <span class="w-12 h-12 rounded-full bg-gray-200 shrink-0"></span>
+                      )}
+
+                      <span class="min-w-0">
+                        <span class="block font-semibold text-gray-900">
+                          {person.name}
+                          {person.accepts_pro_bono && (
+                            <span class="ml-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">pro bono</span>
+                          )}
+                          {person.availability === 'limited' && (
+                            <span class="ml-2 text-xs font-medium text-gray-600">limited availability</span>
+                          )}
+                        </span>
+                        {person.title && <span class="block text-sm text-gray-600">{person.title}</span>}
+                        {person.bio && <span class="block text-sm text-gray-700 mt-2 line-clamp-3">{person.bio}</span>}
+                        <span class="block text-xs text-gray-600 mt-2">
+                          Covers {person.matched.map((m) => serviceTitles.get(m) ?? m).join(', ')}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">How would you invest?</h2>
 
           <div class="space-y-3 mb-6">
             {INVESTMENT_METHODS.map((m) => (
@@ -541,54 +535,10 @@ const title =
           </div>
 
           <button type="submit" class="bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm">
-            {methodsSubmitted ? 'Update summary' : 'Show me the summary'}
+            Create the plan
           </button>
         </form>
 
-        {methodsSubmitted && (
-          <section
-            class="bg-gray-50 border rounded-lg p-6"
-            aria-labelledby="summary"
-            data-summary={JSON.stringify({
-              packageName: selected.name,
-              ecosystem: selected.ecosystem,
-              repositoryUrl: selectedUrl,
-              motivations: MOTIVATIONS.filter((m) => activeMotivations.includes(m.id)).map((m) => m.label),
-              services: services.map((s) => ({
-                title: s.data.title,
-                outcome: s.data.impact ?? '',
-                rubric: s.rubric
-                  ? `${s.rubric.dimensions.length} dimensions${s.rubric.totalPoints ? `, ${s.rubric.totalPoints} points` : ''}`
-                  : '',
-              })),
-              methods: INVESTMENT_METHODS.filter((m) => chosenMethods.includes(m.id)).map((m) => m.label),
-            })}
-          >
-            <h2 id="summary" class="text-xl font-bold text-gray-900 mb-4">Your plan</h2>
-            <pre id="summary-text" class="whitespace-pre-wrap text-sm text-gray-800 bg-white border rounded p-4 overflow-x-auto"></pre>
-
-            <div class="flex flex-wrap items-center gap-3 mt-4">
-              <button type="button" id="copy-summary" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors text-sm font-medium">
-                Copy
-              </button>
-              <span id="copy-status" class="text-sm text-gray-600" role="status" aria-live="polite"></span>
-            </div>
-
-            <div class="mt-5 pt-4 border-t text-sm text-gray-700">
-              <p class="font-semibold mb-1">Where to take it</p>
-              <p class="text-gray-600">
-                Reminder: OSS Wishlist does not facilitate support. This is a teaching tool based
-                on industry expertise. We hope you find it helpful in your plans to support the
-                sustainability of the open source ecosystem.
-                {selectedUrl && (
-                  <>
-                    {' '}<a href={selectedUrl} class="underline hover:text-gray-900" rel="noopener noreferrer" target="_blank">Open {selected.name} &rarr;</a>
-                  </>
-                )}
-              </p>
-            </div>
-          </section>
-        )}
       </>
     )}
 
@@ -609,44 +559,9 @@ const title =
    * each step contains.
    *
    * Listeners are delegated from document, so nothing needs rebinding after a
-   * swap. Inline scripts inside swapped HTML never execute, which is why the
-   * summary reads its data from a data attribute rather than being rendered by
-   * a script in the markup.
+   * swap, which matters because inline scripts inside swapped HTML never run.
    */
   const WIZARD = '#wizard';
-
-  function renderSummary() {
-    const section = document.querySelector('[data-summary]');
-    if (!section) return;
-
-    let data;
-    try {
-      data = JSON.parse(section.getAttribute('data-summary') || '{}');
-    } catch {
-      return;
-    }
-
-    const lines = [`Package: ${data.packageName} (${data.ecosystem})`];
-    if (data.repositoryUrl) lines.push(`Repository: ${data.repositoryUrl}`);
-    if (data.motivations?.length) lines.push(`Why: ${data.motivations.join(', ')}`);
-
-    if (data.services?.length) {
-      lines.push('', 'Work that addresses it:');
-      for (const s of data.services) {
-        lines.push(`- ${s.title}`);
-        if (s.outcome) lines.push(`  Outcome: ${s.outcome}`);
-        if (s.rubric) lines.push(`  Measured against a peer review rubric (${s.rubric})`);
-      }
-    }
-
-    if (data.methods?.length) {
-      lines.push('', 'How we would invest:');
-      for (const m of data.methods) lines.push(`- ${m}`);
-    }
-
-    const output = section.querySelector('#summary-text');
-    if (output) output.textContent = lines.join('\n');
-  }
 
   async function swapTo(url, { push = true } = {}) {
     const wizard = document.querySelector(WIZARD);
@@ -666,8 +581,11 @@ const title =
       wizard.innerHTML = next.innerHTML;
       if (push) history.pushState({}, '', url);
 
-      renderSummary();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Land at the top of the step that just arrived, not wherever the last
+      // one was scrolled to.
+      const heading = wizard.querySelector('h1');
+      if (heading) heading.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
       // Fall back to a normal navigation rather than leaving a dead button.
       window.location.href = url;
@@ -701,29 +619,15 @@ const title =
     const method = (form.getAttribute('method') || 'get').toLowerCase();
     if (method !== 'get') return;
 
-    event.preventDefault();
     const action = new URL(form.getAttribute('action') || window.location.pathname, window.location.origin);
+
+    // The plan is a different page, not another step. Let the browser navigate
+    // rather than fetching it, failing to find #wizard and falling back.
+    if (!action.pathname.endsWith('/invest')) return;
+
+    event.preventDefault();
     const params = new URLSearchParams(new FormData(form));
     swapTo(`${action.pathname}?${params.toString()}`);
-  });
-
-  document.addEventListener('click', async (event) => {
-    if (!event.target.closest?.('#copy-summary')) return;
-    const output = document.querySelector('#summary-text');
-    const status = document.querySelector('#copy-status');
-    if (!output) return;
-
-    try {
-      await navigator.clipboard.writeText(output.textContent ?? '');
-      if (status) status.textContent = 'Copied.';
-    } catch {
-      const range = document.createRange();
-      range.selectNodeContents(output);
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-      if (status) status.textContent = 'Select and copy the text above.';
-    }
   });
 
   // Back and forward should move through the wizard, not out of it.
@@ -731,5 +635,4 @@ const title =
     swapTo(window.location.pathname + window.location.search, { push: false });
   });
 
-  renderSummary();
 </script>
