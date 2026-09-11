@@ -48,7 +48,7 @@ OSS Wishlist is not responsible for the quality of work delivered, disputes betw
 
 All payments are processed directly through third-party platforms (GitHub Sponsors, Open Collective). OSS Wishlist does not handle, hold, or control funds.
 
-Payment is made in advance to practitioners once a wishlist fulfillment has been finalized and scheduled. Each payment covers a one-time, single-service engagement. Follow-up work beyond the initial scope is out of scope for this initiative.
+Payment is arranged directly between whoever is funding the work and the practitioner doing it. OSS Wishlist is not a party to it. Each payment covers a one-time, single-service engagement. Follow-up work beyond the initial scope is out of scope for this initiative.
 
 ## Tax Implications
 

@@ -136,42 +136,21 @@ and the maintainer directly.
 - **ecosyste.ms** - Critical package data, cached into `data/` at build time
 - **Markdown** - Content collections for services, FAQ, and documentation
 
-## 📒 Playbooks (submodule)
+## 📒 Playbooks
 
-Playbooks are maintained in an external repository and included here as a Git submodule.
+The playbooks live in `src/content/playbooks-external`, committed directly to
+this repository. They were a git submodule; they are now vendored so a clone or
+a host build needs no extra step.
 
-- Location in this repo: `src/content/playbooks-external/`
-- Source repo: https://github.com/oss-wishlist/wishlist-playbooks
-- We don’t duplicate playbooks into a local content folder; the submodule is the single source of truth
+They originate from
+[oss-wishlist/wishlist-playbooks](https://github.com/oss-wishlist/wishlist-playbooks).
+Because they are copied rather than linked, the two can drift: an update
+upstream has to be copied in here, and an edit here should go back upstream.
 
-### Initialize or update the submodule
+Each playbook carries a peer review rubric. Those rubrics are parsed at build
+time and shown on the service pages, so the wording of a rubric heading matters:
+see `src/lib/rubric-parser.ts`.
 
-```bash
-git submodule init
-git submodule update
-```
-
-### Linking playbooks from a Service
-
-In a service frontmatter (e.g., `src/content/services/funding-strategy.md`), link to the playbook folder name:
-
-```yaml
----
-title: Funding Strategy
-playbook: funding-strategy      # or use `playbooks: ["a", "b"]` for multiple
----
-```
-
-This maps to `src/content/playbooks-external/funding-strategy/playbook.md`.
-
-### Adding or editing a playbook
-
-Playbooks live in the external repo. To add or improve one:
-1. Open the source repo: https://github.com/oss-wishlist/wishlist-playbooks
-2. Add a new folder (kebab-case) and a `playbook.md` inside
-3. Submit a PR to that repo
-
-Note: Manual edits to submodule files should be done in the source repo via PR; changes made locally in the submodule will be overwritten on update.
 
 ## � Key Files & Folders
 
@@ -184,7 +163,7 @@ src/
 ├── content/              # Static content (markdown)
 │   ├── services/         # Service definitions
 │   ├── guardians/        # Sponsor organizations
-│   └── playbooks-external/ # Git submodule
+│   └── playbooks-external/ # Playbooks and their rubrics
 ├── components/           # Reusable UI components
 └── lib/                  # Utilities and database functions
     ├── db.ts            # Database queries
@@ -201,7 +180,7 @@ src/
 Content collections in `src/content/` (markdown files):
 - **Services**: Add/edit in `src/content/services/`
 - **Guardians**: Add/edit in `src/content/guardians/`
-- **Playbooks**: External git submodule (see Playbooks section above)
+- **Playbooks**: Committed in `src/content/playbooks-external` (see Playbooks section above)
 
 ## 🚀 Deployment
 

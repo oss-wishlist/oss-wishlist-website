@@ -31,6 +31,17 @@ export default defineConfig({
     '/helpers': '/practitioners',
     '/faq': '/about-us',
     '/code-of-conduct': '/about-us',
+    // Orphaned pages from the community framing.
+    '/ai-alignment': '/about-us',
+    '/ecosystem-guardians': '/catalog',
+    // Superseded by the /invest wizard.
+    '/fund': '/invest',
+    '/fund/[...rest]': '/invest',
+    '/p/[...rest]': '/invest',
+    '/check': '/invest',
+    '/take-action': '/invest',
+    '/maintainers': '/catalog',
+    '/calendar': '/about-us',
   },
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],

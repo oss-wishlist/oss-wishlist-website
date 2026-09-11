@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Source Funding Readiness Scorecard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 3px solid #7c3aed;
+        }
+        
+        h1 {
+            font-size: 1.75rem;
+            color: #5b21b6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        
+        .project-input {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .project-input label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        
+        .project-input input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .project-input input:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-header h2 {
+            font-size: 1.1rem;
+            color: white;
+        }
+        
+        .section-score {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .section-a .section-header { background: #7c3aed; }
+        .section-b .section-header { background: #6b7280; }
+        .section-c .section-header { background: #5b21b6; }
+        .section-d .section-header { background: #4b5563; }
+        
+        .criteria-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .criteria-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            background: #f9fafb;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .criteria-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: top;
+        }
+        
+        .criteria-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .criterion-id {
+            font-weight: 700;
+            color: #5b21b6;
+            white-space: nowrap;
+        }
+        
+        .criterion-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+        
+        .criterion-desc {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .score-select {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .score-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.15s ease;
+        }
+        
+        .score-btn:hover {
+            border-color: #7c3aed;
+            color: #7c3aed;
+        }
+        
+        .score-btn.selected {
+            background: #7c3aed;
+            border-color: #7c3aed;
+            color: white;
+        }
+        
+        .total-section {
+            background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .total-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+        
+        .total-score {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+        
+        .total-max {
+            font-size: 1.5rem;
+            opacity: 0.7;
+        }
+        
+        .score-bar {
+            background: rgba(255,255,255,0.2);
+            height: 12px;
+            border-radius: 6px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .score-bar-fill {
+            height: 100%;
+            background: white;
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        
+        .rating-label {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .notes-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .notes-section h3 {
+            font-size: 1rem;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+        }
+        
+        .notes-section textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+        }
+        
+        .notes-section textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+        
+        .print-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            background: #4b5563;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        
+        .print-btn:hover {
+            background: #374151;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .print-btn {
+                display: none;
+            }
+            .section {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Open Source Funding Readiness Scorecard</h1>
+            <p class="subtitle">Assess your project's sustainability and funding strategy</p>
+        </header>
+        
+        <div class="project-input">
+            <label for="project-name">Project Name</label>
+            <input type="text" id="project-name" placeholder="Enter project name...">
+        </div>
+        
+        <!-- Section A -->
+        <div class="section section-a">
+            <div class="section-header">
+                <h2>A. Funding Readiness & Accessibility</h2>
+                <span class="section-score" id="score-a">0 / 12</span>
+            </div>
+            <table class="criteria-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Criterion</th>
+                        <th style="width: 180px;">Score (0–4)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="criterion-id">A1</td>
+                        <td>
+                            <div class="criterion-name">Funding Channels Established</div>
+                            <div class="criterion-desc">Donation/sponsor platforms active (e.g., GitHub Sponsors, Open Collective, foundations).</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="a1">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">A2</td>
+                        <td>
+                            <div class="criterion-name">Clear Value Proposition / Need Declaration</div>
+                            <div class="criterion-desc">Articulated problem statement, sustainability needs, impact narrative.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="a2">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">A3</td>
+                        <td>
+                            <div class="criterion-name">Costs & Funding Goals Identified</div>
+                            <div class="criterion-desc">Maintainer hours, hosting, security, community support — resourcing clearly scoped.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="a3">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Section B -->
+        <div class="section section-b">
+            <div class="section-header">
+                <h2>B. Funding Diversification & Strategic Planning</h2>
+                <span class="section-score" id="score-b">0 / 12</span>
+            </div>
+            <table class="criteria-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Criterion</th>
+                        <th style="width: 180px;">Score (0–4)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="criterion-id">B1</td>
+                        <td>
+                            <div class="criterion-name">Grants & Public Funding Strategy</div>
+                            <div class="criterion-desc">Track list of grant opportunities; capacity to apply (templates, owners assigned).</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="b1">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">B2</td>
+                        <td>
+                            <div class="criterion-name">Corporate/Institutional Partnerships</div>
+                            <div class="criterion-desc">Potential partners mapped; clear alignment with ecosystem dependencies.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="b2">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">B3</td>
+                        <td>
+                            <div class="criterion-name">Revenue / Support Model Flexibility</div>
+                            <div class="criterion-desc">Multiple options evaluated (e.g., service contracts, hosted infra, sponsorship tiers).</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="b3">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Section C -->
+        <div class="section section-c">
+            <div class="section-header">
+                <h2>C. Financial Governance & Accountability</h2>
+                <span class="section-score" id="score-c">0 / 12</span>
+            </div>
+            <table class="criteria-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Criterion</th>
+                        <th style="width: 180px;">Score (0–4)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="criterion-id">C1</td>
+                        <td>
+                            <div class="criterion-name">Transparent Financial Management</div>
+                            <div class="criterion-desc">Budgets and spending published; conflict-of-interest protections in place.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="c1">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">C2</td>
+                        <td>
+                            <div class="criterion-name">Criteria for Allocating Funds</div>
+                            <div class="criterion-desc">Funding distribution policies documented; fair access; align with project priorities.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="c2">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">C3</td>
+                        <td>
+                            <div class="criterion-name">Reporting & Impact Evidence</div>
+                            <div class="criterion-desc">Demonstrates how funds improve security, sustainability, or community outcomes.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="c3">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Section D -->
+        <div class="section section-d">
+            <div class="section-header">
+                <h2>D. Contributor & Maintainer Sustainability Support</h2>
+                <span class="section-score" id="score-d">0 / 12</span>
+            </div>
+            <table class="criteria-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Criterion</th>
+                        <th style="width: 180px;">Score (0–4)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="criterion-id">D1</td>
+                        <td>
+                            <div class="criterion-name">Compensation Pathways</div>
+                            <div class="criterion-desc">Clear eligibility for paid tasks, bounties, or leadership funding.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="d1">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">D2</td>
+                        <td>
+                            <div class="criterion-name">Diversity & Equity in Funding Access</div>
+                            <div class="criterion-desc">Small/first-time contributors supported; regional access barriers addressed.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="d2">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="criterion-id">D3</td>
+                        <td>
+                            <div class="criterion-name">Minimizing Administrative Burden</div>
+                            <div class="criterion-desc">Fiscal hosting or foundation support reduces overhead on maintainers.</div>
+                        </td>
+                        <td>
+                            <div class="score-select" data-criterion="d3">
+                                <button class="score-btn" data-value="0">0</button>
+                                <button class="score-btn" data-value="1">1</button>
+                                <button class="score-btn" data-value="2">2</button>
+                                <button class="score-btn" data-value="3">3</button>
+                                <button class="score-btn" data-value="4">4</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Total Score -->
+        <div class="total-section">
+            <div class="total-label">Total Score</div>
+            <div>
+                <span class="total-score" id="total-score">0</span>
+                <span class="total-max">/ 48</span>
+            </div>
+            <div class="score-bar">
+                <div class="score-bar-fill" id="score-bar-fill" style="width: 0%"></div>
+            </div>
+            <div class="rating-label" id="rating-label">Not yet scored</div>
+        </div>
+        
+        <!-- Notes -->
+        <div class="notes-section">
+            <h3>Notes & Recommendations</h3>
+            <textarea placeholder="Add observations, action items, or recommendations..."></textarea>
+        </div>
+        
+        <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+    
+    <script>
+        const scores = {
+            a1: 0, a2: 0, a3: 0,
+            b1: 0, b2: 0, b3: 0,
+            c1: 0, c2: 0, c3: 0,
+            d1: 0, d2: 0, d3: 0
+        };
+        
+        function updateScores() {
+            const sectionA = scores.a1 + scores.a2 + scores.a3;
+            const sectionB = scores.b1 + scores.b2 + scores.b3;
+            const sectionC = scores.c1 + scores.c2 + scores.c3;
+            const sectionD = scores.d1 + scores.d2 + scores.d3;
+            const total = sectionA + sectionB + sectionC + sectionD;
+            
+            document.getElementById('score-a').textContent = `${sectionA} / 12`;
+            document.getElementById('score-b').textContent = `${sectionB} / 12`;
+            document.getElementById('score-c').textContent = `${sectionC} / 12`;
+            document.getElementById('score-d').textContent = `${sectionD} / 12`;
+            document.getElementById('total-score').textContent = total;
+            
+            const percentage = (total / 48) * 100;
+            document.getElementById('score-bar-fill').style.width = `${percentage}%`;
+            
+            let rating = '';
+            if (total === 0) {
+                rating = 'Not yet scored';
+            } else if (total < 12) {
+                rating = 'Early Stage — Significant gaps in funding readiness';
+            } else if (total < 24) {
+                rating = 'Developing — Foundation in place, needs strategic focus';
+            } else if (total < 36) {
+                rating = 'Progressing — Good practices, room for optimization';
+            } else if (total < 44) {
+                rating = 'Strong — Well-positioned for sustainable funding';
+            } else {
+                rating = 'Excellent — Model for funding sustainability';
+            }
+            document.getElementById('rating-label').textContent = rating;
+        }
+        
+        document.querySelectorAll('.score-select').forEach(select => {
+            const criterion = select.dataset.criterion;
+            select.querySelectorAll('.score-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    select.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    scores[criterion] = parseInt(btn.dataset.value);
+                    updateScores();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

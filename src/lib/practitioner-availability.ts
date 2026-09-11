@@ -28,48 +28,58 @@ export interface AvailablePractitioner {
 /**
  * Local preview data, so practitioner surfaces can be seen without Postgres.
  *
- * Guarded twice: it requires PRACTITIONER_DEMO=1 to be set explicitly, and it
- * refuses to apply when DATABASE_URL exists. A deployment has a database, so
- * this cannot displace real practitioners; without the env var it never loads
- * at all. It is a development aid, not a fallback.
+ * Guarded three ways: it only exists in a development build, it requires
+ * PRACTITIONER_DEMO=1 to be set explicitly, and it refuses to apply when
+ * DATABASE_URL is present.
+ *
+ * The first guard is why the fixtures live inside the function. import.meta.env.DEV
+ * is replaced with a literal false when building for production, so the whole
+ * branch is unreachable and the names are dropped from the bundle rather than
+ * shipped as dead strings.
  */
-const DEMO_PRACTITIONERS = [
-  {
-    slug: 'demo-ada-rivers',
-    name: 'Ada Rivers (demo)',
-    title: 'Governance and community consultant',
-    bio: 'Fifteen years helping projects write governance people actually follow, and moderation policy that holds up when it is tested.',
-    avatar_url: null,
-    availability: 'available',
-    accepts_pro_bono: true,
-    services: ['governance-setup', 'moderation-strategy', 'leadership-onboarding'],
-  },
-  {
-    slug: 'demo-kip-moreno',
-    name: 'Kip Moreno (demo)',
-    title: 'Security reviewer',
-    bio: 'CRA readiness, disclosure policy and vulnerability handling for small maintainer teams.',
-    avatar_url: null,
-    availability: 'limited',
-    accepts_pro_bono: false,
-    services: ['dependency-security-audit'],
-  },
-  {
-    slug: 'demo-sam-oyelaran',
-    name: 'Sam Oyelaran (demo)',
-    title: 'Funding strategist',
-    bio: 'Sponsorship, grant readiness and getting a funding route in place that does not depend on one person.',
-    avatar_url: null,
-    availability: 'available',
-    accepts_pro_bono: false,
-    services: ['funding-strategy', 'maintainer-task-contributor'],
-  },
-];
-
 function demoPractitioners(): AvailablePractitioner[] | null {
+  // Statically false in a production build, so everything below is dropped.
+  if (!import.meta.env.DEV) return null;
+
   const enabled = import.meta.env.PRACTITIONER_DEMO === '1' || process.env.PRACTITIONER_DEMO === '1';
   const hasDatabase = Boolean(import.meta.env.DATABASE_URL || process.env.DATABASE_URL);
   if (!enabled || hasDatabase) return null;
+
+  const DEMO_PRACTITIONERS = [
+    {
+      slug: 'demo-ada-rivers',
+      name: 'Ada Rivers (demo)',
+      title: 'Governance and community consultant',
+      bio: 'Fifteen years helping projects write governance people actually follow, and moderation policy that holds up when it is tested.',
+      avatar_url: null,
+      availability: 'available',
+      accepts_pro_bono: true,
+      services: ['governance-setup', 'moderation-strategy', 'leadership-onboarding'],
+      matched: ['governance-setup', 'moderation-strategy', 'leadership-onboarding'],
+    },
+    {
+      slug: 'demo-kip-moreno',
+      name: 'Kip Moreno (demo)',
+      title: 'Security reviewer',
+      bio: 'CRA readiness, disclosure policy and vulnerability handling for small maintainer teams.',
+      avatar_url: null,
+      availability: 'limited',
+      accepts_pro_bono: false,
+      services: ['dependency-security-audit'],
+      matched: ['dependency-security-audit'],
+    },
+    {
+      slug: 'demo-sam-oyelaran',
+      name: 'Sam Oyelaran (demo)',
+      title: 'Funding strategist',
+      bio: 'Sponsorship, grant readiness and getting a funding route in place that does not depend on one person.',
+      avatar_url: null,
+      availability: 'available',
+      accepts_pro_bono: false,
+      services: ['funding-strategy', 'maintainer-task-contributor'],
+      matched: ['funding-strategy', 'maintainer-task-contributor'],
+    },
+  ];
 
   console.warn('[practitioners] PRACTITIONER_DEMO is on: showing local preview data, not real practitioners.');
   return DEMO_PRACTITIONERS as unknown as AvailablePractitioner[];
