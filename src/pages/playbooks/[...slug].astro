@@ -2,6 +2,7 @@
 import { getEntry, render } from 'astro:content';
 import Layout from '../../components/Layout.astro';
 import { getBasePath } from '../../lib/paths';
+import { playbookTitle, playbookFolder } from '../../lib/playbook-title';
 const basePath = getBasePath();
 
 export const prerender = false;
@@ -27,17 +28,37 @@ if (!playbook) {
 // Render the markdown content
 const { Content } = await render(playbook);
 
+/*
+  The playbooks are written in another repository and carry no frontmatter, so
+  every `data` field on them is undefined. That was fatal rather than untidy:
+  further down, .toLowerCase() was called on the missing title, and it threw
+  after the response had already started streaming. Locally that looks like a
+  200 with a truncated body, so it passed every check here; through Cloudflare
+  a broken stream is a 502, which is how every playbook page on the live site
+  came to be dead, along with the "read the full playbook" link on six service
+  pages.
+
+  So the title is taken from the document itself, the way a reader would take
+  it: the first heading, falling back to the folder name. Nothing below may
+  assume a frontmatter field exists.
+*/
+const folder = playbookFolder(playbook.id);
+const title = playbookTitle(playbook.data, playbook.body, folder);
+
 // GitHub edit URL
 const githubRepoUrl = 'https://github.com/oss-wishlist/wishlist-playbooks';
-const githubEditUrl = `${githubRepoUrl}/edit/main/${playbook.data.github_folder}/playbook.md`;
-const githubViewUrl = `${githubRepoUrl}/tree/main/${playbook.data.github_folder}`;
+const githubFolder = playbook.data.github_folder || folder;
+const githubEditUrl = `${githubRepoUrl}/edit/main/${githubFolder}/playbook.md`;
+const githubViewUrl = `${githubRepoUrl}/tree/main/${githubFolder}`;
 
 // Build SEO description
-const seoDescription = playbook.data.description || `Professional playbook guide for ${playbook.data.title}. Step-by-step guidance for open source practitioners.`;
+const seoDescription =
+  playbook.data.description ||
+  `Professional playbook guide for ${title}. Step-by-step guidance for open source practitioners.`;
 ---
 
 <Layout 
-  title={`${playbook.data.title} - Professional Playbook Guide | OSS Wishlist`}
+  title={`${title} - Professional Playbook Guide | OSS Wishlist`}
   description={seoDescription}
   type="article"
 >
@@ -53,7 +74,7 @@ const seoDescription = playbook.data.description || `Professional playbook guide
           <a href={`${basePath}playbooks`} class="text-gray-500 hover:text-gray-700">Playbooks</a>
         </li>
         <li class="text-gray-400">/</li>
-        <li class="text-gray-900 font-medium">{playbook.data.title}</li>
+        <li class="text-gray-900 font-medium">{title}</li>
       </ol>
     </div>
   </nav>
@@ -64,10 +85,10 @@ const seoDescription = playbook.data.description || `Professional playbook guide
       <div class="flex items-start justify-between mb-6">
         <div class="flex-1">
           <h1 class="text-4xl font-bold text-gray-900 mb-4">
-            {playbook.data.title}
+            {title}
           </h1>
           <p class="text-xl text-gray-600 mb-6">
-            {playbook.data.description}
+            {playbook.data.description ?? ""}
           </p>
         </div>
       </div>
@@ -123,7 +144,7 @@ const seoDescription = playbook.data.description || `Professional playbook guide
           <div class="flex-1">
             <h3 class="text-xl font-bold text-gray-900 mb-2">Help Improve This Playbook</h3>
             <p class="text-gray-600 mb-4">
-              Have experience with {playbook.data.title.toLowerCase()}? Share your insights, add resources, 
+              Have experience with {title.toLowerCase()}? Share your insights, add resources, 
               or suggest improvements. All contributions are welcome!
             </p>
             <div class="flex gap-3">
@@ -139,7 +160,7 @@ const seoDescription = playbook.data.description || `Professional playbook guide
                 <span>Edit on GitHub</span>
               </a>
               <a 
-                href={`${githubRepoUrl}/issues/new?title=Suggestion for ${encodeURIComponent(playbook.data.title)}`}
+                href={`${githubRepoUrl}/issues/new?title=Suggestion for ${encodeURIComponent(title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm border border-gray-300"
