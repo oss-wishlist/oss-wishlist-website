@@ -141,6 +141,30 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
               </svg>
               <span class="hidden sm:inline">Privacy Policy</span>
             </a>
+            <a
+              href="https://github.com/sponsors/emmairwin"
+              class="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 rounded px-2 py-1 flex items-center justify-center sm:justify-start min-h-[44px] transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Fund this work on GitHub Sponsors"
+            >
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+              </svg>
+              <span class="hidden sm:inline">Fund this work</span>
+            </a>
+            <a
+              href="https://github.com/oss-wishlist/oss-wishlist-website/issues/new"
+              class="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 rounded px-2 py-1 flex items-center justify-center sm:justify-start min-h-[44px] transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="File a bug on GitHub"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+              <span class="hidden sm:inline">File a bug</span>
+            </a>
             <a 
               href={`${basePath}contact`}
               class="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 rounded px-2 py-1 flex items-center justify-center sm:justify-start min-h-[44px] transition-colors"
@@ -159,24 +183,6 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
           any organisation that wants to run this can take it.
         -->
         <div class="mt-8 pt-6 border-t border-gray-800 text-sm text-gray-400 space-y-2">
-          <p>
-            Package data from
-            <a
-              href="https://ecosyste.ms"
-              class="underline hover:text-white"
-              rel="noopener noreferrer"
-              target="_blank">ecosyste.ms</a
-            >, licensed
-            <a
-              href="https://creativecommons.org/licenses/by-sa/4.0/"
-              class="underline hover:text-white"
-              rel="noopener noreferrer"
-              target="_blank">CC-BY-SA-4.0</a
-            >.
-          </p>
-          <p class="text-gray-300 font-medium">
-            This is an open source, open content project. There is no cost to use this service.
-          </p>
           <p>
             It is intended as a learning tool. The rubrics are CC-BY, the code is MIT, and any
             organisation that wants to run this can take it.

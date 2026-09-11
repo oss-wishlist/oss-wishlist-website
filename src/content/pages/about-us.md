@@ -19,6 +19,12 @@ This is free to use and always will be. If it was useful:
 - **[Sponsor me on GitHub](https://github.com/sponsors/emmairwin)**
 - **[Subscribe to my blog](https://sunnydeveloper.com/)**
 
+## Cost and Licensing
+
+This is an open source, open content project. There is no cost to use this service.
+
+Package data comes from [Ecosyste.ms](https://ecosyste.ms), licensed [CC-BY-SA-4.0](https://creativecommons.org/licenses/by-sa/4.0/). The rubrics are CC-BY, the code is MIT, and any organisation that wants to run this can take it.
+
 ## Find Us
 
 - **[GitHub](https://github.com/oss-wishlist)**
