@@ -7,6 +7,11 @@
  * real answers, but this site cannot help with any of them, and offering a path
  * it cannot support would be a sales funnel rather than a teaching tool.
  *
+ * These are routes, not different kinds of work. Employee time and a paid
+ * practitioner deliver against the same playbook rubric for the service; what
+ * differs is who does it, not what "done" means or how anyone would know. The
+ * outcome in both cases is that the rubric is met.
+ *
  * What all three have in common is that Open Source Wishlist does not broker
  * any of them. The visitor leaves with a summary and goes to the people
  * themselves.
@@ -30,15 +35,14 @@ export const INVESTMENT_METHODS = [
     id: 'employee-time',
     label: 'Give employee time',
     summary:
-      'Someone on your team does the work, from occasional contribution through to a funded maintainer role.',
+      'Someone on your team, from occasional contribution through to a funded maintainer role.',
     caveat: null,
     caveatWhen: () => false,
   },
   {
     id: 'practitioner',
     label: 'Pay a practitioner',
-    summary:
-      'Someone who does this professionally delivers it against a defined outcome and rubric.',
+    summary: 'Someone who does this professionally, engaged directly.',
     caveat: null,
     caveatWhen: () => false,
   },
