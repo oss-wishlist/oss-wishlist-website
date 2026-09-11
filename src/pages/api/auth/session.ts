@@ -38,8 +38,13 @@ export const GET: APIRoute = async ({ cookies }) => {
       });
     }
     
-    // Return session even if accessToken is missing (legacy sessions)
-    return new Response(JSON.stringify(session), {
+    // The OAuth token stays on the server. It used to be included here, which
+    // handed it to any script on the origin and undid the httpOnly cookie it
+    // is stored in. Nothing in the browser needs it.
+    const { accessToken, ...safeSession } = session as Record<string, unknown>;
+    void accessToken;
+
+    return new Response(JSON.stringify(safeSession), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

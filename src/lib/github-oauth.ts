@@ -274,8 +274,13 @@ export function verifySession(sessionToken: string, secret?: string): SessionDat
       .update(payload)
       .digest('hex');
     
-    // Simple string comparison is sufficient and avoids timing issues
-    if (signature !== expectedSignature) {
+    // Compare in constant time, the way verifyState above already does.
+    // `!==` on strings stops at the first differing byte, which is exactly what
+    // a timing attack measures. timingSafeEqual throws on a length mismatch, so
+    // length is checked first and separately.
+    const given = Buffer.from(signature, 'utf8');
+    const expected = Buffer.from(expectedSignature, 'utf8');
+    if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
       return null;
     }
     

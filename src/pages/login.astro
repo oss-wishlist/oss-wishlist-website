@@ -1,17 +1,23 @@
 ---
 import Layout from '../components/Layout.astro';
 import { SITE_TITLE } from '../config/app';
-import { getBasePath } from '../lib/paths';
+import { getBasePath, withBasePath } from '../lib/paths';
+import { normalizeReturnPath } from '../lib/return-path';
 import { getAvailableProviders } from '../lib/oauth/registry.js';
 
 const basePath = getBasePath();
 
-// If already logged in, redirect to where they were trying to go
+// If already logged in, redirect to where they were trying to go. The
+// destination comes from the query string, so it is validated as a path on
+// this site before anyone is sent to it.
 const user = Astro.locals.user;
-const returnTo = Astro.url.searchParams.get('returnTo') || basePath;
+const returnTo = normalizeReturnPath(
+  Astro.url.searchParams.get('returnTo') || basePath,
+  basePath
+);
 
 if (user) {
-  return Astro.redirect(returnTo);
+  return Astro.redirect(withBasePath(returnTo));
 }
 
 // Get available OAuth providers

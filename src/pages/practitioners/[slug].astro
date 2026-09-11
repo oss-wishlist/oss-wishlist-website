@@ -4,7 +4,7 @@ import { getCollection } from 'astro:content';
 import { withSlug } from '../../lib/entry-slug';
 import { getBasePath } from '../../lib/paths';
 import { getApprovedPractitioners } from '../../lib/db';
-import { marked } from 'marked';
+import { renderBio } from '../../lib/sanitize';
 
 export const prerender = false;
 const basePath = getBasePath();
@@ -34,8 +34,9 @@ const practitionerServices = practitioner.services && Array.isArray(practitioner
       .filter(Boolean)
   : [];
 
-// Render bio as markdown
-const bioHtml = practitioner.bio ? marked(practitioner.bio) : '';
+// Render bio as markdown. The bio is written by the practitioner, so it is
+// sanitised before it reaches set:html below.
+const bioHtml = renderBio(practitioner.bio);
 ---
 
 <Layout title={`${practitioner.name} - OSS Practitioner`} description={practitioner.bio}>

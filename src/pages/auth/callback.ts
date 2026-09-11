@@ -8,6 +8,7 @@ import type { SessionData as OldSessionData } from '../../lib/github-oauth';
 import type { SessionData, OAuthProviderName } from '../../lib/oauth/types';
 import { getOAuthProvider } from '../../lib/oauth/registry.js';
 import { withBasePath, withBaseUrl } from '../../lib/paths';
+import { normalizeReturnPath } from '../../lib/return-path';
 
 export const prerender = false;
 
@@ -20,24 +21,9 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     const basePath = import.meta.env.BASE_URL || '/';
     const cookieReturnTo = cookies.get('oauth_return_to')?.value || '';
     const queryReturnTo = url.searchParams.get('returnTo') || '';
-    let rawReturnTo = cookieReturnTo || queryReturnTo || '/';
-
-    // If full URL, extract path+search+hash
-    try {
-      if (rawReturnTo.startsWith('http://') || rawReturnTo.startsWith('https://')) {
-        const u = new URL(rawReturnTo);
-        rawReturnTo = u.pathname + u.search + u.hash;
-      }
-    } catch {}
-
-    // Remove basePath prefix if duplicated
-    const base = basePath.endsWith('/') ? basePath : basePath + '/';
-    if (rawReturnTo.startsWith(base)) {
-      rawReturnTo = rawReturnTo.slice(base.length - 1);
-    }
-    if (!rawReturnTo.startsWith('/')) rawReturnTo = '/' + rawReturnTo;
-    if (rawReturnTo === '/login') rawReturnTo = '/';
-    return rawReturnTo;
+    // normalizeReturnPath rejects anything that is not a path on this site,
+    // including the protocol-relative and backslash forms that read as a host.
+    return normalizeReturnPath(cookieReturnTo || queryReturnTo || '/', basePath);
   };
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
