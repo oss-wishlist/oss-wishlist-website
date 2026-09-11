@@ -10,6 +10,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import {
+  recentAdvisories,
+  recentAdvisoryCount,
+  recentAdvisoryLabel,
+  hasRecentAdvisories,
+} from '../config/advisories.js';
+import { advisoriesUrl, factsFor } from '../config/service-map.js';
 import { avatarThumb } from '../src/lib/avatar';
 
 import { parseRubric } from '../src/lib/rubric-parser';
@@ -54,14 +61,42 @@ describe('motivation evidence', () => {
     expect(suggestedMotivations(pkg())).toEqual([]);
   });
 
-  it('cites the advisory count for security', () => {
-    const found = suggestedMotivations(pkg({ has_advisories: true, advisory_count: 7 }));
-    expect(found).toContainEqual({ id: 'security', evidence: '7 known security issues published' });
+  const advisory = (daysAgo: number) => ({
+    id: `GHSA-${daysAgo}`,
+    cve: null,
+    title: 'an issue',
+    severity: 'LOW',
+    url: `https://github.com/advisories/GHSA-${daysAgo}`,
+    published_at: new Date(Date.now() - daysAgo * 86400000).toISOString(),
   });
 
-  it('says "issue" rather than "issues" for a single advisory', () => {
-    const found = suggestedMotivations(pkg({ has_advisories: true, advisory_count: 1 }));
-    expect(found[0].evidence).toBe('1 known security issue published');
+  it('cites recent disclosure activity for security', () => {
+    const found = suggestedMotivations(
+      pkg({ has_advisories: true, advisory_count: 7, advisories: [advisory(5), advisory(40)] })
+    );
+    expect(found).toContainEqual({
+      id: 'security',
+      evidence: '2 security advisories published in the last year',
+    });
+  });
+
+  it('says "advisory" rather than "advisories" for a single one', () => {
+    const found = suggestedMotivations(
+      pkg({ has_advisories: true, advisory_count: 1, advisories: [advisory(5)] })
+    );
+    expect(found[0].evidence).toBe('1 security advisory published in the last year');
+  });
+
+  /*
+    drupal/core reported "100 known security issues" from a field that is the
+    API's ceiling on a lifetime history, almost all of it long fixed. Security
+    is suggested on recent activity now, and an old history suggests nothing.
+  */
+  it('suggests nothing from a lifetime count with no recent advisories', () => {
+    const found = suggestedMotivations(
+      pkg({ has_advisories: true, advisory_count: 100, advisories: [advisory(900), advisory(1500)] })
+    );
+    expect(found.find((f) => f.id === 'security')).toBeUndefined();
   });
 
   it('cites the release year for continuity', () => {
@@ -251,5 +286,65 @@ describe('avatarThumb', () => {
   it('refuses a non-http scheme', () => {
     expect(avatarThumb('javascript:alert(1)', 96)).toBeNull();
     expect(avatarThumb('data:image/png;base64,AAAA', 96)).toBeNull();
+  });
+});
+
+describe('recent advisories', () => {
+  const iso = (daysAgo: number) =>
+    new Date(Date.now() - daysAgo * 86400000).toISOString();
+
+  const pkg = (published: (string | null)[]) => ({
+    ecosystem: 'packagist',
+    name: 'drupal/core',
+    advisory_count: 100,
+    has_advisories: true,
+    advisories: published.map((p, i) => ({
+      id: `GHSA-${i}`,
+      cve: null,
+      title: `issue ${i}`,
+      severity: 'LOW',
+      url: `https://github.com/advisories/GHSA-${i}`,
+      published_at: p,
+    })),
+  });
+
+  it('counts only what is inside the window', () => {
+    expect(recentAdvisoryCount(pkg([iso(10), iso(100), iso(800), iso(2000)]))).toBe(2);
+  });
+
+  // The reported bug: 100 is the API's ceiling, not a count, and the entries
+  // are a project's whole disclosure history rather than open problems.
+  it('does not report the capped lifetime total', () => {
+    const label = recentAdvisoryLabel(pkg([iso(5), ...Array(99).fill(iso(3000))]));
+    expect(label).toBe('1 security advisory published in the last year');
+    expect(label).not.toContain('100');
+  });
+
+  it('says nothing when the history is all old, rather than showing a zero', () => {
+    expect(recentAdvisoryLabel(pkg([iso(900), iso(1200)]))).toBeNull();
+    expect(hasRecentAdvisories(pkg([iso(900)]))).toBe(false);
+  });
+
+  it('leaves out an advisory with no publication date', () => {
+    expect(recentAdvisoryCount(pkg([null, iso(10)]))).toBe(1);
+  });
+
+  it('returns them newest first', () => {
+    const out = recentAdvisories(pkg([iso(100), iso(5), iso(50)]));
+    const dates = out.map((a) => a.published_at!);
+    expect([...dates].sort().reverse()).toEqual(dates);
+  });
+
+  it('gives a single advisory its own link, and several the package page', () => {
+    expect(advisoriesUrl(pkg([iso(5)]))).toBe('https://github.com/advisories/GHSA-0');
+    expect(advisoriesUrl(pkg([iso(5), iso(6)]))).toBe(
+      'https://packages.ecosyste.ms/registries/packagist.org/packages/drupal%2Fcore'
+    );
+  });
+
+  it('every fact carrying a number has somewhere to check it', () => {
+    for (const fact of factsFor(pkg([iso(5), iso(6)]))) {
+      if (/\d/.test(fact.text)) expect(fact.href).toBeTruthy();
+    }
   });
 });
