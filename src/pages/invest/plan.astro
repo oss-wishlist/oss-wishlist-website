@@ -18,6 +18,7 @@ import { getPackage, projectUrl } from '../../lib/critical-packages';
 import { labelsFor } from '../../../config/service-map.js';
 import { getRubricForPlaybook } from '../../lib/rubrics';
 import { practitionersForServices } from '../../lib/practitioner-availability';
+import { avatarThumb } from '../../lib/avatar';
 import { MOTIVATIONS, parseMotivations, servicesForMotivations } from '../../../config/motivations.js';
 import { INVESTMENT_METHODS, parseMethods } from '../../../config/investment-methods.js';
 
@@ -150,7 +151,7 @@ const backHref =
 
       {services.length > 0 && (
         <section class="mb-8">
-          <h2 class="text-lg font-bold text-gray-900 mb-3">Services</h2>
+          <h2 class="text-lg font-bold text-gray-900 mb-3">Services that can help</h2>
           <div class="space-y-4">
             {services.map((s) => (
               <div class="border rounded-lg p-4">
@@ -178,7 +179,24 @@ const backHref =
           <h2 class="text-lg font-bold text-gray-900 mb-3">Practitioners</h2>
           <div class="space-y-3">
             {practitioners.map((person) => (
-              <div class="border rounded-lg p-4">
+              <div class="border rounded-lg p-4 flex gap-4">
+                {/*
+                  Eager, not lazy: a page whose purpose is to be printed cannot
+                  wait for an avatar to scroll into view. A lazy image that never
+                  entered the viewport prints as a blank square.
+                */}
+                {person.avatar_url && (
+                  <img
+                    src={avatarThumb(person.avatar_url, 96)!}
+                    alt=""
+                    width="48"
+                    height="48"
+                    loading="eager"
+                    decoding="sync"
+                    class="w-12 h-12 rounded-full object-cover shrink-0"
+                  />
+                )}
+                <div class="min-w-0">
                 <p class="font-semibold text-gray-900">
                   {person.name}
                   {person.accepts_pro_bono && <span class="ml-2 text-xs text-gray-600">pro bono</span>}
@@ -194,6 +212,7 @@ const backHref =
                 <p class="text-xs text-gray-600 mt-1">
                   Profile: {Astro.url.origin}{basePath}practitioners/{person.slug}
                 </p>
+                </div>
               </div>
             ))}
           </div>

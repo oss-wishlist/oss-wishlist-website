@@ -21,9 +21,9 @@ export const INVESTMENT_METHODS = [
     id: 'direct-funding',
     label: 'Fund the project directly',
     summary: 'Money to the maintainers, through whatever route the project already publishes.',
-    /** Shown when the package has no funding link, because then this is harder. */
+    /** Shown when the project has no funding link, because then this is harder. */
     caveat:
-      'This package publishes no funding link, so there may be no route set up yet. That is what funding strategy work is for.',
+      'This project publishes no funding link, so there may be no route set up yet. That is what funding strategy work is for.',
     caveatWhen: (pkg) => pkg.unfunded,
   },
   {

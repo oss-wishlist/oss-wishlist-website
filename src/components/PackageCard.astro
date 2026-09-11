@@ -5,7 +5,7 @@
  * Shows facts only — dependent repo count, and the flags the data carries,
  * phrased as plain statements ("one maintainer", "no release since 2021").
  * No score, no rank, no "at risk" or "failing" language, and no contact route
- * to the maintainer. The action is always to sponsor a service for the package.
+ * to the maintainer. The action is always to start a plan for the project.
  */
 import { getBasePath } from '../lib/paths';
 import type { PresentedPackage } from '../lib/critical-packages';
@@ -59,7 +59,7 @@ const dependents =
       href={`${basePath}${pkg.href.replace(/^\//, '')}`}
       class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
     >
-      Sponsor a service
+      Create a plan
     </a>
   </div>
 </article>
