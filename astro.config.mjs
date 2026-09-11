@@ -31,6 +31,9 @@ export default defineConfig({
     '/helpers': '/practitioners',
     '/faq': '/about-us',
     '/code-of-conduct': '/about-us',
+    // Orphaned pages from the community framing.
+    '/ai-alignment': '/about-us',
+    '/ecosystem-guardians': '/catalog',
   },
   i18n: {
     locales: ['en', 'fr', 'es', 'de'],

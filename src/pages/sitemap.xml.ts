@@ -19,7 +19,6 @@ export const GET: APIRoute = async ({ site }) => {
     { loc: 'catalog', priority: 0.9 },
     { loc: 'fund', priority: 0.9 },
     { loc: 'practitioners', priority: 0.8 },
-    { loc: 'ecosystem-guardians', priority: 0.8 },
     { loc: 'maintainers', priority: 0.8 },
     { loc: 'check', priority: 0.9 },
     { loc: 'apply-practitioner', priority: 0.7 },
