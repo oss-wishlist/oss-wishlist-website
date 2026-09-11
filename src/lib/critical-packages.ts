@@ -151,7 +151,7 @@ export function getCounts() {
 /** The flags a visitor can narrow /fund by. */
 export const FILTERS = [
   { id: 'sole_maintainer', label: 'One maintainer' },
-  { id: 'unfunded', label: 'No funding link' },
+  { id: 'unfunded', label: 'No clear funding or sponsorship pathway' },
   { id: 'quiet', label: 'No release in 18 months' },
 ] as const;
 

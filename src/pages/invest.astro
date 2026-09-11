@@ -488,14 +488,14 @@ const title =
                 </label>
 
                 {/*
-                  Who you would approach is only a question once you have said
-                  you would pay someone. Revealed by CSS when the option above is
+                  The practitioner list is only relevant once you have said you
+                  would pay someone. Revealed by CSS when the option above is
                   ticked, and rendered visible when it arrives already ticked, so
                   it works with JavaScript off too.
                 */}
                 {m.id === 'practitioner' && matchedPractitioners.length > 0 && (
                   <div class="practitioner-picker mt-3 ml-8 pl-4 border-l-2 border-purple-200">
-                    <p class="text-sm font-semibold text-gray-800 mb-1">Who would you approach?</p>
+                    <p class="text-sm font-semibold text-gray-800 mb-1">Practitioners with this speciality</p>
                     <p class="text-sm text-gray-600 mb-4">They listed these services themselves. Pick any, or none.</p>
 
                     <ul class="space-y-3">

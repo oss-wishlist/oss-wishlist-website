@@ -39,7 +39,9 @@ export const DEFAULT_SERVICES = ['general-need'];
  */
 export const FLAG_LABELS = {
   sole_maintainer: () => 'one maintainer',
-  unfunded: () => 'no funding link',
+  // A missing funding link is only interesting because of what it means for
+  // the visitor: there is nowhere obvious to send money.
+  unfunded: () => 'no clear funding or sponsorship pathway',
   // "Published advisory" is security jargon. Most visitors are not security
   // people and will not know what one is, so say what it means instead.
   has_advisories: (pkg) =>

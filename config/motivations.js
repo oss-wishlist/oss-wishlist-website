@@ -95,7 +95,7 @@ export const MOTIVATIONS = [
     label: 'Funding',
     question: 'No way for money to reach the people doing the work.',
     services: ['funding-strategy'],
-    evidence: (pkg) => (pkg.unfunded ? 'no funding link published' : null),
+    evidence: (pkg) => (pkg.unfunded ? 'no clear funding or sponsorship pathway' : null),
   },
   {
     id: 'innovation',
