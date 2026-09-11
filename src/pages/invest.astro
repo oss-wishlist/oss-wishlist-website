@@ -39,6 +39,7 @@ import {
 } from '../lib/critical-packages';
 import { getRubricForPlaybook } from '../lib/rubrics';
 import { practitionersForServices } from '../lib/practitioner-availability';
+import { checkRepositoryForPackage } from '../lib/dependency-check';
 import {
   MOTIVATIONS,
   parseMotivations,
@@ -109,6 +110,24 @@ const advisories = (selected?.advisories ?? []).filter((a) => a.url || a.id);
 
 /** Always a link for the project name: repository, else its registry page. */
 const selectedUrl = selected ? projectUrl(selected) : null;
+
+/**
+ * Optional: does one of your own repositories depend on this package?
+ *
+ * Asked in step 2 because it is evidence like any other. "You already depend on
+ * this" is the strongest reason to care about it, and unlike the flags it is
+ * about the visitor rather than the project. Nothing is stored.
+ */
+const submittedRepo = (params.get('repo') ?? '').trim();
+const dependencyCheck =
+  selected && submittedRepo
+    ? await checkRepositoryForPackage(submittedRepo, selected.ecosystem, selected.name)
+    : null;
+
+const dependencyProblem =
+  dependencyCheck && dependencyCheck.status !== 'ok'
+    ? (dependencyCheck as Extract<typeof dependencyCheck, { message: string }>).message
+    : null;
 
 const orderedMotivations = [
   ...MOTIVATIONS.filter((m) => evidenceById.has(m.id)),
@@ -263,6 +282,65 @@ const title =
         <p class="text-gray-600 mb-8 max-w-2xl">
           We have ticked what the data shows. Change anything.
         </p>
+
+        <details class="mb-6 bg-white border rounded-lg p-5" open={Boolean(dependencyCheck || dependencyProblem)}>
+          <summary class="cursor-pointer font-semibold text-gray-900 list-none inline-flex items-center gap-2">
+            <span class="transition-transform" aria-hidden="true">&rsaquo;</span>
+            Do you depend on {selected.name}?
+          </summary>
+
+          <form method="get" action={selfBase} class="mt-4">
+            <input type="hidden" name="pe" value={selected.ecosystem} />
+            <input type="hidden" name="pn" value={selected.name} />
+            <div class="flex flex-wrap gap-3">
+              <input
+                type="search"
+                name="repo"
+                value={submittedRepo}
+                placeholder="https://github.com/your-org/your-repo"
+                aria-label={`Check whether a repository depends on ${selected.name}`}
+                autocomplete="off"
+                class="flex-1 min-w-[16rem] border rounded px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              <button type="submit" class="bg-gray-800 text-white px-5 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium">
+                Check
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">GitHub, GitLab and Codeberg. Public repositories only. Nothing is stored.</p>
+          </form>
+
+          {dependencyProblem && <p class="mt-4 text-gray-800">{dependencyProblem}</p>}
+
+          {dependencyCheck?.status === 'ok' && (
+            <div
+              role="status"
+              aria-live="polite"
+              class={`mt-4 rounded-lg border-2 p-4 ${
+                dependencyCheck.dependsOn
+                  ? 'border-purple-500 bg-purple-50'
+                  : 'border-gray-300 bg-gray-50'
+              }`}
+            >
+              <p class={`text-2xl font-extrabold ${dependencyCheck.dependsOn ? 'text-purple-700' : 'text-gray-900'}`}>
+                {dependencyCheck.dependsOn ? 'Yes' : 'No'}
+              </p>
+              <p class="text-gray-800 mt-1">
+                {dependencyCheck.dependsOn ? (
+                  <>
+                    <span class="font-semibold">{dependencyCheck.repo.label}</span> depends on
+                    <span class="font-semibold"> {selected.name}</span>.
+                  </>
+                ) : (
+                  <>
+                    We read {dependencyCheck.dependencyCount.toLocaleString('en-US')} dependencies
+                    for <span class="font-semibold">{dependencyCheck.repo.label}</span> and
+                    {' '}{selected.name} is not among them.
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+        </details>
 
         <form method="get" action={selfBase}>
           <input type="hidden" name="pe" value={selected.ecosystem} />
