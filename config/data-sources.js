@@ -54,6 +54,11 @@ export const KEEP_FIELDS = [
   'funding_links',
   'latest_release_published_at',
   'licenses',
+  // Registries publish this when a package is retired: npm sets "deprecated",
+  // Packagist sets "abandoned". It is the difference between a project nobody
+  // has released lately and one its maintainers have declared finished, which
+  // are very different conversations to open with.
+  'status',
 ];
 
 /**

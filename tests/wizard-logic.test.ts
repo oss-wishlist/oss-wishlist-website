@@ -10,6 +10,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   recentAdvisories,
   recentAdvisoryCount,
@@ -25,6 +27,7 @@ import { isExcludedOwner } from '../config/excluded-owners.js';
 import {
   MOTIVATIONS,
   isDormant,
+  isRetired,
   parseMotivations,
   servicesForMotivations,
   suggestedMotivations,
@@ -99,9 +102,12 @@ describe('motivation evidence', () => {
     expect(found.find((f) => f.id === 'security')).toBeUndefined();
   });
 
-  it('cites the release year for continuity', () => {
-    const found = suggestedMotivations(pkg({ quiet: true, latest_release_published_at: '2019-04-01T00:00:00Z' }));
-    expect(found).toContainEqual({ id: 'continuity', evidence: 'no release since 2019' });
+  it('cites a sole maintainer for continuity, which covers burnout as well as departure', () => {
+    const found = suggestedMotivations(pkg({ sole_maintainer: true }));
+    expect(found).toContainEqual({
+      id: 'continuity',
+      evidence: 'one maintainer, so there is nobody to share the load with',
+    });
   });
 
   it('only raises maintainer workload when many depend on one person', () => {
@@ -126,7 +132,7 @@ describe('motivation evidence', () => {
   });
 });
 
-describe('winding down is gated on dormancy', () => {
+describe('winding down', () => {
   it('does not treat an 18 month gap as dormant', () => {
     expect(isDormant(pkg({ latest_release_published_at: monthsAgo(18) }))).toBe(false);
   });
@@ -135,18 +141,105 @@ describe('winding down is gated on dormancy', () => {
     expect(isDormant(pkg({ latest_release_published_at: monthsAgo(25) }))).toBe(true);
   });
 
-  it('suggests succession alone for a recently quiet project', () => {
-    const services = servicesForMotivations(['continuity'], pkg({ latest_release_published_at: monthsAgo(20) }));
-    expect(services).toEqual(['leadership-onboarding']);
+  it('handles a package with no release date without throwing', () => {
+    expect(isDormant(pkg({ latest_release_published_at: null }))).toBe(false);
   });
 
-  it('adds winding down once a project is dormant', () => {
-    const services = servicesForMotivations(['continuity'], pkg({ latest_release_published_at: monthsAgo(40) }));
+  /*
+    It used to be reachable only by picking continuity on a project the data
+    called dormant. Now it is a question in its own right, so someone can ask
+    it about any project.
+  */
+  it('is its own question, reachable for any project', () => {
+    const services = servicesForMotivations(['winding-down'], pkg({}));
     expect(services).toContain('winding-down');
   });
 
-  it('handles a package with no release date without throwing', () => {
-    expect(isDormant(pkg({ latest_release_published_at: null }))).toBe(false);
+  it('offers succession alongside it, because handing on is often the answer', () => {
+    expect(servicesForMotivations(['winding-down'], pkg({}))).toContain('leadership-onboarding');
+  });
+
+  it('no longer drags winding down in behind the continuity question', () => {
+    const services = servicesForMotivations(['continuity'], pkg({ latest_release_published_at: monthsAgo(40) }));
+    expect(services).toEqual(['leadership-onboarding']);
+  });
+
+  // The maintainers saying so, which the registry publishes directly.
+  it.each([
+    [{ status: 'deprecated' }, 'the registry lists this as deprecated'],
+    [{ status: 'abandoned' }, 'the registry lists this as abandoned'],
+    [{ archived: true }, 'the repository is archived'],
+    [{ deprecated: true }, 'the repository is archived'],
+  ])('quotes the registry for %o', (fields, expected) => {
+    const found = suggestedMotivations(pkg(fields));
+    expect(found).toContainEqual({ id: 'winding-down', evidence: expected });
+  });
+
+  it('prefers what the registry said over an inferred gap', () => {
+    const found = suggestedMotivations(
+      pkg({ status: 'deprecated', latest_release_published_at: monthsAgo(40) })
+    );
+    const evidence = found.find((f) => f.id === 'winding-down')!.evidence;
+    expect(evidence).toBe('the registry lists this as deprecated');
+  });
+
+  // A gap is an absence, not a statement, and the wording has to stay on the
+  // right side of that.
+  it('states a release gap as a fact, with no conclusion attached', () => {
+    const found = suggestedMotivations(pkg({ latest_release_published_at: monthsAgo(40) }));
+    const evidence = found.find((f) => f.id === 'winding-down')!.evidence;
+    expect(evidence).toMatch(/^no release in \d+ months$/);
+    expect(evidence).not.toMatch(/abandoned|dead|dying|at risk|failing/i);
+  });
+
+  it('says nothing about a project that is simply quiet', () => {
+    const found = suggestedMotivations(pkg({ latest_release_published_at: monthsAgo(20) }));
+    expect(found.find((f) => f.id === 'winding-down')).toBeUndefined();
+  });
+
+  it('isRetired reads all three ways a registry says it', () => {
+    expect(isRetired({ status: 'deprecated' })).toBe(true);
+    expect(isRetired({ archived: true })).toBe(true);
+    expect(isRetired({ deprecated: true })).toBe(true);
+    expect(isRetired({})).toBe(false);
+    expect(isRetired(null)).toBe(false);
+  });
+});
+
+describe('every playbook is reachable', () => {
+  const catalogue = readdirSync(join(process.cwd(), 'src/content/services'))
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => f.replace(/\.md$/, ''));
+
+  const offered = new Set(MOTIVATIONS.flatMap((m) => m.services));
+
+  it('there is a catalogue to check', () => {
+    expect(catalogue.length).toBeGreaterThan(0);
+  });
+
+  // The reason for the rewrite: digital sovereignty, AI policy and hosting
+  // could not be reached by answering any question.
+  it.each(['ai-consent-framework', 'digital-sovereignty', 'hosting-infrastructure', 'winding-down'])(
+    '%s is reachable',
+    (slug) => {
+      expect(offered.has(slug)).toBe(true);
+    }
+  );
+
+  it('leaves no service unreachable', () => {
+    expect(catalogue.filter((slug) => !offered.has(slug))).toEqual([]);
+  });
+
+  it('offers no service the catalogue does not have', () => {
+    expect([...offered].filter((slug) => !catalogue.includes(slug))).toEqual([]);
+  });
+
+  it('asks a question for each, phrased as a question', () => {
+    for (const m of MOTIVATIONS) {
+      expect(m.services.length).toBeGreaterThan(0);
+      expect(m.label.length).toBeGreaterThan(0);
+      expect(m.question.length).toBeGreaterThan(0);
+    }
   });
 });
 
