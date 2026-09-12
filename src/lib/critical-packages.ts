@@ -96,6 +96,59 @@ const allPackages: CriticalPackage[] = (criticalData as CriticalPackage[]).filte
 export const meta = metaData as DataMeta;
 
 /** Every cached package, minus opt-outs. Fetch order is already deterministic. */
+/**
+ * Facts a visitor can narrow the list by.
+ *
+ * The same flags the cards show, offered once at the top of the page. They were
+ * chips inside each card and led nowhere, which invited a click that did
+ * nothing. A fact is a label where it describes one project and a filter where
+ * it selects many, and those belong in different places.
+ *
+ * Labels here are fixed, unlike the card chips, which take their wording from
+ * the package (a release year, an advisory count).
+ */
+export const PACKAGE_FILTERS = [
+  { id: 'sole_maintainer', label: 'One maintainer' },
+  { id: 'unfunded', label: 'No clear funding pathway' },
+  { id: 'has_advisories', label: 'Recent security advisories' },
+  { id: 'quiet', label: 'No recent release' },
+] as const;
+
+export type PackageFilterId = (typeof PACKAGE_FILTERS)[number]['id'];
+
+export function isPackageFilter(value: string | null): value is PackageFilterId {
+  return PACKAGE_FILTERS.some((f) => f.id === value);
+}
+
+/**
+ * Packages carrying every selected flag.
+ *
+ * Narrowing rather than widening, because someone picking two is looking for
+ * the projects where both are true.
+ */
+export function filterByFlags(
+  packages: CriticalPackage[],
+  flags: readonly string[]
+): CriticalPackage[] {
+  if (flags.length === 0) return packages;
+  return packages.filter((pkg) => {
+    const present = flagsFor(pkg) as string[];
+    return flags.every((flag) => present.includes(flag));
+  });
+}
+
+/** How many packages each filter would leave, so none is offered at zero. */
+export function filterCounts(packages: CriticalPackage[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const filter of PACKAGE_FILTERS) counts[filter.id] = 0;
+  for (const pkg of packages) {
+    for (const flag of flagsFor(pkg) as string[]) {
+      if (flag in counts) counts[flag] += 1;
+    }
+  }
+  return counts;
+}
+
 export function getAllPackages(): CriticalPackage[] {
   return allPackages;
 }

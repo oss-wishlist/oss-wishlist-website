@@ -44,8 +44,22 @@ const dependents =
     </p>
   )}
 
+  {/*
+    The action sits above the facts. A card carries between zero and four of
+    them, so an action underneath lands at a different height on every card and
+    the tallest ones push it out of sight.
+  */}
+  <div class="mb-4">
+    <a
+      href={`${basePath}${pkg.href.replace(/^\//, '')}`}
+      class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+    >
+      Create a plan
+    </a>
+  </div>
+
   {pkg.facts.length > 0 && (
-    <ul class="flex flex-wrap gap-2 mb-4" aria-label="What Ecosyste.ms data shows">
+    <ul class="flex flex-wrap gap-2 mt-auto" aria-label="What Ecosyste.ms data shows">
       {pkg.facts.map((fact) => (
         <li class="text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 rounded-full">
           {/* A fact carrying a number has to be checkable, or it is just an allegation. */}
@@ -64,12 +78,4 @@ const dependents =
     </ul>
   )}
 
-  <div class="mt-auto pt-2">
-    <a
-      href={`${basePath}${pkg.href.replace(/^\//, '')}`}
-      class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
-    >
-      Create a plan
-    </a>
-  </div>
 </article>

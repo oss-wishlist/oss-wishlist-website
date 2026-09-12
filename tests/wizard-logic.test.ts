@@ -10,6 +10,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import {
+  PACKAGE_FILTERS,
+  isPackageFilter,
+  filterByFlags,
+  filterCounts,
+} from '../src/lib/critical-packages';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -554,5 +560,64 @@ describe('activity as continuity evidence', () => {
   // for that. A check that did not run is not a score of zero.
   it('treats a check that did not run as unknown', () => {
     expect(evidenceFor({ scorecard_maintained: null })).toBeUndefined();
+  });
+});
+
+/*
+  The flags were labels inside each card that led nowhere, inviting a click
+  that did nothing. They are filters at the top of step 1 now, and the cards
+  keep them as labels.
+*/
+describe('narrowing by flag', () => {
+  const p = (fields: Record<string, unknown>) => pkg(fields);
+  const solo = p({ sole_maintainer: true });
+  const broke = p({ unfunded: true });
+  const both = p({ sole_maintainer: true, unfunded: true });
+  const neither = p({});
+  const all = [solo, broke, both, neither];
+
+  it('returns everything when nothing is selected', () => {
+    expect(filterByFlags(all, [])).toHaveLength(4);
+  });
+
+  it('keeps the packages carrying the flag', () => {
+    expect(filterByFlags(all, ['sole_maintainer'])).toEqual([solo, both]);
+  });
+
+  // Narrowing, because someone picking two wants where both are true.
+  it('narrows rather than widens when two are selected', () => {
+    expect(filterByFlags(all, ['sole_maintainer', 'unfunded'])).toEqual([both]);
+  });
+
+  it('can select nothing at all, which the page has to handle', () => {
+    expect(filterByFlags(all, ['sole_maintainer', 'has_advisories'])).toEqual([]);
+  });
+
+  it('counts each flag across the set', () => {
+    const counts = filterCounts(all);
+    expect(counts.sole_maintainer).toBe(2);
+    expect(counts.unfunded).toBe(2);
+  });
+
+  // A filter offered at zero is a dead end, and the page hides those.
+  it('reports zero for a flag nothing carries, so it can be left out', () => {
+    expect(filterCounts(all).has_advisories).toBe(0);
+  });
+
+  it('only accepts the flags it offers', () => {
+    for (const f of PACKAGE_FILTERS) expect(isPackageFilter(f.id)).toBe(true);
+    expect(isPackageFilter('sole_maintainer; DROP TABLE')).toBe(false);
+    expect(isPackageFilter('')).toBe(false);
+    expect(isPackageFilter(null)).toBe(false);
+  });
+
+  /*
+    A filter id has to be a flag the cards actually carry. A typo here would
+    produce a filter that counts zero forever, so the page would hide it and
+    nobody would notice it was broken.
+  */
+  it('every filter names a flag the cards can carry', () => {
+    const counted = Object.keys(filterCounts([pkg({})]));
+    for (const f of PACKAGE_FILTERS) expect(counted).toContain(f.id);
   });
 });
