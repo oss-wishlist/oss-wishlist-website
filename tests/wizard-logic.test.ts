@@ -104,10 +104,7 @@ describe('motivation evidence', () => {
 
   it('cites a sole maintainer for continuity, which covers burnout as well as departure', () => {
     const found = suggestedMotivations(pkg({ sole_maintainer: true }));
-    expect(found).toContainEqual({
-      id: 'continuity',
-      evidence: 'one maintainer, so there is nobody to share the load with',
-    });
+    expect(found).toContainEqual({ id: 'continuity', evidence: 'one maintainer listed' });
   });
 
   it('only raises maintainer workload when many depend on one person', () => {
@@ -505,5 +502,57 @@ describe('community files as evidence', () => {
 
   it('treats an empty file listing as known-absent, not unknown', () => {
     expect(evidenceFor(withFiles({}), 'ai-policy')).toContain('AGENTS.md');
+  });
+});
+
+/*
+  Activity, windowed to the past year. total_committers and dds are lifetime
+  figures: lodash reports 265 committers and has not merged a patch in a long
+  while, so neither answers the question continuity asks.
+*/
+describe('activity as continuity evidence', () => {
+  const evidenceFor = (fields: Record<string, unknown>) =>
+    suggestedMotivations(pkg(fields)).find((m) => m.id === 'continuity')?.evidence;
+
+  it('says nothing for a package cached before activity was collected', () => {
+    expect(evidenceFor({ sole_maintainer: false })).toBeUndefined();
+  });
+
+  // requests: many owners listed historically, one person active now.
+  it('reports a single active maintainer even when ownership looks shared', () => {
+    expect(evidenceFor({ sole_maintainer: false, active_maintainer_count: 1 })).toBe(
+      'one person active in the past year'
+    );
+  });
+
+  it('reports a small team, and says nothing about a large one', () => {
+    expect(evidenceFor({ active_maintainer_count: 3 })).toContain('3 people active');
+    expect(evidenceFor({ active_maintainer_count: 9 })).toBeUndefined();
+  });
+
+  // lodash: 88 people sent pull requests, Scorecard scores Maintained at 0.
+  it('reports a Scorecard Maintained score of zero', () => {
+    expect(evidenceFor({ scorecard_maintained: 0 })).toContain('no recent maintenance activity');
+  });
+
+  it('says nothing about a maintained project', () => {
+    expect(evidenceFor({ active_maintainer_count: 9, scorecard_maintained: 10 })).toBeUndefined();
+  });
+
+  it('states every reason that applies', () => {
+    const evidence = evidenceFor({
+      sole_maintainer: true,
+      active_maintainer_count: 1,
+      scorecard_maintained: 0,
+    })!;
+    expect(evidence).toContain('one maintainer listed');
+    expect(evidence).toContain('one person active');
+    expect(evidence).toContain('no recent maintenance activity');
+  });
+
+  // Scorecard uses -1 for a check it could not run, and the fetcher stores null
+  // for that. A check that did not run is not a score of zero.
+  it('treats a check that did not run as unknown', () => {
+    expect(evidenceFor({ scorecard_maintained: null })).toBeUndefined();
   });
 });

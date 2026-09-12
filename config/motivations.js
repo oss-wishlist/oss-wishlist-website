@@ -82,6 +82,24 @@ function bothOf(...parts) {
   return found.length ? found.join('; ') : null;
 }
 
+/**
+ * People active in the past year, when we know.
+ *
+ * `total_committers` counts everyone who ever committed, which says nothing
+ * about now: lodash reports 265 and has not merged a patch in a long while.
+ * This one is windowed.
+ */
+function activeCount(pkg) {
+  const n = pkg?.active_maintainer_count;
+  return typeof n === 'number' ? n : null;
+}
+
+/** OpenSSF Scorecard's Maintained check, 0 to 10, or null when it did not run. */
+function maintainedScore(pkg) {
+  const n = pkg?.scorecard_maintained;
+  return typeof n === 'number' ? n : null;
+}
+
 export const MOTIVATIONS = [
   {
     id: 'security',
@@ -128,8 +146,24 @@ export const MOTIVATIONS = [
       the clearest case of either: nobody is carrying it with them, so there is
       nobody to absorb the load before exhaustion and nobody to hand to after.
     */
-    evidence: (pkg) =>
-      pkg.sole_maintainer ? 'one maintainer, so there is nobody to share the load with' : null,
+    /*
+      Three views of the same risk, and they disagree usefully. Registry
+      ownership says who is listed, the active count says who turned up this
+      year, and Scorecard's Maintained check says whether anything is landing.
+      requests lists many owners and has one person active.
+    */
+    evidence: (pkg) => {
+      const active = activeCount(pkg);
+      const maintained = maintainedScore(pkg);
+      return bothOf(
+        pkg.sole_maintainer ? 'one maintainer listed' : null,
+        active === 1 ? 'one person active in the past year' : null,
+        active !== null && active > 1 && active <= 3
+          ? `${active} people active in the past year`
+          : null,
+        maintained === 0 ? 'OpenSSF Scorecard finds no recent maintenance activity' : null
+      );
+    },
   },
   {
     id: 'capacity',

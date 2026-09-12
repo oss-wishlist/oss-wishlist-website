@@ -115,6 +115,36 @@ const activeMotivations = motivationsSubmitted
 /** Advisories we can name and link, for the security evidence. */
 // The same window the fact above describes, newest first, so the list is
 // evidence for the number rather than a different set of things.
+/*
+  Activity facts for the package page. Every one is windowed to the past year:
+  total_committers and total_commits are lifetime figures and say nothing about
+  now, which is the whole question here.
+
+  A fact is left out when the data is missing, so a package cached before these
+  were collected shows a shorter list and never a zero.
+*/
+const activityFacts: Array<{ label: string; value: string }> = [];
+if (selected) {
+  const num = (n: unknown) => (typeof n === 'number' ? n.toLocaleString('en-US') : null);
+
+  const add = (label: string, value: string | null) => {
+    if (value) activityFacts.push({ label, value });
+  };
+
+  add('People actively maintaining it', num(selected.active_maintainer_count));
+  add(
+    'OpenSSF Scorecard, maintained',
+    typeof selected.scorecard_maintained === 'number'
+      ? `${selected.scorecard_maintained} out of 10`
+      : null
+  );
+  /*
+    Dependent repositories belongs on the card, where it already is. It is a
+    lifetime count of scale, and putting it under a heading that says "past
+    year" would make the panel lie about it.
+  */
+}
+
 const advisories = selected
   ? recentAdvisories(selected).filter((a) => a.url || a.id).slice(0, ADVISORY_LIST_LIMIT)
   : [];
@@ -291,9 +321,38 @@ const title =
             selected.name
           )}?
         </h1>
-        <p class="text-gray-600 mb-8 max-w-2xl">
+        <p class="text-gray-600 mb-6 max-w-2xl">
           Pre-selected services are those which Ecosyste.ms data indicates might be helpful.
         </p>
+
+        {/*
+          Activity, on the package page where there is room for it. Cards keep
+          their three chips: a card exists to choose between twelve of them at a
+          glance, and this would bury that.
+
+          Closed by default. Anyone who wants the numbers opens it, and anyone
+          answering the questions is not made to scroll past them first.
+        */}
+        {activityFacts.length > 0 && (
+          <details class="mb-8 bg-white border rounded-lg p-5">
+            <summary class="cursor-pointer font-semibold text-gray-900 list-none inline-flex items-center gap-2">
+              <span class="transition-transform" aria-hidden="true">&rsaquo;</span>
+              Activity in the past year
+            </summary>
+            <dl class="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+              {activityFacts.map((fact) => (
+                <div class="flex items-baseline justify-between gap-4 border-b border-gray-100 pb-2">
+                  <dt class="text-sm text-gray-600">{fact.label}</dt>
+                  <dd class="text-sm font-semibold text-gray-900">{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p class="text-xs text-gray-500 mt-4">
+              From ecosyste.ms, counted over the past twelve months. The maintainer count is
+              people, and this site does not name them.
+            </p>
+          </details>
+        )}
 
         <details class="mb-6 bg-white border rounded-lg p-5" open={Boolean(dependencyCheck || dependencyProblem)}>
           <summary class="cursor-pointer font-semibold text-gray-900 list-none inline-flex items-center gap-2">
@@ -448,7 +507,7 @@ const title =
           {selectedUrl ? (
             <a
               href={selectedUrl}
-              class="underline decoration-2 underline-offset-4 hover:text-purple-700"
+              class="underline decoration-2 underline-offset-4 hover:text-teal-800"
               rel="noopener noreferrer"
               target="_blank"
               title={`Open ${selected.name}`}>{selected.name}</a
@@ -523,7 +582,7 @@ const title =
                   it works with JavaScript off too.
                 */}
                 {m.id === 'practitioner' && matchedPractitioners.length > 0 && (
-                  <div class="practitioner-picker mt-3 ml-8 pl-4 border-l-2 border-purple-200">
+                  <div class="practitioner-picker mt-3 ml-8 pl-4 border-l-2 border-teal-300">
                     <p class="text-sm font-semibold text-gray-800 mb-1">Practitioners with this speciality</p>
                     <p class="text-sm text-gray-600 mb-4">They listed these services themselves. Pick any, or none.</p>
 
@@ -565,7 +624,7 @@ const title =
             ))}
           </div>
 
-          <button type="submit" class="bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm">
+          <button type="submit" class="bg-teal-700 text-white px-7 py-3 rounded-lg hover:bg-teal-800 transition-colors font-semibold shadow-sm">
             Create the plan
           </button>
         </form>
