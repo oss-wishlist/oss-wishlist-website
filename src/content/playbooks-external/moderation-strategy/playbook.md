@@ -1,7 +1,16 @@
 
 # Moderation Strategy
 
-Modreation tends to be an afterthought, and often becomes urgent as the lack of a strategy takes hold: spam, AI slop, community chaos or just more nosie than one can process.   This playbook is intended to help maintainers co-build a strategy with their team and community to setup for success in the future.  
+Moderation tends to be an afterthought, and often becomes urgent as the lack of
+a strategy takes hold: spam, AI slop, community chaos, or just more noise than
+one person can process. This playbook is intended to help maintainers co-build a
+strategy with their team and community, to set up for success in the future.
+
+Bots appear on both sides of this. They filter spam, and they also generate it:
+automated accounts and AI agents now open issues and pull requests at a rate no
+maintainer can triage by hand, and a contribution that looks plausible costs
+more to review than one that obviously does not. A moderation strategy written
+only against human behaviour will not hold.
 
 **NOTE**: moderation strategy can include code of conduct response, but the details of creating that document, and response times is a governance task.
 
@@ -9,23 +18,23 @@ Modreation tends to be an afterthought, and often becomes urgent as the lack of 
 ## General Resources
 
 - [Moderation Pocket Book](https://github.com/microsoft/OSPO/blob/main/learning_resources/moderating-oss/moderating-oss-repos.md)
-- [Psychological Safety](CHAOSS)(https://chaoss.community/kb/metric-psychological-safety/)
+- [Psychological Safety](https://chaoss.community/kb/metric-psychological-safety/), CHAOSS
 
 ## AI Alignment Resources
 
-- [LLM Moderation Policies](https://github.com/chaoss/wg-ai-alignment/tree/main/moderation])
+- [LLM Moderation Policies](https://github.com/chaoss/wg-ai-alignment/tree/main/moderation)
 
 ## Process Milestones
 
 Note: that some milestones may not currently apply to a project and will be refined as part of the initial 
 
-1. Kick off meeting: Maintainer meets with OSS Wishlist admin and pracitioner (whether sponsor employee or verified pracitioner) to align on goals and timeline.
+1. Kick off meeting: Maintainer meets with OSS Wishlist admin and practitioner (whether sponsor employee or verified practitioner) to align on goals and timeline.
 2.  Noise & Spam Control Readiness
 3.  Team Alignment on Moderation Practices
 4.  Escalation & Maintainer Protection
 5.  Continuous Process Improvement
-7. Wrap up meeting: Maintainer meets with OSS Wishlist maintainer and pracitioner
-8. Survey (maintainer and pracitioner)
+7. Wrap up meeting: Maintainer meets with OSS Wishlist maintainer and practitioner
+8. Survey (maintainer and practitioner)
 
 ## Moderation Strategy – Peer Review Rubric
 
@@ -38,13 +47,15 @@ Note: that some milestones may not currently apply to a project and will be refi
 
 ---
 
-### A. Noise & Spam Control Readiness (0–12 pts)
+### A. Noise & Spam Control Readiness (0–16 pts)
 
 | Criterion | Indicators of Excellence | Score |
 |---------|--------------------------|------|
 | **A1. Automated Spam & Abuse Filtering** | Bots/filters handle spam, AI-slop detection, issue templates block junk. | 0–4 |
 | **A2. Workflow Hygiene in PRs & Issues** | Clear routing rules; backlog pruning; stale automation; minimal manual triage. | 0–4 |
-| **A3. Contribution Qual**
+| **A3. Contribution Quality Signals** | Low-effort and duplicate contributions are identifiable early; templates and checks surface quality before review time is spent. | 0–4 |
+| **A4. Automated & AI-Generated Contributions** | A stated position on bots and AI agents opening issues or pull requests: whether they are permitted, what disclosure is required, and who is accountable for what they submit. | 0–4 |
+
 ---
 
 ## B. Team Alignment on Moderation Practices (0–12 pts)
@@ -77,15 +88,15 @@ Note: that some milestones may not currently apply to a project and will be refi
 
 ---
 
-## ✅ Total Score: **/ 48 pts**
+## ✅ Total Score: **/ 52 pts**
 
 | Rating | Descriptor |
 |------:|------------|
-| 44–48 | Excellent — Maintainers shielded, chaos minimized |
-| 36–43 | Strong — Manageable noise, rare overload |
-| 24–35 | Adequate — Maintainers still burdened during spikes |
-| 12–23 | Weak — Frequent chaos, burnout risk high |
-| 0–11 | Not Viable — Maintainers overwhelmed; community degraded
+| 48–52 | Excellent — Maintainers shielded, chaos minimized |
+| 39–47 | Strong — Manageable noise, rare overload |
+| 26–38 | Adequate — Maintainers still burdened during spikes |
+| 13–25 | Weak — Frequent chaos, burnout risk high |
+| 0–12 | Not Viable — Maintainers overwhelmed; community degraded
 
 ---
 
