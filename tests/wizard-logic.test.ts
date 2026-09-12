@@ -11,6 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  projectUrl,
   PACKAGE_FILTERS,
   isPackageFilter,
   filterByFlags,
@@ -619,5 +620,61 @@ describe('narrowing by flag', () => {
   it('every filter names a flag the cards can carry', () => {
     const counted = Object.keys(filterCounts([pkg({})]));
     for (const f of PACKAGE_FILTERS) expect(counted).toContain(f.id);
+  });
+});
+
+/*
+  ecosyste.ms reports whatever a package declared, and old packages declared
+  hosts that have since closed. net.sf.ehcache:ehcache-core points at
+  svn.terracotta.org, which no longer resolves, so the project link opened a
+  connection error.
+*/
+describe('projectUrl', () => {
+  const maven = (repository_url: string | null) => ({
+    ecosystem: 'maven',
+    name: 'net.sf.ehcache:ehcache-core',
+    repository_url,
+  });
+
+  it('links the repository on a forge we recognise', () => {
+    expect(projectUrl({ ecosystem: 'npm', name: 'lodash', repository_url: 'https://github.com/lodash/lodash' }))
+      .toBe('https://github.com/lodash/lodash');
+  });
+
+  // The reported case.
+  it('does not link a host that no longer resolves', () => {
+    const url = projectUrl(maven('https://svn.terracotta.org/svn/ehcache/trunk'))!;
+    expect(url).not.toContain('terracotta');
+    // Maven's registry page, carrying the coordinates from the package name.
+    expect(url).toBe('https://central.sonatype.com/artifact/net.sf.ehcache/ehcache-core');
+  });
+
+  it.each([
+    'https://java.net/projects/thing',
+    'https://fisheye.jboss.org/browse/thing',
+    'https://args4j.kohsuke.org/source-repository.html',
+    'https://git.jcraft.com/thing',
+  ])('falls back to the registry for %s', (dead) => {
+    expect(projectUrl(maven(dead))).not.toContain(new URL(dead).hostname);
+  });
+
+  it('keeps the forges that are alive but less common', () => {
+    for (const host of ['gitbox.apache.org', 'svn.apache.org', 'cs.opensource.google', 'go.googlesource.com']) {
+      const url = `https://${host}/thing`;
+      expect(projectUrl(maven(url))).toBe(url);
+    }
+  });
+
+  it('refuses a scheme a browser cannot open', () => {
+    for (const bad of ['git://github.com/a/b', 'svn+ssh://example.com/x', 'javascript:alert(1)']) {
+      expect(projectUrl(maven(bad))).not.toBe(bad);
+    }
+  });
+
+  it('always returns somewhere to go', () => {
+    for (const eco of ['npm', 'pypi', 'rubygems', 'cargo', 'packagist', 'nuget', 'go', 'maven']) {
+      const url = projectUrl({ ecosystem: eco, name: eco === 'maven' ? 'g:a' : 'thing', repository_url: null });
+      expect(url).toMatch(/^https:\/\//);
+    }
   });
 });

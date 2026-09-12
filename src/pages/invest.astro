@@ -25,7 +25,6 @@ import { getBasePath } from '../lib/paths';
 import {
   getPackage,
   presentPackage,
-  getFeaturedPackages,
   getEcosystemCounts,
   getHeadlinePool,
   samplePackages,
@@ -98,10 +97,6 @@ const step: 1 | 2 | 3 = !selected ? 1 : !motivationsSubmitted ? 2 : 3;
 
 // ---- Step 1 content ----
 const ecosystemCounts = getEcosystemCounts();
-// The hand-picked set is a starting point for someone with nothing in mind, so
-// it steps aside once there is a filter or a search.
-const featured =
-  step === 1 && !ecosystem && !searching && !filtering ? getFeaturedPackages() : [];
 
 const searchResults = step === 1 && searching
   ? filterByFlags(searchPackages(query, ecosystem), activeFlags)
@@ -111,12 +106,16 @@ const searchTotal = step === 1 && searching
   : 0;
 
 /*
-  A filter selects across the whole cache, so it works without an ecosystem
-  chosen. Sampled the same way as an unfiltered browse, because a filtered list
-  is still a set to choose from rather than a ranking.
+  The list is a fresh random sample on every load, across the whole cache unless
+  a registry or a filter narrows it.
+
+  The page used to open with a hand-picked set of thirteen, which put the same
+  projects at the top of every visit and made the cache look like a shortlist.
+  Sampling keeps the other four thousand reachable and stops the order reading
+  as a ranking, which nothing here is.
 */
 const browsePool =
-  step === 1 && !searching && (ecosystem || filtering)
+  step === 1 && !searching
     ? filterByFlags(getHeadlinePool(ecosystem), activeFlags)
     : [];
 const browse = browsePool.length ? samplePackages(SAMPLE_SIZE, browsePool) : [];
@@ -382,17 +381,22 @@ const title =
           </div>
         )}
 
+        {!searching && !filtering && browse.length > 0 && (
+          <div class="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+            <h2 class="text-xl font-bold text-gray-900">
+              {fmt(browseTotal)} projects that could use support
+            </h2>
+            <a href={ecosystem ? `${selfBase}?ecosystem=${ecosystem}` : selfBase} class="text-sm text-gray-600 underline hover:text-gray-900">
+              Show another set
+            </a>
+          </div>
+        )}
+
         {!searching && browse.length > 0 && (
           <PackageGrid packages={browse.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
         )}
 
-        {!searching && featured.length > 0 && (
-          <>
-            <h2 class="text-xl font-bold text-gray-900 mb-1">Or start with these</h2>
-            <p class="text-gray-600 mb-6">Open source projects you have almost certainly used.</p>
-            <PackageGrid packages={featured.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
-          </>
-        )}
+
       </>
     )}
 

@@ -378,6 +378,58 @@ export function getPool(filters: FilterId[], ecosystem: EcosystemId | null = nul
 }
 
 /**
+ * Forges we will link a repository on.
+ *
+ * ecosyste.ms reports whatever a package declared, and old packages declared
+ * hosts that have since closed. In this cache, java.net, svn.sonatype.org,
+ * fisheye.jboss.org, fisheye.codehaus.org, args4j.kohsuke.org,
+ * svn.forge.objectweb.org, android.git.kernel.org, git.jcraft.com and
+ * svn.terracotta.org all fail to resolve, so the link opened a connection error
+ * on a page that had just promised a project.
+ *
+ * An allow-list fails in the safe direction. A live forge missing from it sends
+ * someone to the registry page, which is one click further from the code and
+ * always works. Guessing the other way sends them nowhere.
+ */
+const LIVE_FORGES = new Set([
+  'github.com',
+  'gitlab.com',
+  'codeberg.org',
+  'bitbucket.org',
+  'git.sr.ht',
+  'hg.sr.ht',
+  'gitbox.apache.org',
+  'svn.apache.org',
+  'git-wip-us.apache.org',
+  'cs.opensource.google',
+  'sourceforge.net',
+  'salsa.debian.org',
+  'invent.kde.org',
+  'gitlab.gnome.org',
+  'gitlab.freedesktop.org',
+  'git.kernel.org',
+  'gitlab.redox-os.org',
+]);
+
+/** Hosts under these are run by the same projects and are as durable. */
+const LIVE_FORGE_SUFFIXES = ['.googlesource.com', '.sr.ht'];
+
+function isLiveForge(url: string): boolean {
+  let host: string;
+  try {
+    const parsed = new URL(url);
+    // A few legacy records carry svn+ssh:// and git:// locations.
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    host = parsed.hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+
+  if (LIVE_FORGES.has(host)) return true;
+  return LIVE_FORGE_SUFFIXES.some((suffix) => host.endsWith(suffix));
+}
+
+/**
  * Where to send someone who wants to look at the project itself.
  *
  * Prefers the repository, and falls back to the registry page, because 208 of
@@ -385,9 +437,7 @@ export function getPool(filters: FilterId[], ecosystem: EcosystemId | null = nul
  * and a name with nowhere to click is a dead end.
  */
 export function projectUrl(pkg: Pick<CriticalPackage, 'ecosystem' | 'name' | 'repository_url'>): string | null {
-  // Only a URL a browser can actually open. A few legacy records carry
-  // svn+ssh:// and git:// locations, which would render as a dead link.
-  if (pkg.repository_url && /^https?:\/\//i.test(pkg.repository_url)) return pkg.repository_url;
+  if (pkg.repository_url && isLiveForge(pkg.repository_url)) return pkg.repository_url;
 
   const name = pkg.name;
   switch (pkg.ecosystem) {
