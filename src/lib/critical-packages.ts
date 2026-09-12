@@ -11,7 +11,7 @@
 import criticalData from '../../data/critical.json';
 import metaData from '../../data/_meta.json';
 import optoutData from '../../data/optout.json';
-import { flagsFor, labelsFor, factsFor, servicesFor } from '../../config/service-map.js';
+import { flagsFor, servicesFor } from '../../config/service-map.js';
 import { hasRecentAdvisories } from '../../config/advisories.js';
 import { isExcludedOwner } from '../../config/excluded-owners.js';
 import { FEATURED_PACKAGES } from '../../config/featured.js';
@@ -424,8 +424,6 @@ export function presentPackage(pkg: CriticalPackage) {
     key: packageKey(pkg.ecosystem, pkg.name),
     href: packageHref(pkg),
     flags: flagsFor(pkg) as string[],
-    labels: labelsFor(pkg) as string[],
-    facts: factsFor(pkg) as Array<{ flag: string; text: string; href: string | null }>,
     serviceSlugs: servicesFor(pkg) as string[],
   };
 }

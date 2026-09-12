@@ -44,38 +44,23 @@ const dependents =
     </p>
   )}
 
-  {/*
-    The action sits above the facts. A card carries between zero and four of
-    them, so an action underneath lands at a different height on every card and
-    the tallest ones push it out of sight.
-  */}
-  <div class="mb-4">
+  <div class="mt-auto pt-1">
+    {/* The same treatment as Get started on the home page, so the action that
+        begins the wizard looks the same wherever it appears. */}
     <a
       href={`${basePath}${pkg.href.replace(/^\//, '')}`}
-      class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm font-medium"
+      class="btn-sparkle btn-sparkle-purple text-sm"
+      aria-label={`Create a plan for ${pkg.name}`}
     >
-      Create a plan
+      <svg class="btn-sparkle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+      <span class="btn-sparkle-text">Create a plan</span>
+      <span class="btn-sparkle-particles">
+        <span class="sparkle-particle" style="top: 50%; left: 25%; background-color: rgb(196, 181, 253);"></span>
+        <span class="sparkle-particle" style="top: 25%; right: 33%; background-color: rgb(167, 139, 250); animation-delay: 0.1s;"></span>
+        <span class="sparkle-particle" style="bottom: 33%; right: 25%; background-color: rgb(217, 213, 254); animation-delay: 0.2s;"></span>
+      </span>
     </a>
   </div>
-
-  {pkg.facts.length > 0 && (
-    <ul class="flex flex-wrap gap-2 mt-auto" aria-label="What Ecosyste.ms data shows">
-      {pkg.facts.map((fact) => (
-        <li class="text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 rounded-full">
-          {/* A fact carrying a number has to be checkable, or it is just an allegation. */}
-          {fact.href ? (
-            <a
-              href={fact.href}
-              class="underline decoration-dotted hover:text-gray-900"
-              rel="noopener noreferrer"
-              target="_blank">{fact.text}</a
-            >
-          ) : (
-            fact.text
-          )}
-        </li>
-      ))}
-    </ul>
-  )}
-
 </article>
