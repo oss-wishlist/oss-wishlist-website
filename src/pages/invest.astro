@@ -418,6 +418,14 @@ const title =
           <input type="hidden" name="pn" value={selected.name} />
           <input type="hidden" name="ms" value="1" />
 
+          {/*
+            The h1 is at the top of the page, and the dependency check and the
+            activity panel sit between it and these questions. By the time
+            anyone reaches the checkboxes the heading has scrolled away, so the
+            list needs its own. Step 3 does the same above its options.
+          */}
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">How you want to help</h2>
+
           <div class="space-y-3 mb-8">
             {orderedMotivations.map((m) => {
               const why = evidenceById.get(m.id);
