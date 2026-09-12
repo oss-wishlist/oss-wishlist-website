@@ -3,6 +3,7 @@ import {
   verifyState, 
   createSession,
   verifySession,
+  SESSION_TTL_SECONDS,
 } from '../../lib/github-oauth';
 import type { SessionData as OldSessionData } from '../../lib/github-oauth';
 import type { SessionData, OAuthProviderName } from '../../lib/oauth/types';
@@ -162,7 +163,9 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     const sessionToken = createSession(sessionData, sessionSecret);
     
     // Set session cookie using Astro's API
-    const maxAge = 60 * 60 * 24; // 24 hours
+    // The same lifetime the signed token carries, so the cookie and the token
+    // do not outlive one another.
+    const maxAge = SESSION_TTL_SECONDS;
     
     // IMPORTANT: In development, always use '/' as the path
     // In production with base path, use the base path

@@ -1,5 +1,15 @@
 import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 
+/**
+ * How long a session is good for, in seconds.
+ *
+ * Must match the cookie's maxAge where the cookie is set, or one of the two
+ * outlives the other: a longer cookie leaves the browser sending a token the
+ * server has already rejected, a longer token leaves a valid token in a cookie
+ * the browser has dropped.
+ */
+export const SESSION_TTL_SECONDS = 60 * 60 * 24;
+
 export interface GitHubUser {
   login: string;
   id: number;
@@ -229,7 +239,18 @@ export function createSession(data: SessionData | any, secret: string): string {
     throw new Error('Session creation must be done server-side');
   }
   
-  const payload = JSON.stringify(data);
+  /*
+    The signed payload carries its own lifetime. Without it, the only expiry
+    was the cookie's maxAge, which is a hint to the browser and nothing more:
+    a token copied out of a log or a backup stayed valid forever, and logging
+    out deleted the cookie without invalidating the token it held.
+  */
+  const now = Math.floor(Date.now() / 1000);
+  const payload = JSON.stringify({
+    ...data,
+    iat: now,
+    exp: now + SESSION_TTL_SECONDS,
+  });
   // lgtm[js/insufficient-password-hash]
   // Note: This is HMAC for session signing, not password hashing
   // HMAC-SHA256 is appropriate for message authentication
@@ -284,8 +305,23 @@ export function verifySession(sessionToken: string, secret?: string): SessionDat
       return null;
     }
     
-    // Parse and return data
-    return JSON.parse(payload) as SessionData;
+    const data = JSON.parse(payload) as SessionData & { exp?: number };
+
+    /*
+      A session issued before expiry existed has no `exp`, and there is no
+      honest way to date it, so it is rejected. That signs everyone out once,
+      on the deploy that ships this, and never again.
+    */
+    if (typeof data.exp !== 'number') {
+      console.warn('[Auth] Rejecting a session with no expiry. It predates session expiry and requires signing in again.');
+      return null;
+    }
+
+    if (Math.floor(Date.now() / 1000) >= data.exp) {
+      return null;
+    }
+
+    return data;
   } catch (error) {
     console.error('Session verification error:', error);
     return null;

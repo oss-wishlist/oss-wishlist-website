@@ -91,19 +91,59 @@ export function checkRateLimit(identifier: string, config: RateLimitConfig): {
  * Get client identifier from request (IP address or fallback)
  */
 export function getClientIdentifier(request: Request): string {
-  // Try to get real IP from headers (for proxies/load balancers)
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
-  }
+  /*
+    The first entry in X-Forwarded-For is whatever the client sent. A client
+    that sets its own X-Forwarded-For gets a fresh bucket on every request, so
+    reading the leftmost value made every limit here advisory.
+
+    The order below is by how forgeable each header is:
+
+    CF-Connecting-IP is written by Cloudflare, which fronts this site, and
+    overwrites anything the client sent under that name. It is the true client
+    address and cannot be set from outside.
+
+    X-Real-IP is set by the platform's own proxy, which is the last hop before
+    the app.
+
+    The rightmost X-Forwarded-For entry is the one appended by the nearest
+    trusted proxy, unlike the leftmost, which is the one the client chose.
+  */
+  const cloudflare = request.headers.get('cf-connecting-ip');
+  if (cloudflare) return cloudflare.trim();
 
   const realIp = request.headers.get('x-real-ip');
-  if (realIp) {
-    return realIp;
+  if (realIp) return realIp.trim();
+
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    const hops = forwardedFor.split(',').map((hop) => hop.trim()).filter(Boolean);
+    if (hops.length > 0) return hops[hops.length - 1];
   }
 
-  // Fallback to a generic identifier (not ideal but better than nothing)
+  // Everything without an identifiable source shares one bucket, which is
+  // restrictive rather than permissive. That is the right way round here.
   return 'unknown';
+}
+
+/**
+ * What to count a request against.
+ *
+ * For a signed-in caller, the account: it survives a changed address, and it
+ * cannot be rotated the way an IP can. For everyone else, the address.
+ *
+ * The identity comes from a verified session, so it is not something a caller
+ * can assert to claim someone else's bucket.
+ */
+export function getRateLimitKey(
+  request: Request,
+  session?: { provider?: string | null; user?: { login?: string | null; username?: string | null } | null } | null
+): string {
+  const name = session?.user?.login || session?.user?.username;
+  if (name) {
+    const provider = session?.provider || 'github';
+    return `user:${provider}:${String(name).toLowerCase()}`;
+  }
+  return `ip:${getClientIdentifier(request)}`;
 }
 
 /**

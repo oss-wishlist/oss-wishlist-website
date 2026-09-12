@@ -2,18 +2,11 @@ import type { APIRoute } from 'astro';
 import { sendAdminEmail, sendEmail, getEmailConfig } from '../../lib/mail';
 import { createPractitioner, updatePractitioner, getPractitionersBySubmitter, getAllPractitioners } from '../../lib/db';
 import { verifySession } from '../../lib/github-oauth';
-import { checkRateLimit, getClientIdentifier, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit';
+import { checkRateLimit, getRateLimitKey, createRateLimitResponse, RATE_LIMITS } from '../../lib/rate-limit';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, cookies }) => {
-  // Rate limiting
-  const clientId = getClientIdentifier(request);
-  const rateCheck = checkRateLimit(clientId, RATE_LIMITS.SUBMIT);
-  if (rateCheck.limited) {
-    return createRateLimitResponse(rateCheck.resetTime);
-  }
-
   try {
     // Verify user is logged in
     const sessionCookie = cookies.get('oss_session') || cookies.get('github_session');
@@ -44,6 +37,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Support both GitHub (login) and GitLab (username)
     const username = session.user?.login || session.user?.username || 'unknown';
+
+    /*
+      Counted against the account rather than the address. This endpoint writes
+      the practitioner record, so the limit should follow the person who owns
+      it and not the network they happen to be on.
+    */
+    const rateCheck = checkRateLimit(getRateLimitKey(request, session), RATE_LIMITS.SUBMIT);
+    if (rateCheck.limited) {
+      return createRateLimitResponse(rateCheck.resetTime);
+    }
 
     let body;
     try {
