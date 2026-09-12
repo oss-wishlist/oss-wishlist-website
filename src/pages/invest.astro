@@ -223,21 +223,6 @@ const title =
     <div id="wizard">
     <WizardSteps current={step} packageHref={stepOneHref} motivationHref={stepTwoHref} />
 
-    {/*
-      Each step sits on its own ground, tinted to match its number in the
-      progress bar above. It tells you which part of the wizard you are in
-      before you have read a word of it.
-
-      Inside #wizard, because the script swaps that element's innerHTML between
-      steps and a class on the element itself would stay on step one's colour.
-    */}
-    <div class={`rounded-xl border-t-4 px-5 py-6 sm:px-7 ${
-      step === 3
-        ? 'border-teal-600 bg-teal-50/60'
-        : step === 2
-          ? 'border-purple-500 bg-purple-50/40'
-          : 'border-gray-300 bg-white'
-    }`}>
     {step === 1 && (
       <>
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Find a project to support</h1>
@@ -446,7 +431,7 @@ const title =
               const why = evidenceById.get(m.id);
               const checked = activeMotivations.includes(m.id);
               return (
-                <label class={`flex gap-4 items-start p-5 rounded-lg border cursor-pointer transition-shadow hover:shadow-md ${why ? 'bg-white border-purple-400 ring-1 ring-purple-200' : 'bg-white border-gray-200'}`}>
+                <label class={`flex gap-4 items-start p-5 rounded-lg border cursor-pointer transition-shadow hover:shadow-md ${why ? 'bg-purple-50 border-purple-200' : 'bg-white'}`}>
                   <input type="checkbox" name="m" value={m.id} checked={checked} class="mt-1 h-4 w-4 shrink-0" />
                   <span class="min-w-0">
                     <span class="block text-lg text-gray-900">
@@ -654,7 +639,6 @@ const title =
 
       </>
     )}
-    </div>
 
     </div>
 
