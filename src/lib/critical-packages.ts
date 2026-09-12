@@ -11,7 +11,7 @@
 import criticalData from '../../data/critical.json';
 import metaData from '../../data/_meta.json';
 import optoutData from '../../data/optout.json';
-import { flagsFor, labelsFor, factsFor, servicesFor } from '../../config/service-map.js';
+import { flagsFor, servicesFor } from '../../config/service-map.js';
 import { hasRecentAdvisories } from '../../config/advisories.js';
 import { isExcludedOwner } from '../../config/excluded-owners.js';
 import { FEATURED_PACKAGES } from '../../config/featured.js';
@@ -96,6 +96,59 @@ const allPackages: CriticalPackage[] = (criticalData as CriticalPackage[]).filte
 export const meta = metaData as DataMeta;
 
 /** Every cached package, minus opt-outs. Fetch order is already deterministic. */
+/**
+ * Facts a visitor can narrow the list by.
+ *
+ * The same flags the cards show, offered once at the top of the page. They were
+ * chips inside each card and led nowhere, which invited a click that did
+ * nothing. A fact is a label where it describes one project and a filter where
+ * it selects many, and those belong in different places.
+ *
+ * Labels here are fixed, unlike the card chips, which take their wording from
+ * the package (a release year, an advisory count).
+ */
+export const PACKAGE_FILTERS = [
+  { id: 'sole_maintainer', label: 'One maintainer' },
+  { id: 'unfunded', label: 'No clear funding pathway' },
+  { id: 'has_advisories', label: 'Recent security advisories' },
+  { id: 'quiet', label: 'No recent release' },
+] as const;
+
+export type PackageFilterId = (typeof PACKAGE_FILTERS)[number]['id'];
+
+export function isPackageFilter(value: string | null): value is PackageFilterId {
+  return PACKAGE_FILTERS.some((f) => f.id === value);
+}
+
+/**
+ * Packages carrying every selected flag.
+ *
+ * Narrowing rather than widening, because someone picking two is looking for
+ * the projects where both are true.
+ */
+export function filterByFlags(
+  packages: CriticalPackage[],
+  flags: readonly string[]
+): CriticalPackage[] {
+  if (flags.length === 0) return packages;
+  return packages.filter((pkg) => {
+    const present = flagsFor(pkg) as string[];
+    return flags.every((flag) => present.includes(flag));
+  });
+}
+
+/** How many packages each filter would leave, so none is offered at zero. */
+export function filterCounts(packages: CriticalPackage[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const filter of PACKAGE_FILTERS) counts[filter.id] = 0;
+  for (const pkg of packages) {
+    for (const flag of flagsFor(pkg) as string[]) {
+      if (flag in counts) counts[flag] += 1;
+    }
+  }
+  return counts;
+}
+
 export function getAllPackages(): CriticalPackage[] {
   return allPackages;
 }
@@ -325,6 +378,58 @@ export function getPool(filters: FilterId[], ecosystem: EcosystemId | null = nul
 }
 
 /**
+ * Forges we will link a repository on.
+ *
+ * ecosyste.ms reports whatever a package declared, and old packages declared
+ * hosts that have since closed. In this cache, java.net, svn.sonatype.org,
+ * fisheye.jboss.org, fisheye.codehaus.org, args4j.kohsuke.org,
+ * svn.forge.objectweb.org, android.git.kernel.org, git.jcraft.com and
+ * svn.terracotta.org all fail to resolve, so the link opened a connection error
+ * on a page that had just promised a project.
+ *
+ * An allow-list fails in the safe direction. A live forge missing from it sends
+ * someone to the registry page, which is one click further from the code and
+ * always works. Guessing the other way sends them nowhere.
+ */
+const LIVE_FORGES = new Set([
+  'github.com',
+  'gitlab.com',
+  'codeberg.org',
+  'bitbucket.org',
+  'git.sr.ht',
+  'hg.sr.ht',
+  'gitbox.apache.org',
+  'svn.apache.org',
+  'git-wip-us.apache.org',
+  'cs.opensource.google',
+  'sourceforge.net',
+  'salsa.debian.org',
+  'invent.kde.org',
+  'gitlab.gnome.org',
+  'gitlab.freedesktop.org',
+  'git.kernel.org',
+  'gitlab.redox-os.org',
+]);
+
+/** Hosts under these are run by the same projects and are as durable. */
+const LIVE_FORGE_SUFFIXES = ['.googlesource.com', '.sr.ht'];
+
+function isLiveForge(url: string): boolean {
+  let host: string;
+  try {
+    const parsed = new URL(url);
+    // A few legacy records carry svn+ssh:// and git:// locations.
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    host = parsed.hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+
+  if (LIVE_FORGES.has(host)) return true;
+  return LIVE_FORGE_SUFFIXES.some((suffix) => host.endsWith(suffix));
+}
+
+/**
  * Where to send someone who wants to look at the project itself.
  *
  * Prefers the repository, and falls back to the registry page, because 208 of
@@ -332,9 +437,7 @@ export function getPool(filters: FilterId[], ecosystem: EcosystemId | null = nul
  * and a name with nowhere to click is a dead end.
  */
 export function projectUrl(pkg: Pick<CriticalPackage, 'ecosystem' | 'name' | 'repository_url'>): string | null {
-  // Only a URL a browser can actually open. A few legacy records carry
-  // svn+ssh:// and git:// locations, which would render as a dead link.
-  if (pkg.repository_url && /^https?:\/\//i.test(pkg.repository_url)) return pkg.repository_url;
+  if (pkg.repository_url && isLiveForge(pkg.repository_url)) return pkg.repository_url;
 
   const name = pkg.name;
   switch (pkg.ecosystem) {
@@ -371,8 +474,6 @@ export function presentPackage(pkg: CriticalPackage) {
     key: packageKey(pkg.ecosystem, pkg.name),
     href: packageHref(pkg),
     flags: flagsFor(pkg) as string[],
-    labels: labelsFor(pkg) as string[],
-    facts: factsFor(pkg) as Array<{ flag: string; text: string; href: string | null }>,
     serviceSlugs: servicesFor(pkg) as string[],
   };
 }

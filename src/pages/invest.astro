@@ -25,7 +25,6 @@ import { getBasePath } from '../lib/paths';
 import {
   getPackage,
   presentPackage,
-  getFeaturedPackages,
   getEcosystemCounts,
   getHeadlinePool,
   samplePackages,
@@ -35,6 +34,10 @@ import {
   packageKey,
   projectUrl,
   ECOSYSTEMS,
+  PACKAGE_FILTERS,
+  isPackageFilter,
+  filterByFlags,
+  filterCounts,
   type CriticalPackage,
 } from '../lib/critical-packages';
 import { getRubricForPlaybook } from '../lib/rubrics';
@@ -59,6 +62,7 @@ export const prerender = false;
 
 const basePath = getBasePath();
 const params = Astro.url.searchParams;
+const selfBase = `${basePath}invest`;
 const fmt = (n: number) => n.toLocaleString('en-US');
 
 // ---- Step 1 state: which package ----
@@ -66,6 +70,13 @@ const rawEcosystem = params.get('ecosystem');
 const ecosystem = isEcosystemId(rawEcosystem) ? rawEcosystem : null;
 const query = (params.get('q') ?? '').trim();
 const searching = query.length >= 2;
+
+/*
+  Flags to narrow by, chosen at the top of the page. These were labels inside
+  each card that led nowhere.
+*/
+const activeFlags = params.getAll('flag').filter(isPackageFilter);
+const filtering = activeFlags.length > 0;
 
 const pkgEcosystem = params.get('pe');
 const pkgName = params.get('pn');
@@ -86,13 +97,43 @@ const step: 1 | 2 | 3 = !selected ? 1 : !motivationsSubmitted ? 2 : 3;
 
 // ---- Step 1 content ----
 const ecosystemCounts = getEcosystemCounts();
-const featured = step === 1 && !ecosystem && !searching ? getFeaturedPackages() : [];
-const searchResults = step === 1 && searching ? searchPackages(query, ecosystem) : [];
-const searchTotal = step === 1 && searching ? countSearchMatches(query, ecosystem) : 0;
-const browse =
-  step === 1 && ecosystem && !searching
-    ? samplePackages(SAMPLE_SIZE, getHeadlinePool(ecosystem))
+
+const searchResults = step === 1 && searching
+  ? filterByFlags(searchPackages(query, ecosystem), activeFlags)
+  : [];
+const searchTotal = step === 1 && searching
+  ? (filtering ? searchResults.length : countSearchMatches(query, ecosystem))
+  : 0;
+
+/*
+  The list is a fresh random sample on every load, across the whole cache unless
+  a registry or a filter narrows it.
+
+  The page used to open with a hand-picked set of thirteen, which put the same
+  projects at the top of every visit and made the cache look like a shortlist.
+  Sampling keeps the other four thousand reachable and stops the order reading
+  as a ranking, which nothing here is.
+*/
+const browsePool =
+  step === 1 && !searching
+    ? filterByFlags(getHeadlinePool(ecosystem), activeFlags)
     : [];
+const browse = browsePool.length ? samplePackages(SAMPLE_SIZE, browsePool) : [];
+const browseTotal = browsePool.length;
+
+/** Counts for the filter row, so none is offered leading to an empty list. */
+const flagCounts = filterCounts(getHeadlinePool(ecosystem));
+
+/** This page with one filter toggled, keeping everything else. */
+const filterHref = (id: string) => {
+  const next = new URLSearchParams();
+  if (ecosystem) next.set('ecosystem', ecosystem);
+  if (query) next.set('q', query);
+  for (const flag of activeFlags) if (flag !== id) next.append('flag', flag);
+  if (!activeFlags.includes(id)) next.append('flag', id);
+  const qs = next.toString();
+  return qs ? `${selfBase}?${qs}` : selfBase;
+};
 
 /** Link that selects a package and moves to step 2. */
 const pickHref = (p: CriticalPackage) =>
@@ -115,6 +156,36 @@ const activeMotivations = motivationsSubmitted
 /** Advisories we can name and link, for the security evidence. */
 // The same window the fact above describes, newest first, so the list is
 // evidence for the number rather than a different set of things.
+/*
+  Activity facts for the package page. Every one is windowed to the past year:
+  total_committers and total_commits are lifetime figures and say nothing about
+  now, which is the whole question here.
+
+  A fact is left out when the data is missing, so a package cached before these
+  were collected shows a shorter list and never a zero.
+*/
+const activityFacts: Array<{ label: string; value: string }> = [];
+if (selected) {
+  const num = (n: unknown) => (typeof n === 'number' ? n.toLocaleString('en-US') : null);
+
+  const add = (label: string, value: string | null) => {
+    if (value) activityFacts.push({ label, value });
+  };
+
+  add('People actively maintaining it', num(selected.active_maintainer_count));
+  add(
+    'OpenSSF Scorecard, maintained',
+    typeof selected.scorecard_maintained === 'number'
+      ? `${selected.scorecard_maintained} out of 10`
+      : null
+  );
+  /*
+    Dependent repositories belongs on the card, where it already is. It is a
+    lifetime count of scale, and putting it under a heading that says "past
+    year" would make the panel lie about it.
+  */
+}
+
 const advisories = selected
   ? recentAdvisories(selected).filter((a) => a.url || a.id).slice(0, ADVISORY_LIST_LIMIT)
   : [];
@@ -174,7 +245,6 @@ const services = await Promise.all(
     }))
 );
 
-const selfBase = `${basePath}invest`;
 const stepOneHref = selfBase;
 const stepTwoHref = selected
   ? `${selfBase}?pe=${encodeURIComponent(selected.ecosystem)}&pn=${encodeURIComponent(selected.name)}`
@@ -225,6 +295,38 @@ const title =
           </div>
         </form>
 
+        {/*
+          Narrowing, offered once at the top. The same facts appear on the cards
+          as labels; selecting many projects is a different job from describing
+          one, so it lives here.
+
+          A filter leading to nothing is left out entirely.
+        */}
+        <div class="flex flex-wrap items-center gap-2 mb-4" role="group" aria-label="Narrow by what the data shows">
+          <span class="text-sm text-gray-600 mr-1">Narrow by</span>
+          {PACKAGE_FILTERS.filter((f) => flagCounts[f.id] > 0).map((f) => (
+            <a
+              href={filterHref(f.id)}
+              aria-pressed={activeFlags.includes(f.id) ? 'true' : 'false'}
+              class={`inline-flex items-baseline gap-2 rounded-full px-3 py-1.5 text-sm border transition-colors ${
+                activeFlags.includes(f.id)
+                  ? 'bg-gray-800 text-white border-gray-800'
+                  : 'bg-white border-gray-300 hover:border-purple-400 hover:bg-purple-50'
+              }`}
+            >
+              {f.label}
+              <span class={`text-xs ${activeFlags.includes(f.id) ? 'text-gray-300' : 'text-gray-500'}`}>
+                {fmt(flagCounts[f.id])}
+              </span>
+            </a>
+          ))}
+          {filtering && (
+            <a href={ecosystem ? `${selfBase}?ecosystem=${ecosystem}` : selfBase} class="text-sm text-gray-600 underline hover:text-gray-900 ml-1">
+              Clear
+            </a>
+          )}
+        </div>
+
         <div class="flex flex-wrap gap-2 mb-8" role="group" aria-label="Filter by registry">
           {ECOSYSTEMS.filter((e) => ecosystemCounts[e.id] > 0).map((e) => (
             <a
@@ -261,17 +363,40 @@ const title =
           )
         )}
 
+        {!searching && filtering && browseTotal > 0 && (
+          <h2 class="text-xl font-bold text-gray-900 mb-4">
+            {browseTotal === 1
+              ? '1 project matches'
+              : `${fmt(browseTotal)} projects match`}
+            {browse.length < browseTotal && <span class="font-normal text-gray-600"> &middot; showing {browse.length}</span>}
+          </h2>
+        )}
+
+        {!searching && filtering && browseTotal === 0 && (
+          <div class="bg-white border rounded-lg p-6 mb-8">
+            <p class="text-gray-700">
+              No project in the cache carries all of those together.
+              <a href={selfBase} class="underline hover:text-gray-900">Start again</a>.
+            </p>
+          </div>
+        )}
+
+        {!searching && !filtering && browse.length > 0 && (
+          <div class="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+            <h2 class="text-xl font-bold text-gray-900">
+              {fmt(browseTotal)} projects that could use support
+            </h2>
+            <a href={ecosystem ? `${selfBase}?ecosystem=${ecosystem}` : selfBase} class="text-sm text-gray-600 underline hover:text-gray-900">
+              Show another set
+            </a>
+          </div>
+        )}
+
         {!searching && browse.length > 0 && (
           <PackageGrid packages={browse.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
         )}
 
-        {!searching && featured.length > 0 && (
-          <>
-            <h2 class="text-xl font-bold text-gray-900 mb-1">Or start with these</h2>
-            <p class="text-gray-600 mb-6">Open source projects you have almost certainly used.</p>
-            <PackageGrid packages={featured.map(presentPackage).map((p) => ({ ...p, href: pickHref(p as any) }))} />
-          </>
-        )}
+
       </>
     )}
 
@@ -291,9 +416,38 @@ const title =
             selected.name
           )}?
         </h1>
-        <p class="text-gray-600 mb-8 max-w-2xl">
+        <p class="text-gray-600 mb-6 max-w-2xl">
           Pre-selected services are those which Ecosyste.ms data indicates might be helpful.
         </p>
+
+        {/*
+          Activity, on the package page where there is room for it. Cards keep
+          their three chips: a card exists to choose between twelve of them at a
+          glance, and this would bury that.
+
+          Closed by default. Anyone who wants the numbers opens it, and anyone
+          answering the questions is not made to scroll past them first.
+        */}
+        {activityFacts.length > 0 && (
+          <details class="mb-8 bg-white border rounded-lg p-5">
+            <summary class="cursor-pointer font-semibold text-gray-900 list-none inline-flex items-center gap-2">
+              <span class="transition-transform" aria-hidden="true">&rsaquo;</span>
+              Activity in the past year
+            </summary>
+            <dl class="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+              {activityFacts.map((fact) => (
+                <div class="flex items-baseline justify-between gap-4 border-b border-gray-100 pb-2">
+                  <dt class="text-sm text-gray-600">{fact.label}</dt>
+                  <dd class="text-sm font-semibold text-gray-900">{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p class="text-xs text-gray-500 mt-4">
+              From ecosyste.ms, counted over the past twelve months. The maintainer count is
+              people, and this site does not name them.
+            </p>
+          </details>
+        )}
 
         <details class="mb-6 bg-white border rounded-lg p-5" open={Boolean(dependencyCheck || dependencyProblem)}>
           <summary class="cursor-pointer font-semibold text-gray-900 list-none inline-flex items-center gap-2">
@@ -359,7 +513,23 @@ const title =
           <input type="hidden" name="pn" value={selected.name} />
           <input type="hidden" name="ms" value="1" />
 
-          <div class="space-y-3 mb-8">
+          {/*
+            The h1 is at the top of the page, and the dependency check and the
+            activity panel sit between it and these questions. By the time
+            anyone reaches the checkboxes the heading has scrolled away, so the
+            list needs its own. Step 3 does the same above its options.
+          */}
+          {/*
+            Three kinds of thing on these two pages, and each gets its own
+            colour so you can tell them apart at a glance: what you want (this,
+            purple), who could do it (amber), and how you pay (teal). The
+            surrounding page stays white, so the colour marks the section
+            instead of washing the whole screen.
+          */}
+          <section class="rounded-xl border-t-4 border-purple-500 bg-purple-50/50 px-5 py-6 sm:px-6 mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">How you want to help</h2>
+
+          <div class="space-y-3 mb-2">
             {orderedMotivations.map((m) => {
               const why = evidenceById.get(m.id);
               const checked = activeMotivations.includes(m.id);
@@ -434,6 +604,8 @@ const title =
             })}
           </div>
 
+          </section>
+
           <button type="submit" class="bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm">
             Continue
           </button>
@@ -448,7 +620,7 @@ const title =
           {selectedUrl ? (
             <a
               href={selectedUrl}
-              class="underline decoration-2 underline-offset-4 hover:text-purple-700"
+              class="underline decoration-2 underline-offset-4 hover:text-teal-800"
               rel="noopener noreferrer"
               target="_blank"
               title={`Open ${selected.name}`}>{selected.name}</a
@@ -489,6 +661,7 @@ const title =
           {activeMotivations.map((m) => <input type="hidden" name="m" value={m} />)}
 
 
+          <section class="rounded-xl border-t-4 border-teal-600 bg-teal-50/60 px-5 py-6 sm:px-6 mb-8">
           <h2 class="text-2xl font-bold text-gray-900 mb-2">How would you like to invest?</h2>
           <p class="text-gray-600 mb-6 max-w-2xl">
             Whoever does the work, it is delivered against the same playbook rubric. These are
@@ -523,7 +696,7 @@ const title =
                   it works with JavaScript off too.
                 */}
                 {m.id === 'practitioner' && matchedPractitioners.length > 0 && (
-                  <div class="practitioner-picker mt-3 ml-8 pl-4 border-l-2 border-purple-200">
+                  <div class="practitioner-picker mt-3 rounded-lg border-t-4 border-amber-500 bg-amber-50/70 px-4 py-4">
                     <p class="text-sm font-semibold text-gray-800 mb-1">Practitioners with this speciality</p>
                     <p class="text-sm text-gray-600 mb-4">They listed these services themselves. Pick any, or none.</p>
 
@@ -565,7 +738,9 @@ const title =
             ))}
           </div>
 
-          <button type="submit" class="bg-purple-600 text-white px-7 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm">
+          </section>
+
+          <button type="submit" class="bg-teal-700 text-white px-7 py-3 rounded-lg hover:bg-teal-800 transition-colors font-semibold shadow-sm">
             Create the plan
           </button>
         </form>

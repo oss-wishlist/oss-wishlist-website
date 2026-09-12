@@ -14,6 +14,17 @@ export interface Props {
 
 const { current, packageHref = null, motivationHref = null } = Astro.props as Props;
 
+/*
+  Each step has its own colour, so the page you are on is recognisable before
+  you read anything. Step 2 is purple, step 3 teal. Teal differs from purple in
+  lightness as well as hue, so the two stay apart for red-green colour vision.
+*/
+const ACCENT = {
+  1: 'bg-gray-800 text-white',
+  2: 'bg-purple-600 text-white',
+  3: 'bg-teal-700 text-white',
+} as const;
+
 const steps = [
   { n: 1, label: 'Pick a project', href: current > 1 ? packageHref : null },
   { n: 2, label: 'How to help', href: current > 2 ? motivationHref : null },
@@ -30,7 +41,7 @@ const steps = [
           <span
             class={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
               step.n === current
-                ? 'bg-purple-600 text-white'
+                ? ACCENT[step.n]
                 : step.n < current
                   ? 'bg-gray-800 text-white'
                   : 'bg-gray-200 text-gray-500'

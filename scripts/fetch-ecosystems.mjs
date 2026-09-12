@@ -198,6 +198,32 @@ function trimRecord(raw) {
     and plenty of projects are governed through a foundation or a docs site, so
     its absence says nothing.
   */
+  /*
+    How many people were active in the past year, and whether OpenSSF Scorecard
+    considers the project maintained.
+
+    The count only. ecosyste.ms sends `active_maintainers` as a list of GitHub
+    logins with commit counts, and this project does not name maintainers: the
+    number answers the question a visitor has, and naming the one person still
+    holding a package up would point at them.
+
+    `sole_maintainer` stays alongside this. It reads registry ownership, which
+    is a different fact: requests lists many owners historically and has one
+    person active now.
+  */
+  const active = raw.issue_metadata?.active_maintainers;
+  out.active_maintainer_count = Array.isArray(active) ? active.length : null;
+
+  const checks = raw.repo_metadata?.scorecard?.data?.checks;
+  const maintained = Array.isArray(checks)
+    ? checks.find((c) => c?.name === 'Maintained')
+    : null;
+  // Scorecard uses -1 for "could not run", which is different from a 0.
+  out.scorecard_maintained =
+    maintained && typeof maintained.score === 'number' && maintained.score >= 0
+      ? maintained.score
+      : null;
+
   const repoFiles = raw.repo_metadata?.metadata?.files;
   out.files = repoFiles
     ? {

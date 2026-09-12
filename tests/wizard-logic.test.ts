@@ -10,6 +10,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import {
+  projectUrl,
+  PACKAGE_FILTERS,
+  isPackageFilter,
+  filterByFlags,
+  filterCounts,
+} from '../src/lib/critical-packages';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -104,10 +111,7 @@ describe('motivation evidence', () => {
 
   it('cites a sole maintainer for continuity, which covers burnout as well as departure', () => {
     const found = suggestedMotivations(pkg({ sole_maintainer: true }));
-    expect(found).toContainEqual({
-      id: 'continuity',
-      evidence: 'one maintainer, so there is nobody to share the load with',
-    });
+    expect(found).toContainEqual({ id: 'continuity', evidence: 'one maintainer listed' });
   });
 
   it('only raises maintainer workload when many depend on one person', () => {
@@ -505,5 +509,172 @@ describe('community files as evidence', () => {
 
   it('treats an empty file listing as known-absent, not unknown', () => {
     expect(evidenceFor(withFiles({}), 'ai-policy')).toContain('AGENTS.md');
+  });
+});
+
+/*
+  Activity, windowed to the past year. total_committers and dds are lifetime
+  figures: lodash reports 265 committers and has not merged a patch in a long
+  while, so neither answers the question continuity asks.
+*/
+describe('activity as continuity evidence', () => {
+  const evidenceFor = (fields: Record<string, unknown>) =>
+    suggestedMotivations(pkg(fields)).find((m) => m.id === 'continuity')?.evidence;
+
+  it('says nothing for a package cached before activity was collected', () => {
+    expect(evidenceFor({ sole_maintainer: false })).toBeUndefined();
+  });
+
+  // requests: many owners listed historically, one person active now.
+  it('reports a single active maintainer even when ownership looks shared', () => {
+    expect(evidenceFor({ sole_maintainer: false, active_maintainer_count: 1 })).toBe(
+      'one person active in the past year'
+    );
+  });
+
+  it('reports a small team, and says nothing about a large one', () => {
+    expect(evidenceFor({ active_maintainer_count: 3 })).toContain('3 people active');
+    expect(evidenceFor({ active_maintainer_count: 9 })).toBeUndefined();
+  });
+
+  // lodash: 88 people sent pull requests, Scorecard scores Maintained at 0.
+  it('reports a Scorecard Maintained score of zero', () => {
+    expect(evidenceFor({ scorecard_maintained: 0 })).toContain('no recent maintenance activity');
+  });
+
+  it('says nothing about a maintained project', () => {
+    expect(evidenceFor({ active_maintainer_count: 9, scorecard_maintained: 10 })).toBeUndefined();
+  });
+
+  it('states every reason that applies', () => {
+    const evidence = evidenceFor({
+      sole_maintainer: true,
+      active_maintainer_count: 1,
+      scorecard_maintained: 0,
+    })!;
+    expect(evidence).toContain('one maintainer listed');
+    expect(evidence).toContain('one person active');
+    expect(evidence).toContain('no recent maintenance activity');
+  });
+
+  // Scorecard uses -1 for a check it could not run, and the fetcher stores null
+  // for that. A check that did not run is not a score of zero.
+  it('treats a check that did not run as unknown', () => {
+    expect(evidenceFor({ scorecard_maintained: null })).toBeUndefined();
+  });
+});
+
+/*
+  The flags were labels inside each card that led nowhere, inviting a click
+  that did nothing. They are filters at the top of step 1 now, and the cards
+  keep them as labels.
+*/
+describe('narrowing by flag', () => {
+  const p = (fields: Record<string, unknown>) => pkg(fields);
+  const solo = p({ sole_maintainer: true });
+  const broke = p({ unfunded: true });
+  const both = p({ sole_maintainer: true, unfunded: true });
+  const neither = p({});
+  const all = [solo, broke, both, neither];
+
+  it('returns everything when nothing is selected', () => {
+    expect(filterByFlags(all, [])).toHaveLength(4);
+  });
+
+  it('keeps the packages carrying the flag', () => {
+    expect(filterByFlags(all, ['sole_maintainer'])).toEqual([solo, both]);
+  });
+
+  // Narrowing, because someone picking two wants where both are true.
+  it('narrows rather than widens when two are selected', () => {
+    expect(filterByFlags(all, ['sole_maintainer', 'unfunded'])).toEqual([both]);
+  });
+
+  it('can select nothing at all, which the page has to handle', () => {
+    expect(filterByFlags(all, ['sole_maintainer', 'has_advisories'])).toEqual([]);
+  });
+
+  it('counts each flag across the set', () => {
+    const counts = filterCounts(all);
+    expect(counts.sole_maintainer).toBe(2);
+    expect(counts.unfunded).toBe(2);
+  });
+
+  // A filter offered at zero is a dead end, and the page hides those.
+  it('reports zero for a flag nothing carries, so it can be left out', () => {
+    expect(filterCounts(all).has_advisories).toBe(0);
+  });
+
+  it('only accepts the flags it offers', () => {
+    for (const f of PACKAGE_FILTERS) expect(isPackageFilter(f.id)).toBe(true);
+    expect(isPackageFilter('sole_maintainer; DROP TABLE')).toBe(false);
+    expect(isPackageFilter('')).toBe(false);
+    expect(isPackageFilter(null)).toBe(false);
+  });
+
+  /*
+    A filter id has to be a flag the cards actually carry. A typo here would
+    produce a filter that counts zero forever, so the page would hide it and
+    nobody would notice it was broken.
+  */
+  it('every filter names a flag the cards can carry', () => {
+    const counted = Object.keys(filterCounts([pkg({})]));
+    for (const f of PACKAGE_FILTERS) expect(counted).toContain(f.id);
+  });
+});
+
+/*
+  ecosyste.ms reports whatever a package declared, and old packages declared
+  hosts that have since closed. net.sf.ehcache:ehcache-core points at
+  svn.terracotta.org, which no longer resolves, so the project link opened a
+  connection error.
+*/
+describe('projectUrl', () => {
+  const maven = (repository_url: string | null) => ({
+    ecosystem: 'maven',
+    name: 'net.sf.ehcache:ehcache-core',
+    repository_url,
+  });
+
+  it('links the repository on a forge we recognise', () => {
+    expect(projectUrl({ ecosystem: 'npm', name: 'lodash', repository_url: 'https://github.com/lodash/lodash' }))
+      .toBe('https://github.com/lodash/lodash');
+  });
+
+  // The reported case.
+  it('does not link a host that no longer resolves', () => {
+    const url = projectUrl(maven('https://svn.terracotta.org/svn/ehcache/trunk'))!;
+    expect(url).not.toContain('terracotta');
+    // Maven's registry page, carrying the coordinates from the package name.
+    expect(url).toBe('https://central.sonatype.com/artifact/net.sf.ehcache/ehcache-core');
+  });
+
+  it.each([
+    'https://java.net/projects/thing',
+    'https://fisheye.jboss.org/browse/thing',
+    'https://args4j.kohsuke.org/source-repository.html',
+    'https://git.jcraft.com/thing',
+  ])('falls back to the registry for %s', (dead) => {
+    expect(projectUrl(maven(dead))).not.toContain(new URL(dead).hostname);
+  });
+
+  it('keeps the forges that are alive but less common', () => {
+    for (const host of ['gitbox.apache.org', 'svn.apache.org', 'cs.opensource.google', 'go.googlesource.com']) {
+      const url = `https://${host}/thing`;
+      expect(projectUrl(maven(url))).toBe(url);
+    }
+  });
+
+  it('refuses a scheme a browser cannot open', () => {
+    for (const bad of ['git://github.com/a/b', 'svn+ssh://example.com/x', 'javascript:alert(1)']) {
+      expect(projectUrl(maven(bad))).not.toBe(bad);
+    }
+  });
+
+  it('always returns somewhere to go', () => {
+    for (const eco of ['npm', 'pypi', 'rubygems', 'cargo', 'packagist', 'nuget', 'go', 'maven']) {
+      const url = projectUrl({ ecosystem: eco, name: eco === 'maven' ? 'g:a' : 'thing', repository_url: null });
+      expect(url).toMatch(/^https:\/\//);
+    }
   });
 });
