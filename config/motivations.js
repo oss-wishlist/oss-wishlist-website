@@ -100,7 +100,7 @@ export const MOTIVATIONS = [
   {
     id: 'moderation',
     label: 'moderation',
-    question: 'Is there a plan for spam, abuse and conflict in the community?',
+    question: 'Is there a plan for spam, bots, abuse and conflict in the community?',
     services: ['moderation-strategy'],
     // Nothing in registry metadata describes how a community is run.
     evidence: () => null,
