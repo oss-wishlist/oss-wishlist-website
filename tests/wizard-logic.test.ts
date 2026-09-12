@@ -441,3 +441,69 @@ describe('recent advisories', () => {
     }
   });
 });
+
+/*
+  ecosyste.ms sends the repository's community files inside repo_metadata on
+  the critical record, so these cost no extra request. The three-state handling
+  is the part worth pinning: a package cached before this existed has no file
+  listing, and reading that as "absent" would put "no SECURITY.md" on every
+  record in the cache.
+*/
+describe('community files as evidence', () => {
+  const withFiles = (files: Record<string, boolean>) => pkg({ files });
+  const evidenceFor = (p: any, id: string) =>
+    suggestedMotivations(p).find((m) => m.id === id)?.evidence;
+
+  it('says nothing when the file listing was never fetched', () => {
+    const old = pkg({});
+    expect(old.files).toBeUndefined();
+    for (const id of ['security', 'moderation', 'ai-policy', 'contributors']) {
+      expect(evidenceFor(old, id)).toBeUndefined();
+    }
+  });
+
+  it('says nothing about a file that is present', () => {
+    const p = withFiles({ security: true, code_of_conduct: true, contributing: true, agents: true });
+    for (const id of ['moderation', 'ai-policy', 'contributors']) {
+      expect(evidenceFor(p, id)).toBeUndefined();
+    }
+  });
+
+  it('reports a missing SECURITY.md against CRA readiness', () => {
+    expect(evidenceFor(withFiles({ security: false }), 'security')).toContain('SECURITY.md');
+  });
+
+  it('reports a missing AGENTS.md as no published position on AI use', () => {
+    expect(evidenceFor(withFiles({ agents: false }), 'ai-policy')).toContain('AGENTS.md');
+  });
+
+  it('reports a missing CONTRIBUTING guide against contributors', () => {
+    expect(evidenceFor(withFiles({ contributing: false }), 'contributors')).toContain('CONTRIBUTING');
+  });
+
+  // A code of conduct is a moderation instrument and part of how a community
+  // governs itself, so it counts for both questions.
+  it('counts a missing code of conduct for moderation and governance alike', () => {
+    const p = withFiles({ code_of_conduct: false });
+    expect(evidenceFor(p, 'moderation')).toBe('no code of conduct published');
+    expect(evidenceFor(p, 'governance')).toContain('no code of conduct published');
+  });
+
+  it('states both reasons when a question rests on two signals', () => {
+    const p = pkg({ sole_maintainer: true, files: { code_of_conduct: false } });
+    const governance = evidenceFor(p, 'governance')!;
+    expect(governance).toContain('one maintainer');
+    expect(governance).toContain('code of conduct');
+  });
+
+  // Governance files appear on 1% of critical packages, so absence proves
+  // nothing and is deliberately not read.
+  it('draws no conclusion from a missing GOVERNANCE.md', () => {
+    const p = withFiles({ governance: false, code_of_conduct: true });
+    expect(evidenceFor(p, 'governance')).toBeUndefined();
+  });
+
+  it('treats an empty file listing as known-absent, not unknown', () => {
+    expect(evidenceFor(withFiles({}), 'ai-policy')).toContain('AGENTS.md');
+  });
+});

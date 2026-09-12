@@ -184,6 +184,31 @@ function trimRecord(raw) {
   out.archived = Boolean(raw.repo_metadata?.archived);
   out.deprecated = Boolean(raw.status) || out.archived;
 
+  /*
+    Which community files the repository publishes. ecosyste.ms already sends
+    this inside repo_metadata on the critical record, so it costs no extra
+    request; we were discarding it.
+
+    Stored as its own object so that a package fetched before this existed is
+    distinguishable from one whose repository has none of these files. Without
+    that, every record in the old cache would read as "no SECURITY.md".
+
+    Only the four with an unambiguous reading are kept. `governance` is in the
+    source data and left out on purpose: it appears on 1% of critical packages,
+    and plenty of projects are governed through a foundation or a docs site, so
+    its absence says nothing.
+  */
+  const repoFiles = raw.repo_metadata?.metadata?.files;
+  out.files = repoFiles
+    ? {
+        security: Boolean(repoFiles.security),
+        code_of_conduct: Boolean(repoFiles.code_of_conduct),
+        contributing: Boolean(repoFiles.contributing),
+        // AGENTS.md, the convention for telling AI agents how to work on a repo.
+        agents: Boolean(repoFiles.agents),
+      }
+    : null;
+
   const advisories = Array.isArray(raw.advisories) ? raw.advisories : [];
   // Withdrawn advisories are excluded below, so count after filtering.
   const live = advisories.filter((a) => !a.withdrawn_at);
