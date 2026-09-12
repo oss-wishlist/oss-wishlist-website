@@ -62,6 +62,14 @@ export const KEEP_FIELDS = [
 ];
 
 /**
+ * Community files we read from repo_metadata, and what each one tells a
+ * visitor. `governance` is deliberately absent: it appears on 1% of critical
+ * packages, and a project governed through a foundation or a docs site has no
+ * GOVERNANCE.md, so its absence is uninformative.
+ */
+export const COMMUNITY_FILES = ['security', 'code_of_conduct', 'contributing', 'agents'];
+
+/**
  * A package counts as `quiet` when its latest release is older than this.
  * Phrased on the site as a fact ("no release since 2023"), never as a judgement.
  */

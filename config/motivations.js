@@ -1,34 +1,17 @@
 /**
  * Step 2 of the wizard: what brings you here.
  *
- * These questions came from the Teaching Open Source Risk and Investment
- * Framework (microsoft/OSPO), which is a good framework and was written
- * independently of this catalogue. The mismatch showed. Some questions led
- * nowhere in particular, and several playbooks could not be reached by
- * answering any question at all: digital sovereignty, AI policy and hosting
- * were never offered, and winding down appeared only as a side effect of the
- * continuity question.
+ * One question per playbook. Each asks what that playbook answers, so the
+ * question and the service it leads to name the same subject.
  *
- * So the rule is now one question per playbook, and each question asks what
- * that playbook actually answers. Someone should be able to read a question and
- * the service it leads to and recognise the same subject in both.
+ * `evidence` returns a sentence when the cached data supports a question, and
+ * the page shows it beside the pre-ticked box so the reasoning is on screen and
+ * arguable. Several always return null: registry metadata says nothing about
+ * whether a project has an AI policy or meets a procurement standard, so those
+ * questions are offered unticked.
  *
- * Every motivation carries `evidence`. We pre-tick from what the data shows and
- * say why on the page, so the reasoning is visible and arguable rather than
- * hidden inside a recommendation. The visitor overrides freely; a pre-tick is a
- * suggestion with its working shown, never a verdict.
- *
- * Several motivations have an `evidence` that can never fire. Registry metadata
- * says nothing about whether a project has an AI policy, or whether it meets a
- * procurement standard, and inventing a signal would teach people to trust one
- * that is not there. Those questions are offered unticked, which is the honest
- * arrangement: no signal is not the same as no need.
- *
- * Labels echo the services they lead to, so someone leaves with the vocabulary
- * the catalogue uses rather than abstractions invented for this page. They are
- * written to sit inside the sentence the page builds around them, "I want to
- * help with ...", which is why they are lowercase apart from the acronyms.
- * Lowercasing them at render time turned CRA into cra.
+ * Labels sit inside the sentence the page builds, "I want to help with ...",
+ * so they are lowercase apart from acronyms.
  */
 
 import { recentAdvisoryLabel } from './advisories.js';
@@ -75,6 +58,30 @@ function retiredLabel(pkg) {
   return null;
 }
 
+/**
+ * Does the repository publish this file?
+ *
+ * Three answers, and the third matters: true, false, and unknown. A package
+ * cached before the file listing was collected has no `files` at all, and
+ * reading that as "absent" would put "no SECURITY.md" on every record in the
+ * cache. Unknown returns null and the question is offered unticked.
+ */
+function hasFile(pkg, name) {
+  if (!pkg?.files) return null;
+  return Boolean(pkg.files[name]);
+}
+
+/** Evidence that a file is missing, when we know it is missing. */
+function missingFile(pkg, name, phrase) {
+  return hasFile(pkg, name) === false ? phrase : null;
+}
+
+/** Join what we found, so a question can rest on more than one signal. */
+function bothOf(...parts) {
+  const found = parts.filter(Boolean);
+  return found.length ? found.join('; ') : null;
+}
+
 export const MOTIVATIONS = [
   {
     id: 'security',
@@ -87,7 +94,11 @@ export const MOTIVATIONS = [
       more of them, not fewer. So this is evidence that the subject is live for
       this project, not evidence that it is failing.
     */
-    evidence: (pkg) => recentAdvisoryLabel(pkg),
+    evidence: (pkg) =>
+      bothOf(
+        recentAdvisoryLabel(pkg),
+        missingFile(pkg, 'security', 'no SECURITY.md, which is where a disclosure policy usually lives')
+      ),
   },
   {
     id: 'governance',
@@ -95,15 +106,17 @@ export const MOTIVATIONS = [
     question: 'Is it clear how decisions get made, and who makes them?',
     services: ['governance-setup'],
     evidence: (pkg) =>
-      pkg.sole_maintainer ? 'one maintainer, so decisions rest with one person' : null,
+      bothOf(
+        pkg.sole_maintainer ? 'one maintainer, so decisions rest with one person' : null,
+        missingFile(pkg, 'code_of_conduct', 'no code of conduct published')
+      ),
   },
   {
     id: 'moderation',
     label: 'moderation',
     question: 'Is there a plan for spam, bots, abuse and conflict in the community?',
     services: ['moderation-strategy'],
-    // Nothing in registry metadata describes how a community is run.
-    evidence: () => null,
+    evidence: (pkg) => missingFile(pkg, 'code_of_conduct', 'no code of conduct published'),
   },
   {
     id: 'continuity',
@@ -141,9 +154,10 @@ export const MOTIVATIONS = [
     label: 'contributors and growth',
     question: 'Are there enough people contributing to keep it moving?',
     services: ['developer-relations-strategy'],
-    // Contributor growth is not in the cached data, and inventing a signal
-    // would teach people to trust one that is not there.
-    evidence: () => null,
+    // Contributor numbers are not in the cached data. Whether there is a door
+    // for a new contributor to walk through is.
+    evidence: (pkg) =>
+      missingFile(pkg, 'contributing', 'no CONTRIBUTING guide for a new contributor to follow'),
   },
   {
     id: 'sovereignty',
@@ -159,7 +173,10 @@ export const MOTIVATIONS = [
     label: 'AI policy',
     question: 'Does the project have an AI policy?',
     services: ['ai-consent-framework'],
-    evidence: () => null,
+    // AGENTS.md is the convention for telling AI agents how to work on a repo,
+    // and it is the closest thing to a published AI policy that registry data
+    // can see.
+    evidence: (pkg) => missingFile(pkg, 'agents', 'no AGENTS.md, so no published position on AI use'),
   },
   {
     id: 'winding-down',

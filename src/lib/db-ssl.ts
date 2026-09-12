@@ -1,37 +1,23 @@
 /**
  * TLS for the managed Postgres connection.
  *
- * The previous arrangement did two things, and the second one was the problem:
+ * DigitalOcean's managed databases use DigitalOcean's own CA, which Node does
+ * not trust, so a verified connection fails with "self signed certificate in
+ * certificate chain". This module supplies that CA.
  *
- *     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
- *     ssl: { rejectUnauthorized: false }
- *
- * The first is process-wide. It disables certificate verification for every
- * outbound TLS connection the server makes for the life of the process, not
- * just the database one: the OAuth code-for-token exchange with GitHub and
- * GitLab, the profile fetch that carries the access token, the requests to
- * ecosyste.ms, mail. Anyone positioned to intercept that traffic could present
- * any certificate they liked.
- *
- * It was set for an understandable reason. DigitalOcean's managed databases are
- * issued certificates by DigitalOcean's own CA, which is not in Node's trust
- * store, so a verified connection fails with "self signed certificate in
- * certificate chain" and turning verification off makes it work. The actual fix
- * is to give Node that CA.
- *
- * The CA certificate is not a secret. It is published in the DigitalOcean
- * control panel for anyone with the cluster, and it certifies the server to the
- * client rather than authenticating the client. So it can be committed, put in
- * an environment variable, or mounted as a file, whichever is least trouble.
+ * The certificate is public. It certifies the server to us, so committing it is
+ * fine, as is an environment variable or a mounted file.
  *
  * Resolution order:
- *   1. DATABASE_CA_CERT        - the PEM itself, or base64 of it
- *   2. DATABASE_CA_CERT_PATH   - a path to a .crt file
- *   3. certs/do-postgres-ca.crt - committed in the repo, if present
- *   4. nothing                 - connect unverified, and say so loudly
+ *   1. DATABASE_CA_CERT          PEM, or base64 of it
+ *   2. DATABASE_CA_CERT_PATH     path to a .crt
+ *   3. certs/do-postgres-ca.crt  committed in the repo
+ *   4. none                      connect unverified, and warn at every start
  *
- * Step 4 exists so that a missing certificate degrades to what happens today
- * rather than taking the site down. It is not the destination.
+ * Step 4 keeps a missing certificate from taking the site down. Either way the
+ * scope stays on this connection. The code here before set
+ * NODE_TLS_REJECT_UNAUTHORIZED=0, which reached every outbound TLS connection
+ * the process made, including the OAuth token exchange.
  */
 
 import * as fs from 'node:fs';
