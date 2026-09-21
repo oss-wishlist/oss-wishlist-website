@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-14T10:24:18.415Z",
+  "fetched_at": "2026-09-21T10:30:09.796Z",
   "attribution": "Package data from ecosyste.ms (https://ecosyste.ms), licensed CC-BY-SA-4.0.",
   "license": "CC-BY-SA-4.0",
   "sources": [
@@ -19,10 +19,10 @@
   "cap": 5000,
   "counts": {
     "total": 4544,
-    "sole_maintainer": 571,
-    "unfunded": 2944,
-    "has_advisories": 774,
-    "quiet": 1782,
+    "sole_maintainer": 570,
+    "unfunded": 2940,
+    "has_advisories": 776,
+    "quiet": 1775,
     "per_registry": {
       "npmjs.org": 625,
       "pypi.org": 522,
