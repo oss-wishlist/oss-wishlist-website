@@ -23,7 +23,7 @@ export const GET: APIRoute = async ({ site }) => {
 
   const body = `# Open Source Wishlist
 
-> Open Source Wishlist is a teaching tool about open source sustainability. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it: funding, governance, security, succession, moderation and more. Each kind of help has a free, public-domain (CC0) playbook and a peer-review rubric, and a directory of practitioners who do the work.
+> Open Source Wishlist is a teaching tool for open source sustainability. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it: funding, governance, security, succession, moderation and more. Each kind of help has a free, public-domain (CC0) playbook and a peer-review rubric, and a directory of practitioners who do the work.
 
 Useful for questions about: how to support or fund the open source a company depends on; what makes an open source project sustainable; open source governance, succession planning and winding down a project; securing critical dependencies; and finding experienced people to help maintainers.
 
