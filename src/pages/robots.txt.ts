@@ -1,34 +1,23 @@
 /**
  * Dynamic robots.txt
- * 
- * Allows/disallows crawling based on DISABLE_INDEXING env variable
- * When DISABLE_INDEXING=true (staging), disallows all crawlers
- * When DISABLE_INDEXING=false or unset (production), allows crawlers
+ *
+ * Staging (DISABLE_INDEXING=true) and placeholder mode disallow everything.
+ * Production lets search engines and AI assistants that cite their sources in,
+ * and keeps model-training crawlers out; see lib/seo.ts for the lists.
+ *
+ * There used to be a public/robots.txt as well. Static files win over routes,
+ * so it silently replaced this one and blocked ChatGPT and Perplexity from
+ * ever linking to the site.
  */
 
 import type { APIRoute } from 'astro';
+import { buildRobotsTxt } from '../lib/seo';
 
-export const GET: APIRoute = () => {
+export const GET: APIRoute = ({ site }) => {
   const disableIndexing = import.meta.env.DISABLE_INDEXING === 'true';
   const isPlaceholder = import.meta.env.PUBLIC_SITE_MODE === 'placeholder';
-  
-  const robotsTxt = (disableIndexing || isPlaceholder)
-    ? `# Staging Environment - No Indexing
-User-agent: *
-Disallow: /
-`
-    : `# Production Environment
-User-agent: *
-Allow: /
 
-# Disallow admin/api routes
-Disallow: /api/
-
-# Sitemap
-Sitemap: ${import.meta.env.PUBLIC_SITE_URL}${import.meta.env.BASE_URL || ''}/sitemap.xml
-`;
-
-  return new Response(robotsTxt, {
+  return new Response(buildRobotsTxt({ indexable: !(disableIndexing || isPlaceholder), site }), {
     status: 200,
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',

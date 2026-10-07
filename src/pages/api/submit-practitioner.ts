@@ -250,9 +250,9 @@ We've received your application and will review it within 3-5 business days. We'
 
 In the meantime:
 • Join our Discord community: https://discord.gg/9BY9P5FD
-• Browse our service catalogue: https://oss-wishlist.org/catalog
+• Browse our service catalogue: https://oss-wishlist.com/catalog
 
-If you have any questions, please use our contact form at https://oss-wishlist.org/contact
+If you have any questions, please use our contact form at https://oss-wishlist.com/contact
 
 We're excited to have you join the practitioners helping open source projects thrive!
 

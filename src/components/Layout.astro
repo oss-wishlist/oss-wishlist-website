@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { getBasePath } from '../lib/paths';
 import Header from './Header.astro';
+import { absoluteUrl } from '../lib/seo';
 
 export interface Props {
   title: string;
@@ -26,12 +27,52 @@ const {
 const basePath = getBasePath(); // Returns with trailing slash
 const logoUrl = '/logo.png';
 
-// Build canonical URL
-const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com';
+// Canonical URL from astro.config's `site`, not PUBLIC_SITE_URL: that pointed
+// production at a domain that does not resolve. See lib/seo.ts.
+const siteUrl = Astro.site ?? 'https://oss-wishlist.com';
 const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 
 // Full image URL for Open Graph
 const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toString();
+
+// Who publishes the site and what it is about, for search engines and AI
+// assistants deciding whether this is a source on open source sustainability.
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": absoluteUrl('#organization', siteUrl),
+      "name": "Open Source Wishlist",
+      "alternateName": "OSS Wishlist",
+      "url": absoluteUrl('', siteUrl),
+      "logo": absoluteUrl('logo.png', siteUrl),
+      "description": "Open Source Wishlist is a teaching tool. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it.",
+      "founder": { "@type": "Person", "name": "Emma Irwin", "url": "https://github.com/emmairwin" },
+      "knowsAbout": [
+        "Open source sustainability",
+        "Open source maintainers",
+        "Open source funding",
+        "Open source governance",
+        "Software supply chain security",
+        "Critical open source dependencies",
+        "Open source succession planning"
+      ],
+      "sameAs": [
+        "https://github.com/oss-wishlist",
+        "https://www.linkedin.com/company/110187652"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": absoluteUrl('#website', siteUrl),
+      "name": "Open Source Wishlist",
+      "url": absoluteUrl('', siteUrl),
+      "inLanguage": "en",
+      "publisher": { "@id": absoluteUrl('#organization', siteUrl) }
+    }
+  ]
+};
 ---
 
 <!DOCTYPE html>
@@ -69,6 +110,9 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={ogImage} />
     
+    <!-- Plain-text summary for AI assistants: https://llmstxt.org -->
+    <link rel="alternate" type="text/markdown" title="llms.txt" href={absoluteUrl('llms.txt', siteUrl)} />
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" href={logoUrl} />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -76,21 +120,8 @@ const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toStr
     <!-- Generator -->
     <meta name="generator" content={Astro.generator} />
     
-    <!-- Structured Data for Organization -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Open Source Wishlist",
-        "url": "https://oss-wishlist.com",
-        "logo": "https://oss-wishlist.com/logo.png",
-        "description": "Open Source Wishlist is a teaching tool. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it.",
-        "sameAs": [
-          "https://github.com/oss-wishlist",
-          "https://www.linkedin.com/company/110187652"
-        ]
-      }
-    </script>
+    <!-- Structured Data: Organization and WebSite -->
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   </head>
   <body class="bg-gray-50 min-h-screen overflow-x-hidden flex flex-col">
     <!-- Skip to main content link for keyboard users -->
