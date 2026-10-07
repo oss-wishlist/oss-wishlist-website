@@ -1,5 +1,6 @@
 ---
 import { getBasePath } from '../../lib/paths';
+import { absoluteUrl } from '../../lib/seo';
 import Layout from '../../components/Layout.astro';
 import { getEntry, getCollection, render } from 'astro:content';
 import { getApprovedPractitionersSafe } from '../../lib/practitioner-availability';
@@ -95,19 +96,16 @@ const matchingPractitioners = allPractitioners.filter(p =>
 );
 
 // Build structured data for the service
-const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'https://oss-wishlist.com';
-const serviceUrl = new URL(`${basePath}services/${toSlug(service.id)}`, siteUrl).toString();
+const serviceUrl = absoluteUrl(`services/${toSlug(service.id)}`, Astro.site);
 
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "Service",
   "name": service.data.title,
   "description": service.data.description,
-  "provider": {
-    "@type": "Organization",
-    "name": "Open Source Wish List"
-  },
-  "serviceType": service.data.category,
+  "provider": { "@id": absoluteUrl('#organization', Astro.site) },
+  "serviceType": service.data.service_type,
+  "about": "Open source sustainability",
   "url": serviceUrl,
   "audience": {
     "@type": "Audience",

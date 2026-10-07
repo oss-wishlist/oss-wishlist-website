@@ -6,7 +6,7 @@
 // Site metadata
 export const SITE_TITLE = 'Open Source Wishlist';
 export const SITE_DESCRIPTION =
-  'Open Source Wishlist is a teaching tool. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it.';
+  'Open Source Wishlist is a teaching tool for open source sustainability. It uses ecosyste.ms data to show what would help a critical open source project, and which kinds of expertise address it.';
 
 // Get the base path from Astro's built-in BASE_URL (set by astro.config.mjs)
 export const BASE_PATH = import.meta.env.BASE_URL || '/';

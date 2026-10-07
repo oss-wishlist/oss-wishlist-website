@@ -5,7 +5,9 @@ import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://oss-wish-list.github.io',
+  // The one place the site's address is set. Canonical tags, the sitemap,
+  // robots.txt and llms.txt all read it as Astro.site.
+  site: 'https://oss-wishlist.com',
   base: process.env.PUBLIC_BASE_PATH || '/',
   // Wishlists were replaced by /fund and /check. These keep every previously
   // published link working rather than 404ing it.
