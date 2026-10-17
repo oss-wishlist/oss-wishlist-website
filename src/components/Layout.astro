@@ -30,7 +30,10 @@ const logoUrl = '/logo.png';
 // Canonical URL from astro.config's `site`, not PUBLIC_SITE_URL: that pointed
 // production at a domain that does not resolve. See lib/seo.ts.
 const siteUrl = Astro.site ?? 'https://oss-wishlist.com';
-const canonicalURL = new URL(Astro.url.pathname, siteUrl);
+// /catalog and /catalog/ serve the same page, so both name /catalog. The home
+// page keeps its slash.
+const canonicalPath = Astro.url.pathname.length > 1 ? Astro.url.pathname.replace(/\/+$/, '') : '/';
+const canonicalURL = new URL(canonicalPath, siteUrl);
 
 // Full image URL for Open Graph
 const ogImage = image.startsWith('http') ? image : new URL(image, siteUrl).toString();
@@ -85,7 +88,7 @@ const structuredData = {
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalURL} />
+    {!noindex && <link rel="canonical" href={canonicalURL} />}
     
     <!-- Robots -->
     {(import.meta.env.DISABLE_INDEXING === 'true' || noindex) && (
