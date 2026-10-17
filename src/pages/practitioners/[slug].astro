@@ -18,7 +18,9 @@ const practitioner = approvedPractitioners.find(p => p.slug === slug);
 
 // If practitioner doesn't exist, return 404
 if (!practitioner) {
-  return Astro.redirect('/404');
+  // Render the 404 page here, with a 404 status. Redirecting to /404 answered
+  // 302 first, which Search Console reports as a soft 404.
+  return Astro.rewrite(`${getBasePath()}404`);
 }
 
 // Fetch services to map slugs to titles (same approach as edit page)

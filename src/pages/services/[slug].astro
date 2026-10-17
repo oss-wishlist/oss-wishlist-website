@@ -22,7 +22,9 @@ const service = propsService || await getEntry('services', slug);
 
 // If service doesn't exist, return 404
 if (!service) {
-  return Astro.redirect('/404');
+  // Render the 404 page here, with a 404 status. Redirecting to /404 answered
+  // 302 first, which Search Console reports as a soft 404.
+  return Astro.rewrite(`${getBasePath()}404`);
 }
 
 // Helper to derive a slug from an entry id (Astro v6: id includes file extension)

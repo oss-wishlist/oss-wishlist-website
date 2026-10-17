@@ -2,6 +2,10 @@
 import Layout from '../components/Layout.astro';
 import { getBasePath } from '../lib/paths';
 
+// Pages that could not find what was asked for rewrite to this one; the status
+// has to say so too, or search engines index it as a real page.
+Astro.response.status = 404;
+
 const basePath = getBasePath();
 const logoUrl = `${basePath}images/ecosystems.svg`;
 ---
@@ -9,6 +13,7 @@ const logoUrl = `${basePath}images/ecosystems.svg`;
 <Layout 
   title="Page Not Found - OSS Wishlist" 
   description="The page you're looking for doesn't exist."
+  noindex
 >
   <div class="min-h-screen flex flex-col items-center justify-center px-4 py-16">
     <!-- Logo -->

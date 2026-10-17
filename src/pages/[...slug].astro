@@ -24,7 +24,9 @@ const LOOKS_LIKE_A_PAGE = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)
 
 const page = LOOKS_LIKE_A_PAGE.test(pageSlug) ? await getEntry('pages', pageSlug) : undefined;
 if (!page) {
-  return Astro.redirect(`${getBasePath()}404`);
+  // Render the 404 page here, with a 404 status. Redirecting to /404 answered
+  // 302 first, which Search Console reports as a soft 404.
+  return Astro.rewrite(`${getBasePath()}404`);
 }
 const { Content } = await render(page);
 const basePath = getBasePath();
@@ -59,7 +61,7 @@ const basePath = getBasePath();
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div></div>
           <a 
-            href={`${basePath}/`}
+            href={basePath}
             class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
           >
             ← Back to Home
