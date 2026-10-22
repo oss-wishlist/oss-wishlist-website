@@ -100,6 +100,14 @@ function maintainedScore(pkg) {
   return typeof n === 'number' ? n : null;
 }
 
+/**
+ * A long release gap is only a useful wind-down signal when maintenance is
+ * quiet too. Unknown activity stays unknown rather than being treated as none.
+ */
+function hasNoRecentMaintenance(pkg) {
+  return activeCount(pkg) === 0 && maintainedScore(pkg) === 0;
+}
+
 export const MOTIVATIONS = [
   {
     id: 'security',
@@ -221,8 +229,9 @@ export const MOTIVATIONS = [
       Two signals, deliberately worded differently. A registry marking a package
       deprecated or abandoned, or a repository being archived, is the
       maintainers stating a position, and the page can quote it. A long release
-      gap is only an absence, and saying more than that would put a conclusion
-      in someone's mouth.
+      gap is only an absence. Pair it with both activity measures reporting no
+      recent maintenance before raising it; missing activity data or evidence
+      of active work is not enough.
 
       Succession planning is offered alongside winding down because the honest
       answer is often the other one: a project with no maintainer left may want
@@ -231,7 +240,7 @@ export const MOTIVATIONS = [
     evidence: (pkg) => {
       const retired = retiredLabel(pkg);
       if (retired) return retired;
-      if (isDormant(pkg)) {
+      if (isDormant(pkg) && hasNoRecentMaintenance(pkg)) {
         const months = Math.floor(monthsSinceRelease(pkg));
         return `no release in ${months} months`;
       }

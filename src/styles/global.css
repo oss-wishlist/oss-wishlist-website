@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@source "../";
 
 /* Custom base styles */
 @layer base {
@@ -225,7 +225,7 @@
   }
   
   .form-textarea {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:border-transparent transition-all duration-200 resize-vertical min-h-[100px];
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:border-transparent transition-all duration-200 resize-y min-h-[100px];
   }
   
   .form-label {

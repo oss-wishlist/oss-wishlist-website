@@ -189,11 +189,33 @@ describe('winding down', () => {
 
   // A gap is an absence, not a statement, and the wording has to stay on the
   // right side of that.
-  it('states a release gap as a fact, with no conclusion attached', () => {
-    const found = suggestedMotivations(pkg({ latest_release_published_at: monthsAgo(40) }));
+  it('requires both recent-activity measures to be quiet before suggesting wind-down', () => {
+    const found = suggestedMotivations(
+      pkg({
+        latest_release_published_at: monthsAgo(40),
+        active_maintainer_count: 0,
+        scorecard_maintained: 0,
+      })
+    );
     const evidence = found.find((f) => f.id === 'winding-down')!.evidence;
     expect(evidence).toMatch(/^no release in \d+ months$/);
     expect(evidence).not.toMatch(/abandoned|dead|dying|at risk|failing/i);
+  });
+
+  it('does not infer wind-down from an old release when there is recent activity', () => {
+    const found = suggestedMotivations(
+      pkg({
+        latest_release_published_at: monthsAgo(28),
+        active_maintainer_count: 5,
+        scorecard_maintained: 10,
+      })
+    );
+    expect(found.find((f) => f.id === 'winding-down')).toBeUndefined();
+  });
+
+  it('does not infer no activity when maintenance data is unknown', () => {
+    const found = suggestedMotivations(pkg({ latest_release_published_at: monthsAgo(40) }));
+    expect(found.find((f) => f.id === 'winding-down')).toBeUndefined();
   });
 
   it('says nothing about a project that is simply quiet', () => {
