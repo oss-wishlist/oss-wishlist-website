@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-26T10:49:52.660Z",
+  "fetched_at": "2026-11-02T13:11:21.434Z",
   "attribution": "Package data from ecosyste.ms (https://ecosyste.ms), licensed CC-BY-SA-4.0.",
   "license": "CC-BY-SA-4.0",
   "sources": [
@@ -18,11 +18,11 @@
   ],
   "cap": 5000,
   "counts": {
-    "total": 4543,
+    "total": 4549,
     "sole_maintainer": 567,
-    "unfunded": 2914,
-    "has_advisories": 785,
-    "quiet": 1734,
+    "unfunded": 2917,
+    "has_advisories": 786,
+    "quiet": 1725,
     "per_registry": {
       "npmjs.org": 625,
       "pypi.org": 522,
@@ -31,7 +31,7 @@
       "proxy.golang.org": 625,
       "repo1.maven.org": 625,
       "packagist.org": 548,
-      "nuget.org": 348
+      "nuget.org": 354
     }
   },
   "opt_outs_honoured": 0
