@@ -13,16 +13,28 @@ const createModeratedString = (minLength?: number, maxLength?: number) =>
       (val) => !maxLength || val.length <= maxLength,
       { message: `Must not exceed ${maxLength} characters` }
     )
-    .refine(
-      (val) => moderateContent(val).isClean,
-      (val) => ({ message: moderateContent(val).reason || 'Contains inappropriate content' })
-    );
+    .superRefine((val, ctx) => {
+      const moderation = moderateContent(val);
+      if (!moderation.isClean) {
+        ctx.addIssue({
+          code: 'custom',
+          message: moderation.reason || 'Contains inappropriate content'
+        });
+      }
+    });
 
 const createOptionalModeratedString = () =>
-  z.string().optional().refine(
-    (val) => !val || val.trim() === '' || moderateContent(val).isClean,
-    (val) => ({ message: val ? (moderateContent(val).reason || 'Contains inappropriate content') : 'Invalid content' })
-  );
+  z.string().optional().superRefine((val, ctx) => {
+    if (val && val.trim() !== '') {
+      const moderation = moderateContent(val);
+      if (!moderation.isClean) {
+        ctx.addIssue({
+          code: 'custom',
+          message: moderation.reason || 'Contains inappropriate content'
+        });
+      }
+    }
+  });
 
 // Wishlist form data schema
 export const wishlistFormDataSchema = z.object({
@@ -39,11 +51,11 @@ export const wishlistFormDataSchema = z.object({
 
   // New: Project size selection for pricing context
   projectSize: z.enum(['small', 'medium', 'large'], {
-    errorMap: () => ({ message: 'Project size must be small, medium, or large' })
+    error: 'Project size must be small, medium, or large'
   }),
   
   urgency: z.enum(['low', 'medium', 'high'], {
-    errorMap: () => ({ message: 'Urgency must be low, medium, or high' })
+    error: 'Urgency must be low, medium, or high'
   }),
   
   description: createOptionalModeratedString(),
@@ -115,12 +127,12 @@ export type WishlistSubmission = z.infer<typeof wishlistSubmissionSchema>;
 
 // Helper function to format Zod errors for API responses
 export function formatZodError(error: z.ZodError) {
-  const firstError = error.errors[0];
+  const firstError = error.issues[0];
   return {
     error: 'Validation failed',
     details: firstError.message,
     field: firstError.path.join('.'),
-    allErrors: error.errors.map(err => ({
+    allErrors: error.issues.map(err => ({
       field: err.path.join('.'),
       message: err.message
     }))
